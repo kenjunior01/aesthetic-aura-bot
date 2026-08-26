@@ -9,6 +9,8 @@ import {
 import { useAura } from '@/lib/aura-store';
 import { AuroraBackground } from '@/components/aura/AuroraBackground';
 import BottomNav from './BottomNav';
+import ClosetScreen from './ClosetScreen';
+import ExploreScreen from './ExploreScreen';
 import type { Tab } from './BottomNav';
 
 const dailyRecs = [
@@ -199,37 +201,7 @@ function RoutineSection() {
   );
 }
 
-function ClosetPlaceholder() {
-  return (
-    <div className="flex flex-col items-center justify-center gap-4 py-12">
-      <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-surface-strong">
-        <Sparkles className="h-10 w-10 text-muted-foreground" />
-      </div>
-      <div className="text-center">
-        <h3 className="text-lg font-semibold">Seu Armário Virtual</h3>
-        <p className="text-sm text-muted-foreground mt-1 max-w-xs">
-          Fotografe e organize suas roupas aqui. Em breve você poderá gerar looks automaticamente!
-        </p>
-      </div>
-    </div>
-  );
-}
 
-function ExplorePlaceholder() {
-  return (
-    <div className="flex flex-col items-center justify-center gap-4 py-12">
-      <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-surface-strong">
-        <Heart className="h-10 w-10 text-muted-foreground" />
-      </div>
-      <div className="text-center">
-        <h3 className="text-lg font-semibold">Explorar</h3>
-        <p className="text-sm text-muted-foreground mt-1 max-w-xs">
-          Descubra tendências, dicas de estilo e inspirações personalizadas para você.
-        </p>
-      </div>
-    </div>
-  );
-}
 
 function ProfileTab() {
   const { profile, reset } = useAura();
@@ -305,7 +277,7 @@ export default function DashboardScreen() {
   const firstName = profile.name?.split(' ')[0] || 'Estilista';
 
   return (
-    <div className="relative min-h-screen pb-20">
+    <div className="relative min-h-screen">
       <AuroraBackground />
 
       <div className="relative z-10 px-4 pt-6 max-w-lg mx-auto">
@@ -337,17 +309,9 @@ export default function DashboardScreen() {
           </motion.div>
         )}
 
-        {activeTab === 'closet' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <ClosetPlaceholder />
-          </motion.div>
-        )}
+        {activeTab === 'closet' && <ClosetScreen />}
 
-        {activeTab === 'explore' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <ExplorePlaceholder />
-          </motion.div>
-        )}
+        {activeTab === 'explore' && <ExploreScreen />}
 
         {activeTab === 'profile' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>

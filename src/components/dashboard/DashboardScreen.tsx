@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Sparkles, Scissors, Heart, TrendingUp,
@@ -15,6 +15,7 @@ import ClosetScreen from './ClosetScreen';
 import ExploreScreen from './ExploreScreen';
 import ActivitiesScreen from './ActivitiesScreen';
 import AIChatButton from './AIChatButton';
+import { useAchievements } from '@/hooks/use-achievements';
 
 const dailyRecs = [
   {
@@ -291,7 +292,8 @@ function ShareSection() {
 }
 
 function ProfileTab() {
-  const { profile, xp, streak, totalCompletedActivities, achievements, reset } = useAura();
+  const { profile, xp, streak, totalCompletedActivities, achievements, reset, update, onboarded } = useAura();
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const { level } = getLevelInfo(xp);
   const unlockedCount = achievements.filter((a) => a.unlockedAt).length;
 
@@ -390,12 +392,50 @@ function ProfileTab() {
         </div>
       </div>
 
-      <button
-        onClick={reset}
-        className="text-sm text-destructive hover:underline text-center py-2"
+      {/* Edit Profile button */}
+      <motion.button
+        whileTap={{ scale: 0.98 }}
+        onClick={() => reset()}
+        className="glass rounded-2xl p-4 flex items-center gap-3 w-full text-left hover:border-primary/30 transition-colors"
       >
-        Resetar perfil e recomeçar
-      </button>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-strong">
+          <Sparkles className="h-5 w-5 text-primary" />
+        </div>
+        <div className="flex-1">
+          <span className="text-sm font-semibold block">Editar Perfil</span>
+          <span className="text-xs text-muted-foreground block mt-0.5">Atualize suas informações estéticas</span>
+        </div>
+        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+      </motion.button>
+
+      {/* Reset button */}
+      {!showResetConfirm ? (
+        <button
+          onClick={() => setShowResetConfirm(true)}
+          className="text-sm text-destructive hover:underline text-center py-2"
+        >
+          Resetar tudo e recomeçar
+        </button>
+      ) : (
+        <div className="glass rounded-2xl p-4 text-center">
+          <p className="text-sm font-semibold mb-1">Tem certeza?</p>
+          <p className="text-xs text-muted-foreground mb-3">Isso apagará seu perfil, XP, conquistas e progresso.</p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowResetConfirm(false)}
+              className="flex-1 h-10 rounded-xl border border-border text-sm font-medium hover:bg-surface-strong transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => { reset(); setShowResetConfirm(false); }}
+              className="flex-1 h-10 rounded-xl bg-destructive text-destructive-foreground text-sm font-medium"
+            >
+              Resetar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -403,6 +443,9 @@ function ProfileTab() {
 export default function DashboardScreen() {
   const { profile } = useAura();
   const [activeTab, setActiveTab] = useAuraTab('home');
+
+  // Auto-unlock achievements based on state
+  useAchievements();
 
   const firstName = profile.name?.split(' ')[0] || 'Estilista';
 

@@ -186,7 +186,10 @@ export const useAura = create<AuraState>()(
           if (!has && max && next.length > max) next = next.slice(next.length - max);
           return { profile: { ...s.profile, [key]: next } };
         }),
-      complete: () => set({ onboarded: true }),
+      complete: () => set((s) => ({
+        onboarded: true,
+        xp: s.xp + 100, // Onboarding completion reward
+      })),
       reset: () => set({
         profile: emptyProfile,
         onboarded: false,
@@ -281,6 +284,9 @@ export const useAura = create<AuraState>()(
         const todayStr = new Date().toISOString().split('T')[0];
         if (state.lastActiveDate === todayStr) return;
 
+        // Award daily login XP (first login of the day)
+        const dailyLoginXp = 5;
+
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         const yesterdayStr = yesterday.toISOString().split('T')[0];
@@ -290,6 +296,7 @@ export const useAura = create<AuraState>()(
           : 1;
 
         set({
+          xp: state.xp + dailyLoginXp,
           streak: newStreak,
           lastActiveDate: todayStr,
         });

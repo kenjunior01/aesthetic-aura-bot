@@ -1,10 +1,10 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   TrendingUp, Heart, Share2,
   Flame, Star, Sparkles, ShoppingCart,
-  MapPin, ExternalLink,
+  MapPin, ExternalLink, Check,
 } from 'lucide-react';
 import { useAura } from '@/lib/aura-store';
 import {
@@ -13,7 +13,9 @@ import {
   type RegionalProduct,
 } from '@/lib/aura-data';
 import { cn } from '@/lib/utils';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+
+// ... (keeping all existing data and components, updating TrendCard and adding Toast)
 
 const trendingTopics = [
   {
@@ -71,6 +73,30 @@ const seasonalPicks = [
   { id: 's5', title: 'Óculos de sol vintage', reason: 'Acessório com personalidade', emoji: '🕶️' },
 ];
 
+// ============================================================
+// TOAST NOTIFICATION
+// ============================================================
+
+function Toast({ message, visible }: { message: string; visible: boolean }) {
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ opacity: 0, y: 20, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.9 }}
+          className="fixed bottom-24 left-4 right-4 z-50 max-w-lg mx-auto glass rounded-2xl p-3 flex items-center gap-3 glow"
+        >
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-500/20">
+            <Check className="h-4 w-4 text-green-400" />
+          </div>
+          <span className="text-sm font-medium flex-1">{message}</span>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 function TipCard({ tip }: { tip: typeof styleTips[0] }) {
   return (
     <motion.div
@@ -86,8 +112,27 @@ function TipCard({ tip }: { tip: typeof styleTips[0] }) {
   );
 }
 
-function TrendCard({ topic, index }: { topic: typeof trendingTopics[0]; index: number }) {
+function TrendCard({ topic, index, onToast }: { topic: typeof trendingTopics[0]; index: number; onToast: (msg: string) => void }) {
   const Icon = topic.icon;
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSaved(true);
+    onToast('Salvo nos favoritos!');
+  };
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const text = `${topic.title} - Descobri no AuraStyle 🔥`;
+    if (navigator.share) {
+      try { await navigator.share({ title: topic.title, text }); } catch { /* cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(text);
+      onToast('Link copiado!');
+    }
+  };
+
   return (
     <motion.div
       initial={{ x: 40, opacity: 0 }}
@@ -104,10 +149,13 @@ function TrendCard({ topic, index }: { topic: typeof trendingTopics[0]; index: n
       <h3 className="text-base font-bold mb-2">{topic.title}</h3>
       <p className="text-xs text-muted-foreground leading-relaxed">{topic.desc}</p>
       <div className="flex items-center gap-4 mt-4 pt-3 border-t border-border">
-        <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-          <Heart className="h-3 w-3" /> Salvar
+        <button
+          onClick={handleSave}
+          className={cn('flex items-center gap-1 text-xs transition-colors', saved ? 'text-primary font-medium' : 'text-muted-foreground hover:text-foreground')}
+        >
+          <Heart className={cn('h-3 w-3', saved && 'fill-primary')} /> {saved ? 'Salvo' : 'Salvar'}
         </button>
-        <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+        <button onClick={handleShare} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
           <Share2 className="h-3 w-3" /> Compartilhar
         </button>
       </div>
@@ -191,7 +239,7 @@ function ProductCard({ product }: { product: RegionalProduct }) {
 // PRODUCT RECOMMENDATIONS SECTION
 // ============================================================
 
-function ProductRecommendations() {
+function ProductRecommendations({ onToast }: { onToast: (msg: string) => void }) {
   const { profile } = useAura();
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
 
@@ -301,6 +349,12 @@ function ProductRecommendations() {
 
 export default function ExploreScreen() {
   const { profile } = useAura();
+  const [toast, setToast] = useState({ message: '', visible: false });
+
+  const showToast = useCallback((message: string) => {
+    setToast({ message, visible: true });
+    setTimeout(() => setToast({ message: '', visible: false }), 2000);
+  }, []);
 
   return (
     <div className="relative z-10 px-4 pt-6 pb-24 max-w-lg mx-auto">
@@ -330,8 +384,8 @@ export default function ExploreScreen() {
           </div>
         )}
 
-        {/* Product Recommendations - NEW */}
-        <ProductRecommendations />
+        {/* Product Recommendations */}
+        <ProductRecommendations onToast={showToast} />
 
         {/* Trending */}
         <section className="mb-8">
@@ -340,7 +394,7 @@ export default function ExploreScreen() {
           </h2>
           <div className="flex flex-col gap-4">
             {trendingTopics.map((topic, i) => (
-              <TrendCard key={topic.id} topic={topic} index={i} />
+              <TrendCard key={topic.id} topic={topic} index={i} onToast={showToast} />
             ))}
           </div>
         </section>
@@ -369,6 +423,8 @@ export default function ExploreScreen() {
           </div>
         </section>
       </motion.div>
+
+      <Toast message={toast.message} visible={toast.visible} />
     </div>
   );
 }

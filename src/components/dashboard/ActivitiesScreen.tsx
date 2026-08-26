@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Flame, Zap, Trophy, Target, ChevronRight, Star,
-  Check, Lock, TrendingUp, Sparkles, RotateCcw,
+  Check, Lock, TrendingUp, Sparkles,
 } from 'lucide-react';
-import { useAura, getLevelInfo, type DailyActivity, type Achievement } from '@/lib/aura-store';
+import { useAura, getLevelInfo } from '@/lib/aura-store';
+import type { DailyActivity } from '@/lib/aura-store';
 import {
   dailyChallenges,
   weeklyGoalTemplates,
@@ -208,8 +209,11 @@ function DailyChallengesSection() {
     // Check if this completes all
     const willBeAllDone = dailyActivities.filter((a) => !a.completed && a.id !== id).length === 0;
     if (willBeAllDone) {
+      // Award bonus XP for completing all daily activities
+      const { xp } = useAura.getState();
+      useAura.setState({ xp: xp + 150 });
       setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 2000);
+      setTimeout(() => setShowConfetti(false), 2500);
     }
   };
 

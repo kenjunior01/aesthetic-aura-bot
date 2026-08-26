@@ -1,0 +1,370 @@
+   100→   100→export const hairColors = [
+   101→   101→  { id: 'loiro-claro', label: 'Loiro claro', color: 'oklch(0.9 0.08 88)' },
+   102→   102→  { id: 'loiro-escuro', label: 'Loiro escuro', color: 'oklch(0.75 0.09 80)' },
+   103→   103→  { id: 'castanho-medio', label: 'Castanho médio', color: 'oklch(0.5 0.07 58)' },
+   104→   104→  { id: 'castanho-escuro', label: 'Castanho escuro', color: 'oklch(0.35 0.05 50)' },
+   105→   105→  { id: 'ruivo', label: 'Ruivo', color: 'oklch(0.55 0.16 40)' },
+   106→   106→  { id: 'preto', label: 'Preto', color: 'oklch(0.22 0.02 285)' },
+   107→   107→  { id: 'grisalho', label: 'Grisalho', color: 'oklch(0.78 0.01 285)' },
+   108→   108→  { id: 'colorido', label: 'Colorido', color: 'oklch(0.65 0.22 320)' },
+   109→   109→] as const;
+   110→   110→
+   111→   111→export const hairLengths = [
+   112→   112→  { id: 'buzz', label: 'Buzz cut' },
+   113→   113→  { id: 'curto', label: 'Curto' },
+   114→   114→  { id: 'medio', label: 'Médio' },
+   115→   115→  { id: 'longo', label: 'Longo' },
+   116→   116→] as const;
+   117→   117→
+   118→   118→export const hairThickness = [
+   119→   119→  { id: 'fino', label: 'Fino' },
+   120→   120→  { id: 'medio', label: 'Médio' },
+   121→   121→  { id: 'grosso', label: 'Grosso' },
+   122→   122→] as const;
+   123→   123→
+   124→   124→export const hairIssues = [
+   125→   125→  'Queda',
+   126→   126→  'Caspa',
+   127→   127→  'Ressecamento',
+   128→   128→  'Frizz',
+   129→   129→  'Quebra',
+   130→   130→  'Oleosidade',
+   131→   131→];
+   132→   132→
+   133→   133→export const bodyTypes = [
+   134→   134→  { id: 'triangulo', label: 'Triângulo', desc: 'Quadris mais largos que os ombros' },
+   135→   135→  { id: 'invertido', label: 'Triângulo invertido', desc: 'Ombros mais largos que os quadris' },
+   136→   136→  { id: 'retangular', label: 'Retangular', desc: 'Ombros, cintura e quadris alinhados' },
+   137→   137→  { id: 'oval', label: 'Oval', desc: 'Volume concentrado no centro' },
+   138→   138→  { id: 'ampulheta', label: 'Ampulheta', desc: 'Cintura marcada, ombros e quadris equilibrados' },
+   139→   139→] as const;
+   140→   140→
+   141→   141→export const styles = [
+   142→   142→  { id: 'casual', label: 'Casual', emoji: '👕' },
+   143→   143→  { id: 'streetwear', label: 'Streetwear', emoji: '🧢' },
+   144→   144→  { id: 'formal', label: 'Formal', emoji: '👔' },
+   145→   145→  { id: 'minimalista', label: 'Minimalista', emoji: '⬜' },
+   146→   146→  { id: 'esportivo', label: 'Esportivo', emoji: '🏃' },
+   147→   147→  { id: 'boho', label: 'Boho', emoji: '🌸' },
+   148→   148→  { id: 'grunge', label: 'Grunge', emoji: '🖣' },
+   149→   149→  { id: 'classico', label: 'Clássico', emoji: '🎩' },
+   150→   150→  { id: 'elegante', label: 'Elegante', emoji: '✨' },
+   151→   151→  { id: 'rocker', label: 'Rocker', emoji: '🎸' },
+   152→   152→] as const;
+   153→   153→
+   154→   154→export const occasions = [
+   155→   155→  'Trabalho',
+   156→   156→  'Festa',
+   157→   157→  'Casual',
+   158→   158→  'Date',
+   159→   159→  'Academia',
+   160→   160→  'Viagem',
+   161→   161→  'Evento social',
+   162→   162→];
+   163→   163→
+   164→   164→export const budgets = [
+   165→   165→  { id: 'economico', label: 'Econômico', hint: '$' },
+   166→   166→  { id: 'moderado', label: 'Moderado', hint: '$$' },
+   167→   167→  { id: 'premium', label: 'Premium', hint: '$$$' },
+   168→   168→  { id: 'luxo', label: 'Luxo', hint: '$$$$' },
+   169→   169→] as const;
+   170→   170→
+   171→   171→export const favoriteColors = [
+   172→   172→  'oklch(0.22 0.02 285)',
+   173→   173→  'oklch(0.97 0.01 285)',
+   174→   174→  'oklch(0.55 0.2 25)',
+   175→   175→  'oklch(0.72 0.16 60)',
+   176→   176→  'oklch(0.82 0.14 85)',
+   177→   177→  'oklch(0.68 0.15 145)',
+   178→   178→  'oklch(0.62 0.14 195)',
+   179→   179→  'oklch(0.6 0.19 255)',
+   180→   180→  'oklch(0.55 0.22 300)',
+   181→   181→  'oklch(0.68 0.18 340)',
+   182→   182→  'oklch(0.5 0.06 60)',
+   183→   183→  'oklch(0.75 0.05 200)',
+   184→   184→];
+   185→   185→
+   186→   186→export const climates = ['tropical', 'temperado', 'frio', 'arido'];
+   187→   187→
+   188→   188→export const professions = [
+   189→   189→  'Design',
+   190→   190→  'Tecnologia',
+   191→   191→  'Saúde',
+   192→   192→  'Educação',
+   193→   193→  'Direito',
+   194→   194→  'Marketing',
+   195→   195→  'Engenharia',
+   196→   196→  'Finanças',
+   197→   197→  'Artes',
+   198→   198→  'Gastronomia',
+   199→   199→  'Estudante',
+   200→   200→  'Empreendedor',
+   201→   201→];
+   202→   202→
+   203→   203→export const closetCategories = [
+   204→   204→  'Camisetas',
+   205→   205→  'Camisas',
+   206→   206→  'Calças',
+   207→   207→  'Vestidos',
+   208→   208→  'Jaquetas',
+   209→   209→  'Sapatos',
+   210→   210→  'Acessórios',
+   211→   211→];
+   212→   212→
+   213→   213→// ============================================================
+   214→   214→// DAILY CHALLENGES POOL
+   215→   215→// ============================================================
+   216→   216→
+   217→   217→export type DailyChallenge = {
+   218→   218→  title: string;
+   219→   219→  description: string;
+   220→   220→  category: 'pele' | 'cabelo' | 'estilo' | 'bem-estar' | 'desafio';
+   221→   221→  xp: number;
+   222→   222→};
+   223→   223→
+   224→   224→export const dailyChallenges: DailyChallenge[] = [
+   225→   225→  // Pele
+   226→   226→  { title: 'Protetor solar diário', description: 'Aplique FPS 30+ no rosto e pescoço. Proteção é o melhor anti-idade.', category: 'pele', xp: 20 },
+   227→   227→  { title: 'Rotina de limpeza dupla', description: 'Faça limpeza com óleo seguida de sabonete. Remove 2x mais impurezas.', category: 'pele', xp: 25 },
+   228→   228→  { title: 'Hidratação noturna', description: 'Aplique sérum + creme hidratante antes de dormir. Pele regenera à noite.', category: 'pele', xp: 20 },
+   229→   229→  { title: 'Máscara facial', description: 'Use uma máscara de argila ou hidratante por 15 minutos. Tratamento intensivo.', category: 'pele', xp: 30 },
+   230→   230→  { title: 'Beba 2L de água', description: 'Hidratação interna reflete na pele. Comece o dia com um copo em jejum.', category: 'pele', xp: 15 },
+   231→   231→  { title: 'Esfoliação suave', description: 'Esfolie o rosto 1x com movimentos circulares. Não exagere para não irritar.', category: 'pele', xp: 25 },
+   232→   232→  { title: 'Água micelar antes de dormir', description: 'Remova maquiagem e poluição do dia com água micelar. Pele limpa respira melhor.', category: 'pele', xp: 15 },
+   233→   233→  { title: 'Contorno de olhos', description: 'Aplique creme específico para a área dos olhos com toques suaves.', category: 'pele', xp: 20 },
+   234→   234→  // Cabelo
+   235→   235→  { title: 'Tratamento capilar profundo', description: 'Aplique máscara de hidratação e deixe agir por 20 min. Cabelo sedoso garantido.', category: 'cabelo', xp: 30 },
+   236→   236→  { title: 'Proteção térmica', description: 'Use protetor térmico antes de qualquer ferramenta quente. Previne quebra.', category: 'cabelo', xp: 20 },
+   237→   237→  { title: 'Massagem no couro cabeludo', description: 'Massagem de 5 min estimula a circulação e promove crescimento saudável.', category: 'cabelo', xp: 15 },
+   238→   238→  { title: 'Finalizou sem enxaguar', description: 'Experimente um leave-in ou óleo capilar para definição e brilho.', category: 'cabelo', xp: 20 },
+   239→   239→  { title: 'Dia sem shampoo', description: 'Deixe o cabelo descansar. Lave só com água ou condicionador. Equilíbrio natural.', category: 'cabelo', xp: 20 },
+   240→   240→  { title: 'Penteie com cuidado', description: 'Comece pelas pontas e suba. Evite puxar cabelo molhado para prevenir quebra.', category: 'cabelo', xp: 10 },
+   241→   241→  { title: 'Tônica capilar', description: 'Aplique tônica no couro cabeludo para estimular folículos e combater queda.', category: 'cabelo', xp: 25 },
+   242→   242→  // Estilo
+   243→   243→  { title: 'Monte um look completo', description: 'Combine 3+ peças do seu armário em um look harmonioso. Fotografe e salve.', category: 'estilo', xp: 35 },
+   244→   244→  { title: 'Experimente uma cor nova', description: 'Use uma peça em cor que normalmente não escolheria. Saia da zona de conforto.', category: 'estilo', xp: 25 },
+   245→   245→  { title: 'Acessorize o look', description: 'Adicione pelo menos 2 acessórios ao look de hoje. Relógio, colar, cinto...', category: 'estilo', xp: 20 },
+   246→   246→  { title: 'Organize seu armário', description: 'Separe 30 min para organizar peças por categoria e cor. Visualize melhor.', category: 'estilo', xp: 30 },
+   247→   247→  { title: 'Pesquise referências', description: 'Busque 3 referências de estilo no Pinterest/Instagram que combinem com seu perfil.', category: 'estilo', xp: 20 },
+   248→   248→  { title: 'Mix de texturas', description: 'Combine peças com texturas diferentes: algodão + couro + tricô, por exemplo.', category: 'estilo', xp: 25 },
+   249→   249→  { title: 'Autoestilo do dia', description: 'Tire uma foto do seu look de hoje e avalie: o que funciona? O que mudaria?', category: 'estilo', xp: 15 },
+   250→   250→  { title: 'Descubra sua paleta', description: 'Identifique 5 cores que mais combinam com seu tom de pele. Crie sua paleta pessoal.', category: 'estilo', xp: 30 },
+   251→   251→  // Bem-estar
+   252→   252→  { title: '10 min de meditação', description: 'Respire fundo e medite. Beleza vem de dentro. Reduza o estresse que reflete na pele.', category: 'bem-estar', xp: 20 },
+   253→   253→  { title: 'Exercício físico', description: '30 min de qualquer atividade física. Circulação melhora a pele e o humor.', category: 'bem-estar', xp: 30 },
+   254→   254→  { title: 'Sono de qualidade', description: 'Durma pelo menos 7h. O corpo regenera pele e cabelo durante o sono profundo.', category: 'bem-estar', xp: 25 },
+   255→   255→  { title: 'Alimentação colorida', description: 'Inclua 5 cores diferentes de alimentos nas refeições de hoje. Antioxidantes naturais.', category: 'bem-estar', xp: 20 },
+   256→   256→  { title: 'Postura corporal', description: 'Preste atenção à sua postura ao caminhar e sentar. Boa postura transforma a presença.', category: 'bem-estar', xp: 15 },
+   257→   257→  { title: 'Digital detox 1h', description: 'Fique 1 hora sem redes sociais. Menos comparação, mais autoestima.', category: 'bem-estar', xp: 25 },
+   258→   258→  // Desafio
+   259→   259→  { title: 'No-makeup day', description: 'Saia de casa sem maquiagem e sinta-se confiante. Sua beleza natural é única.', category: 'desafio', xp: 40 },
+   260→   260→  { title: 'Look monocrômico', description: 'Monte um look todo em uma só cor ou tons similares. Elegância na simplicidade.', category: 'desafio', xp: 35 },
+   261→   261→  { title: 'Recrie um look de referência', description: 'Pegue uma inspiração e recrie com peças que você já tem. Criatividade!', category: 'desafio', xp: 40 },
+   262→   262→  { title: 'Crie um cápsula de 5 peças', description: 'Selecione 5 peças versáteis que criem pelo menos 10 combinações diferentes.', category: 'desafio', xp: 45 },
+   263→   263→  { title: 'Compartilhe seu estilo', description: 'Mande seu look de hoje para um amigo e peça opinião. Feedback é valioso.', category: 'desafio', xp: 30 },
+   264→   264→];
+   265→   265→
+   266→   266→// ============================================================
+   267→   267→// ACHIEVEMENTS
+   268→   268→// ============================================================
+   269→   269→
+   270→   270→export type AchievementDef = {
+   271→   271→  id: string;
+   272→   272→  title: string;
+   273→   273→  description: string;
+   274→   274→  icon: string;
+   275→   275→  xp: number;
+   276→   276→};
+   277→   277→
+   278→   278→export const achievementDefs: AchievementDef[] = [
+   279→   279→  { id: 'primeira-atividade', title: 'Primeiro Passo', description: 'Complete sua primeira atividade diária', icon: '🌟', xp: 50 },
+   280→   280→  { id: 'streak-3', title: 'Dedicação', description: 'Mantenha um streak de 3 dias', icon: '🔥', xp: 100 },
+   281→   281→  { id: 'streak-7', title: 'Semana Perfeita', description: 'Mantenha um streak de 7 dias', icon: '⚡', xp: 200 },
+   282→   282→  { id: 'streak-30', title: 'Mês de Ouro', description: 'Mantenha um streak de 30 dias', icon: '👑', xp: 500 },
+   283→   283→  { id: '10-atividades', title: 'Em Movimento', description: 'Complete 10 atividades no total', icon: '🎯', xp: 75 },
+   284→   284→  { id: '50-atividades', title: 'Estilista em Treino', description: 'Complete 50 atividades no total', icon: '📚', xp: 250 },
+   285→   285→  { id: '100-atividades', title: 'Mestre do Estilo', description: 'Complete 100 atividades no total', icon: '🏆', xp: 500 },
+   286→   286→  { id: 'primeiro-look', title: 'Criador de Looks', description: 'Monte seu primeiro look completo', icon: '🛍️', xp: 50 },
+   287→   287→  { id: 'armario-10', title: 'Guarda-Roupa Ativo', description: 'Cadastre 10 peças no armário', icon: '👕', xp: 100 },
+   288→   288→  { id: 'armario-30', title: 'Fashionista', description: 'Cadastre 30 peças no armário', icon: '📦', xp: 200 },
+   289→   289→  { id: 'todos-dias', title: 'Dia Perfeito', description: 'Complete todas as atividades de um dia', icon: '⭐', xp: 150 },
+   290→   290→  { id: 'explorador', title: 'Explorador', description: 'Visite todas as abas do app em um dia', icon: '🔍', xp: 50 },
+   291→   291→  { id: 'meta-semanal', title: 'Focado', description: 'Complete uma meta semanal', icon: '🎯', xp: 100 },
+   292→   292→  { id: 'todas-metas', title: 'Semana Produtiva', description: 'Complete todas as metas semanais', icon: '🏆', xp: 300 },
+   293→   293→  { id: 'level-5', title: 'Estilista Júnior', description: 'Alcance o nível 5', icon: '🧑‍🥺', xp: 100 },
+   294→   294→  { id: 'level-10', title: 'Estilista Sênior', description: 'Alcance o nível 10', icon: '👨‍🎨', xp: 250 },
+   295→   295→  { id: 'level-25', title: 'Guru da Beleza', description: 'Alcance o nível 25', icon: '🌹', xp: 500 },
+   296→   296→  { id: 'orçamento-sabio', title: 'Orçamento Sábio', description: 'Explore 5 recomendações de produtos', icon: '💰', xp: 75 },
+   297→   297→  { id: 'rotina-completa', title: 'Rotina Impecável', description: 'Complete toda a rotina de cuidados 3 dias seguidos', icon: '✨', xp: 150 },
+   298→   298→  { id: 'share-look', title: 'Influenciador', description: 'Compartilhe um look com amigos', icon: '📢', xp: 100 },
+   299→   299→];
+   300→   300→
+   301→   301→// ============================================================
+   302→   302→// WEEKLY GOALS TEMPLATES
+   303→   303→// ============================================================
+   304→   304→
+   305→   305→export type WeeklyGoalTemplate = {
+   306→   306→  id: string;
+   307→   307→  title: string;
+   308→   308→  target: number;
+   309→   309→  unit: string;
+   310→   310→  xp: number;
+   311→   311→  category: 'pele' | 'cabelo' | 'estilo' | 'bem-estar';
+   312→   312→};
+   313→   313→
+   314→   314→export const weeklyGoalTemplates: WeeklyGoalTemplate[] = [
+   315→   315→  { id: 'wg-rotina', title: 'Completar rotina de cuidados', target: 5, unit: 'dias', xp: 100, category: 'pele' },
+   316→   316→  { id: 'wg-hidratacao', title: 'Bebber 2L de água', target: 5, unit: 'dias', xp: 80, category: 'bem-estar' },
+   317→   317→  { id: 'wg-looks', title: 'Montar looks criativos', target: 3, unit: 'looks', xp: 120, category: 'estilo' },
+   318→   318→  { id: 'wg-tratamento', title: 'Tratamentos capilares', target: 2, unit: 'sessões', xp: 80, category: 'cabelo' },
+   319→   319→  { id: 'wg-exercicio', title: 'Exercício físico', target: 4, unit: 'dias', xp: 100, category: 'bem-estar' },
+   320→   320→  { id: 'wg-armario', title: 'Adicionar peças ao armário', target: 5, unit: 'peças', xp: 80, category: 'estilo' },
+   321→   321→  { id: 'wg-protetor', title: 'Usar protetor solar', target: 7, unit: 'dias', xp: 120, category: 'pele' },
+   322→   322→  { id: 'wg-sono', title: 'Dormir 7h+ por noite', target: 5, unit: 'noites', xp: 100, category: 'bem-estar' },
+   323→   323→];
+   324→   324→
+   325→   325→// ============================================================
+   326→   326→// REGIONAL PRODUCT RECOMMENDATIONS
+   327→   327→// ============================================================
+   328→   328→
+   329→   329→export type RegionalProduct = {
+   330→   330→  id: string;
+   331→   331→  name: string;
+   332→   332→  brand: string;
+   333→   333→  category: 'pele' | 'cabelo' | 'maquiagem' | 'fragrância' | 'acessório';
+   334→   334→  price: number;
+   335→   335→  currency: string;
+   336→   336→  region: string;
+   337→   337→  store: string;
+   338→   338→  rating: number;
+   339→   339→  description: string;
+   340→   340→  skinType?: string[];
+   341→   341→  hairType?: string[];
+   342→   342→  budgetLevel: 'economico' | 'moderado' | 'premium' | 'luxo';
+   343→   343→};
+   344→   344→
+   345→   345→export const regionalProducts: RegionalProduct[] = [
+   346→   346→  // São Paulo
+   347→   347→  { id: 'sp-1', name: 'FPS Solar Fluid 50', brand: 'La Roche-Posay', category: 'pele', price: 89.90, currency: 'R$', region: 'São Paulo, BR', store: 'Drogasil', rating: 4.8, description: 'Protetor solar fluido toque seco, ideal para pele oleosa e mista. Proteção UVA/UVB alta com cor vitamina E.', skinType: ['oleosa', 'mista'], budgetLevel: 'moderado' },
+   348→   348→  { id: 'sp-2', name: 'Shampoo Hidratação Profunda', brand: 'Seda', category: 'cabelo', price: 24.90, currency: 'R$', region: 'São Paulo, BR', store: 'Mercado Livre', rating: 4.5, description: 'Fórmula com óleo de argan para cabelos cacheados e crespos. Hidratação intensa.', hairType: ['cacheado', 'crespo', 'afro'], budgetLevel: 'economico' },
+   349→   349→  { id: 'sp-3', name: 'Sérum Vitamina C 15%', brand: 'Skinceuticals', category: 'pele', price: 389.00, currency: 'R$', region: 'São Paulo, BR', store: 'Farmácia Raia', rating: 4.9, description: 'Sérum antioxidante com 15% de ácido L-ascórbico puro. Ilumina e uniformiza o tom.', budgetLevel: 'luxo' },
+   350→   350→  { id: 'sp-4', name: 'Batom Líquido Matte', brand: 'MAC', category: 'maquiagem', price: 129.00, currency: 'R$', region: 'São Paulo, BR', store: 'Sephora', rating: 4.7, description: 'Acabamento matte longa duração. Fórmula confortável com pigmentação intensa.', budgetLevel: 'premium' },
+   351→   351→  { id: 'sp-5', name: 'Óleo Capilar Marroquino', brand: 'Moroccanoil', category: 'cabelo', price: 219.00, currency: 'R$', region: 'São Paulo, BR', store: 'Bottega Verde', rating: 4.8, description: 'Tratamento com óleo de argan e vitaminas. Brilho instantâneo sem pesar.', hairType: ['liso', 'ondulado', 'cacheado'], budgetLevel: 'premium' },
+   352→   352→
+   353→   353→  // Rio de Janeiro
+   354→   354→  { id: 'rj-1', name: 'Protetor Solar Toque Seco', brand: 'Neutrogena', category: 'pele', price: 59.90, currency: 'R$', region: 'Rio de Janeiro, BR', store: 'Pague Menos', rating: 4.6, description: 'FPS 70 toque seco, perfeito para clima tropical e praia. Não deixa a pele oleosa.', skinType: ['oleosa', 'mista', 'normal'], budgetLevel: 'economico' },
+   355→   355→  { id: 'rj-2', name: 'Máscara Capilar Tropical', brand: 'O Boticário', category: 'cabelo', price: 49.90, currency: 'R$', region: 'Rio de Janeiro, BR', store: 'O Boticário', rating: 4.5, description: 'Máscara com óleo de coco e manteiga de karitê. Recupera cabelos danificados pelo sol.', hairType: ['cacheado', 'crespo', 'afro', 'ondulado'], budgetLevel: 'moderado' },
+   356→   356→  { id: 'rj-3', name: 'Água Micelar Bio', brand: 'Bioderma', category: 'pele', price: 79.90, currency: 'R$', region: 'Rio de Janeiro, BR', store: 'Drogaria São Paulo', rating: 4.7, description: 'Remove impurezas e maquiagem sem enxágue. Respeita o equilíbrio da pele.', budgetLevel: 'moderado' },
+   357→   357→
+   358→   358→  // Brasília
+   359→   359→  { id: 'bsb-1', name: 'Hidratante Facial com FPS', brand: 'Eucerin', category: 'pele', price: 119.00, currency: 'R$', region: 'Brasília, BR', store: 'Farmácia Popular', rating: 4.6, description: 'Hidratante com proteção solar FPS 30 e ácido hialurônico. Clima seco de Brasília pede hidratação extra.', skinType: ['seca', 'sensivel', 'normal'], budgetLevel: 'moderado' },
+   360→   360→  { id: 'bsb-2', name: 'Creme de Mãos Premium', brand: 'L’Occitane', category: 'pele', price: 89.00, currency: 'R$', region: 'Brasília, BR', store: 'L’Occitane', rating: 4.8, description: 'Manteiga de karité 20%. Para mãos ressecadas pelo clima seco. Absorção rápida.', budgetLevel: 'premium' },
+   361→   361→
+   362→   362→  // Salvador
+   363→   363→  { id: 'ss-1', name: 'Bloqueador Solar Coral', brand: 'Coral', category: 'pele', price: 34.90, currency: 'R$', region: 'Salvador, BR', store: 'Bahia Farmácia', rating: 4.4, description: 'FPS 50 resistente à água e suor. Essencial para clima tropical e praia.', skinType: ['oleosa', 'mista', 'normal'], budgetLevel: 'economico' },
+   364→   364→  { id: 'ss-2', name: 'Óleo para Cabelos Étnicos', brand: 'Akata', category: 'cabelo', price: 54.90, currency: 'R$', region: 'Salvador, BR', store: 'Akata', rating: 4.9, description: 'Blend de óleos naturais para cabelos crespos e afros. Definição e brilho.', hairType: ['crespo', 'afro', 'locks'], budgetLevel: 'moderado' },
+   365→   365→  { id: 'ss-3', name: 'Base Fluida Matte', brand: 'NARS', category: 'maquiagem', price: 299.00, currency: 'R$', region: 'Salvador, BR', store: 'Sephora', rating: 4.8, description: 'Cobertura média com acabamento matte natural. 30 tons para todos os tons de pele.', budgetLevel: 'luxo' },
+   366→   366→
+   367→   367→  // Lisboa
+   368→   368→  { id: 'lx-1', name: 'Creme Hidratante Universal', brand: 'Caudalie', category: 'pele', price: 39.90, currency: '€', region: 'Lisboa, PT', store: 'El Corte Inglés', rating: 4.7, description: 'Hidratante com uva vinífera e ácido hialurônico. Textura leve para clima temperado.', budgetLevel: 'moderado' },
+   369→   369→  { id: 'lx-2', name: 'Perfume Essence Pure', brand: 'Zara', category: 'fragrância', price: 19.99, currency: '€', region: 'Lisboa, PT', store: 'Zara', rating: 4.3, description: 'Fragrância fresca e floral, perfeita para o dia-a-dia europeu. Notas de jasmim e almíscar.', budgetLevel: 'economico' },
+   370→   370→  { id: 'lx-3', name: 'Sérum Retinol 0.3%', brand: 'The Ordinary', category: 'pele', price: 12.90, currency: '€', region: 'Lisboa, PT', store: 'Lookfantastic', rating: 4.6, description: 'Retinol puro em base de squalane. Anti-idade acessível e eficaz. Comece 2x por semana.', budgetLevel: 'economico' },
+   371→   371→  { id: 'lx-4', name: 'Máscara Capilar Reparadora', brand: 'Kérastase', category: 'cabelo', price: 42.00, currency: '€', region: 'Lisboa, PT', store: 'Sephora', rating: 4.9, description: 'Tratamento profissional para cabelos danificados. Reconstrói a fibra capilar.', budgetLevel: 'luxo' },
+   372→   372→
+   373→   373→  // Porto
+   374→   374→  { id: 'por-1', name: 'Protetor Solar Invisible', brand: 'ISDIN', category: 'pele', price: 29.90, currency: '€', region: 'Porto, PT', store: 'Farmácia Portuguesa', rating: 4.8, description: 'Ecran solar facial transparente FPS 50+. Toque seco, sem resíduos brancos.', budgetLevel: 'moderado' },
+   375→   375→  { id: 'por-2', name: 'Chapéu Fedora Clássico', brand: 'Lock & Co.', category: 'acessório', price: 65.00, currency: '€', region: 'Porto, PT', store: 'Lock & Co.', rating: 4.5, description: 'Chapéu em feltro de lã. Protege do sol e eleva qualquer look casual com elegância europeia.', budgetLevel: 'premium' },
+   376→   376→
+   377→   377→  // Luanda
+   378→   378→  { id: 'lad-1', name: 'Óleo de Palma Capilar', brand: 'Djigui', category: 'cabelo', price: 3500, currency: 'Kz', region: 'Luanda, AO', store: 'Supermercado Kero', rating: 4.3, description: 'Óleo natural para cabelos afros e crespos. Hidratação profunda e brilho.', hairType: ['crespo', 'afro', 'locks'], budgetLevel: 'economico' },
+   379→   379→  { id: 'lad-2', name: 'Creme Hidratante Clarins', brand: 'Clarins', category: 'pele', price: 18500, currency: 'Kz', region: 'Luanda, AO', store: 'Shopalma', rating: 4.7, description: 'Hidratante facial para clima tropical. Proteção e luminosidade para todos os tons de pele.', budgetLevel: 'luxo' },
+   380→   380→
+   381→   381→  // Maputo
+   382→   382→  { id: 'mpz-1', name: 'Manteiga de Karité Pura', brand: 'SheaMoisture', category: 'pele', price: 450, currency: 'MZN', region: 'Maputo, MZ', store: 'Shoprite', rating: 4.6, description: 'Manteiga de karité 100% natural. Hidratação intensa para pele e cabelo.', budgetLevel: 'economico' },
+   383→   383→  { id: 'mpz-2', name: 'Perfume CLASSIC', brand: 'Club de Nuit', category: 'fragrância', price: 1200, currency: 'MZN', region: 'Maputo, MZ', store: 'Perfumaria Maputo', rating: 4.4, description: 'Fragrância sofisticada com notas amadeiradas e cítricas. Presença marcante.', budgetLevel: 'moderado' },
+   384→   384→
+   385→   385→  // Belo Horizonte
+   386→   386→  { id: 'bh-1', name: 'Sabonete Esfoliante', brand: 'Aesop', category: 'pele', price: 159.00, currency: 'R$', region: 'Belo Horizonte, BR', store: 'Aesop', rating: 4.8, description: 'Esfoliante com sementes de apricot e lavanda. Limpa e renova a pele suavemente.', budgetLevel: 'premium' },
+   387→   387→
+   388→   388→  // Curitiba
+   389→   389→  { id: 'cw-1', name: 'Hidratante Labial FPS', brand: 'Nivea', category: 'pele', price: 19.90, currency: 'R$', region: 'Curitiba, BR', store: 'Farmácia Araújo', rating: 4.5, description: 'Bálsamo labial com FPS 15 e manteiga de karité. Essencial para frio.', budgetLevel: 'economico' },
+   390→   390→  { id: 'cw-2', name: 'Cachecol de Cashmere', brand: 'Farm Rio', category: 'acessório', price: 189.00, currency: 'R$', region: 'Curitiba, BR', store: 'Farm Rio', rating: 4.6, description: 'Cachecol em cashmere com estampa exclusiva. Aquece com estilo no frio.', budgetLevel: 'premium' },
+   391→   391→
+   392→   392→  // Porto Alegre
+   393→   393→  { id: 'poa-1', name: 'Creme de Mãos com FPS', brand: 'Garnier', category: 'pele', price: 29.90, currency: 'R$', region: 'Porto Alegre, BR', store: 'Drogaria Farma', rating: 4.4, description: 'Creme para mãos ressecadas com proteção solar. Clima frio resseca as mãos.', budgetLevel: 'economico' },
+   394→   394→
+   395→   395→  // Recife
+   396→   396→  { id: 'rec-1', name: 'Spray Fixador de Maquiagem', brand: 'Urban Decay', category: 'maquiagem', price: 169.00, currency: 'R$', region: 'Recife, BR', store: 'Sephora', rating: 4.7, description: 'Fixador all-nighter. Mantém a maquiagem intacta mesmo no calor tropical.', budgetLevel: 'premium' },
+   397→   397→  { id: 'rec-2', name: 'Tônico Adstringente', brand: 'Vichy', category: 'pele', price: 89.90, currency: 'R$', region: 'Recife, BR', store: 'Drogasil', rating: 4.6, description: 'Tônico para pele oleosa no calor. Controla brilho e minimiza poros.', skinType: ['oleosa', 'mista'], budgetLevel: 'moderado' },
+   398→   398→
+   399→   399→  // Fortaleza
+   400→   400→  { id: 'for-1', name: 'Óleo Solar Corporal', brand: 'Hawaiian Tropic', category: 'pele', price: 44.90, currency: 'R$', region: 'Fortaleza, BR', store: 'Pague Menos', rating: 4.5, description: 'Bronzeador com FPS 15 e óleo de tamanu. Protege enquanto bronzeia.', budgetLevel: 'economico' },
+   401→   401→
+   402→   402→  // Manaus
+   403→   403→  { id: 'mn-1', name: 'Pó Compacto Translúcido', brand: 'Dior', category: 'maquiagem', price: 399.00, currency: 'R$', region: 'Manaus, BR', store: 'Dior', rating: 4.9, description: 'Pó translúcido que controla oleosidade no calor. Acabamento matte natural.', budgetLevel: 'luxo' },
+   404→   404→];
+   405→   405→
+   406→   406→// ============================================================
+   407→   407→// HELPER: Get products for a region
+   408→   408→// ============================================================
+   409→   409→
+   410→   410→export function getProductsForRegion(region: string, budget?: string, skinTypes?: string[], hairType?: string[]): RegionalProduct[] {
+   411→   411→  let products = regionalProducts.filter((p) => p.region === region);
+   412→   412→
+   413→   413→  // If no products for exact region, show all as fallback
+   414→   414→  if (products.length === 0) {
+   415→   415→    products = [...regionalProducts];
+   416→   416→  }
+   417→   417→
+   418→   418→  // Filter by budget
+   419→   419→  if (budget) {
+   420→   420→    const budgetOrder = ['economico', 'moderado', 'premium', 'luxo'];
+   421→   421→    const userBudgetIdx = budgetOrder.indexOf(budget);
+   422→   422→    if (userBudgetIdx >= 0) {
+   423→   423→      products = products.filter((p) => {
+   424→   424→        const pIdx = budgetOrder.indexOf(p.budgetLevel);
+   425→   425→        return pIdx <= userBudgetIdx + 1;
+   426→   426→      });
+   427→   427→    }
+   428→   428→  }
+   429→   429→
+   430→   430→  // Filter by skin type compatibility
+   431→   431→  if (skinTypes && skinTypes.length > 0) {
+   432→   432→    const skinFiltered = products.filter((p) => {
+   433→   433→      if (!p.skinType || p.skinType.length === 0) return true;
+   434→   434→      return p.skinType.some((st) => skinTypes.includes(st));
+   435→   435→    });
+   436→   436→    if (skinFiltered.length > 0) products = skinFiltered;
+   437→   437→  }
+   438→   438→
+   439→   439→  // Filter by hair type compatibility
+   440→   440→  if (hairType) {
+   441→   441→    const hairFiltered = products.filter((p) => {
+   442→   442→      if (!p.hairType || p.hairType.length === 0) return true;
+   443→   443→      return p.hairType.includes(hairType);
+   444→   444→    });
+   445→   445→    if (hairFiltered.length > 0) products = hairFiltered;
+   446→   446→  }
+   447→   447→
+   448→   448→  return products.sort((a, b) => b.rating - a.rating);
+   449→   449→}
+   450→   450→
+   451→   451→// ============================================================
+   452→   452→// ACTIVITY CATEGORY CONFIG
+   453→   453→// ============================================================
+   454→   454→
+   455→   455→export const activityCategoryConfig: Record<string, { label: string; color: string; emoji: string }> = {
+   456→   456→  'pele': { label: 'Pele', color: 'from-blue-500/20 to-teal-500/20', emoji: '🧴' },
+   457→   457→  'cabelo': { label: 'Cabelo', color: 'from-gold/20 to-orange-500/20', emoji: '💇' },
+   458→   458→  'estilo': { label: 'Estilo', color: 'from-primary/10 to-primary-glow/10', emoji: '👗' },
+   459→   459→  'bem-estar': { label: 'Bem-estar', color: 'from-green-500/20 to-emerald-500/20', emoji: '🧘' },
+   460→   460→  'desafio': { label: 'Desafio', color: 'from-purple-500/20 to-pink-500/20', emoji: '🎯' },
+   461→   461→};
+   462→   462→
+   463→   463→export const productCategoryConfig: Record<string, { label: string; emoji: string }> = {
+   464→   464→  'pele': { label: 'Pele', emoji: '🧴' },
+   465→   465→  'cabelo': { label: 'Cabelo', emoji: '💇' },
+   466→   466→  'maquiagem': { label: 'Maquiagem', emoji: '💄' },
+   467→   467→  'fragrância': { label: 'Fragrância', emoji: '🌸' },
+   468→   468→  'acessório': { label: 'Acessório', emoji: '🕶️' },
+   469→   469→};

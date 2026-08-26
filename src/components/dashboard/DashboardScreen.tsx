@@ -1,17 +1,20 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Sparkles, Scissors, Heart, TrendingUp,
   Droplets, Sun, Moon, Palette, ArrowRight,
+  Flame, Zap, Share2, Star,
 } from 'lucide-react';
-import { useAura } from '@/lib/aura-store';
+import { useAura, getLevelInfo } from '@/lib/aura-store';
 import { AuroraBackground } from '@/components/aura/AuroraBackground';
 import BottomNav from './BottomNav';
+import type { Tab } from './BottomNav';
 import ClosetScreen from './ClosetScreen';
 import ExploreScreen from './ExploreScreen';
-import type { Tab } from './BottomNav';
+import ActivitiesScreen from './ActivitiesScreen';
+import AIChatButton from './AIChatButton';
 
 const dailyRecs = [
   {
@@ -82,6 +85,56 @@ function ProfileSummaryCard() {
         ))}
       </div>
     </div>
+  );
+}
+
+function StreakAndLevelBar() {
+  const { xp, streak, checkAndUpdateStreak } = useAura();
+  const { level, progress } = getLevelInfo(xp);
+
+  useEffect(() => {
+    checkAndUpdateStreak();
+  }, [checkAndUpdateStreak]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="glass rounded-2xl p-3 flex items-center gap-3"
+    >
+      {/* Level badge */}
+      <div className="h-10 w-10 rounded-full bg-aura flex items-center justify-center shrink-0">
+        <span className="text-sm font-bold text-primary-foreground">{level}</span>
+      </div>
+
+      {/* XP bar */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-[10px] text-muted-foreground">Nível {level}</span>
+          <span className="text-[10px] text-gold font-medium">{xp} XP</span>
+        </div>
+        <div className="h-1.5 rounded-full bg-surface-strong overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${Math.min(progress * 100, 100)}%` }}
+            transition={{ type: 'spring', stiffness: 200, damping: 30 }}
+            className="h-full rounded-full bg-aura"
+          />
+        </div>
+      </div>
+
+      {/* Streak */}
+      {streak > 0 && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="flex items-center gap-1 rounded-full bg-orange-500/15 px-2.5 py-1.5 shrink-0"
+        >
+          <Flame className="h-3.5 w-3.5 text-orange-400" />
+          <span className="text-xs font-bold text-orange-400">{streak}</span>
+        </motion.div>
+      )}
+    </motion.div>
   );
 }
 
@@ -201,10 +254,46 @@ function RoutineSection() {
   );
 }
 
+function ShareSection() {
+  const { profile, xp, streak } = useAura();
+  const { level } = getLevelInfo(xp);
+  const firstName = profile.name?.split(' ')[0] || 'Estilista';
 
+  const handleShare = async () => {
+    const shareText = `${firstName} está no nível ${level} no AuraStyle! 🔥 ${streak} dias de streak. Baixe agora e descubra seu estilo!`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'AuraStyle - Seu estilo, reinventado', text: shareText });
+      } catch {
+        // User cancelled share
+      }
+    } else {
+      await navigator.clipboard.writeText(shareText);
+    }
+  };
+
+  return (
+    <motion.button
+      whileTap={{ scale: 0.98 }}
+      onClick={handleShare}
+      className="glass rounded-2xl p-4 flex items-center gap-3 bg-gradient-to-r from-primary/10 to-gold/10 w-full text-left"
+    >
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-aura">
+        <Share2 className="h-5 w-5 text-primary-foreground" />
+      </div>
+      <div className="flex-1">
+        <span className="text-sm font-semibold block">Compartilhe AuraStyle</span>
+        <span className="text-xs text-muted-foreground block mt-0.5">Convide amigos e viralize seu estilo</span>
+      </div>
+      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+    </motion.button>
+  );
+}
 
 function ProfileTab() {
-  const { profile, reset } = useAura();
+  const { profile, xp, streak, totalCompletedActivities, achievements, reset } = useAura();
+  const { level } = getLevelInfo(xp);
+  const unlockedCount = achievements.filter((a) => a.unlockedAt).length;
 
   return (
     <div className="flex flex-col gap-6 py-4">
@@ -214,6 +303,41 @@ function ProfileTab() {
         </div>
         <h2 className="text-xl font-bold">{profile.name || 'Seu Nome'}</h2>
         <p className="text-sm text-muted-foreground mt-1">Perfil Estético</p>
+        <div className="flex items-center justify-center gap-4 mt-3">
+          <div className="text-center">
+            <span className="text-lg font-bold text-primary block">{level}</span>
+            <span className="text-[10px] text-muted-foreground uppercase">Nível</span>
+          </div>
+          <div className="h-8 w-px bg-border" />
+          <div className="text-center">
+            <span className="text-lg font-bold text-orange-400 block">{streak}d</span>
+            <span className="text-[10px] text-muted-foreground uppercase">Streak</span>
+          </div>
+          <div className="h-8 w-px bg-border" />
+          <div className="text-center">
+            <span className="text-lg font-bold text-gold block">{xp}</span>
+            <span className="text-[10px] text-muted-foreground uppercase">XP</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats grid */}
+      <div className="grid grid-cols-3 gap-2.5">
+        <div className="glass rounded-2xl p-3 text-center">
+          <Star className="h-4 w-4 text-gold mx-auto mb-1" />
+          <span className="text-base font-bold block">{unlockedCount}</span>
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Conquistas</span>
+        </div>
+        <div className="glass rounded-2xl p-3 text-center">
+          <Zap className="h-4 w-4 text-primary mx-auto mb-1" />
+          <span className="text-base font-bold block">{totalCompletedActivities}</span>
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Atividades</span>
+        </div>
+        <div className="glass rounded-2xl p-3 text-center">
+          <Flame className="h-4 w-4 text-orange-400 mx-auto mb-1" />
+          <span className="text-base font-bold block">{streak}d</span>
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Melhor streak</span>
+        </div>
       </div>
 
       <div className="glass rounded-2xl p-4">
@@ -251,6 +375,12 @@ function ProfileTab() {
               <span className="capitalize">{profile.budget}</span>
             </div>
           )}
+          {profile.region && (
+            <div className="flex justify-between py-1 border-b border-border">
+              <span className="text-muted-foreground">Região</span>
+              <span>{profile.region}</span>
+            </div>
+          )}
           {profile.styles.length > 0 && (
             <div className="flex justify-between py-1 border-b border-border">
               <span className="text-muted-foreground">Estilos</span>
@@ -280,47 +410,59 @@ export default function DashboardScreen() {
     <div className="relative min-h-screen">
       <AuroraBackground />
 
-      <div className="relative z-10 px-4 pt-6 max-w-lg mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="mb-6"
-        >
-          <h1 className="text-2xl font-bold">
-            Olá, {firstName}! <Sparkles className="inline h-6 w-6 text-gold" />
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Suas recomendações personalizadas estão prontas
-          </p>
-        </motion.div>
+      {activeTab !== 'activities' && activeTab !== 'closet' && activeTab !== 'explore' && (
+        <div className="relative z-10 px-4 pt-6 max-w-lg mx-auto">
+          {/* Header */}
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="mb-4"
+          >
+            <h1 className="text-2xl font-bold">
+              Olá, {firstName}! <Sparkles className="inline h-6 w-6 text-gold" />
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Suas recomendações personalizadas estão prontas
+            </p>
+          </motion.div>
 
-        {/* Tab Content */}
-        {activeTab === 'home' && (
+          {/* Level + Streak bar */}
+          <div className="mb-6">
+            <StreakAndLevelBar />
+          </div>
+        </div>
+      )}
+
+      {/* Tab Content */}
+      {activeTab === 'home' && (
+        <div className="relative z-10 px-4 max-w-lg mx-auto">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex flex-col gap-6"
+            className="flex flex-col gap-6 pb-24"
           >
             <ProfileSummaryCard />
             <DailyRecs />
             <TrendsSection />
             <RoutineSection />
+            <ShareSection />
           </motion.div>
-        )}
+        </div>
+      )}
 
-        {activeTab === 'closet' && <ClosetScreen />}
-
-        {activeTab === 'explore' && <ExploreScreen />}
-
-        {activeTab === 'profile' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      {activeTab === 'activities' && <ActivitiesScreen />}
+      {activeTab === 'closet' && <ClosetScreen />}
+      {activeTab === 'explore' && <ExploreScreen />}
+      {activeTab === 'profile' && (
+        <div className="relative z-10 px-4 max-w-lg mx-auto">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pb-24">
             <ProfileTab />
           </motion.div>
-        )}
-      </div>
+        </div>
+      )}
 
       <BottomNav active={activeTab} onChange={setActiveTab} />
+      <AIChatButton />
     </div>
   );
 }

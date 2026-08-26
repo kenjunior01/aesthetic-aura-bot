@@ -50,14 +50,20 @@ export default function Page() {
   }, []);
 
   const nextStep = useCallback(() => {
-    setStep((s) => s < 5 ? s + 1 : s);
-    if (step >= 5) setView('dashboard');
-  }, [step]);
+    setStep((s) => {
+      const next = s < 5 ? s + 1 : s;
+      if (next >= 5) setView('dashboard');
+      return next;
+    });
+  }, []);
 
   const prevStep = useCallback(() => {
-    setStep((s) => (s > 0 ? s - 1 : 0));
-    if (step <= 0) setView('welcome');
-  }, [step]);
+    setStep((s) => {
+      const prev = s > 0 ? s - 1 : 0;
+      if (prev <= 0) setView('welcome');
+      return prev;
+    });
+  }, []);
 
   if (!mounted) {
     return (

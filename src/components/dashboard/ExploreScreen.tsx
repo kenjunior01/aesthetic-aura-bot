@@ -2,17 +2,24 @@
 
 import { motion } from 'framer-motion';
 import {
-  TrendingUp, Heart, Bookmark, Share2,
-  Flame, Star, Eye, Sparkles,
+  TrendingUp, Heart, Share2,
+  Flame, Star, Sparkles, ShoppingCart,
+  MapPin, ExternalLink,
 } from 'lucide-react';
 import { useAura } from '@/lib/aura-store';
-import { GlowButton } from '@/components/aura/ui';
+import {
+  getProductsForRegion,
+  productCategoryConfig,
+  type RegionalProduct,
+} from '@/lib/aura-data';
+import { cn } from '@/lib/utils';
+import { useState, useMemo } from 'react';
 
 const trendingTopics = [
   {
     id: 't1',
     title: 'Earth Tones Dominam 2025',
-    desc: 'Paletas neutras e terrosas são a tendência absoluta da temporada. Combine tons de caramelo, oliva e areia para um look sofisticado.',
+    desc: 'Paletas neutras e terrosas são a tendência absoluta da temporada. Combine tons de caramelo, oliva e areia para um look sofisticado que funciona em qualquer contexto.',
     tag: 'Tendência',
     tagColor: 'text-primary',
     icon: Flame,
@@ -21,7 +28,7 @@ const trendingTopics = [
   {
     id: 't2',
     title: 'Streetwear vs. Quiet Luxury',
-    desc: 'A fusão entre conforto urbano e elegância discreta continua forte. Aposte em peças de qualidade sem logotipos exagerados.',
+    desc: 'A fusão entre conforto urbano e elegância discreta continua forte. Aposte em peças de qualidade sem logotipos exagerados para um visual sofisticado.',
     tag: 'Estilo',
     tagColor: 'text-gold',
     icon: Star,
@@ -30,7 +37,7 @@ const trendingTopics = [
   {
     id: 't3',
     title: 'Cuidado Capilar Personalizado',
-    desc: 'Rotinas específicas para cada tipo de cabelo ganham força. Conheça seu tipo e crie um protocolo exclusivo.',
+    desc: 'Rotinas específicas para cada tipo de cabelo ganham força. Conheça seu tipo e crie um protocolo exclusivo que funcione para suas necessidades reais.',
     tag: 'Cuidados',
     tagColor: 'text-blue-400',
     icon: Sparkles,
@@ -39,7 +46,7 @@ const trendingTopics = [
   {
     id: 't4',
     title: 'Moda Sustentável',
-    desc: 'Marcas conscientes e peças atemporais estão redefinindo o consumo. Qualidade sobre quantidade.',
+    desc: 'Marcas conscientes e peças atemporais estão redefinindo o consumo. Qualidade sobre quantidade é o novo lema da moda inteligente.',
     tag: 'Sustentabilidade',
     tagColor: 'text-green-400',
     icon: Heart,
@@ -49,7 +56,7 @@ const trendingTopics = [
 
 const styleTips = [
   { id: 'tip1', title: 'Regra do 3', desc: 'Combine no máximo 3 cores por look para harmonia visual', icon: '🎯' },
-  { id: 'tip2', title: 'Camadas com propósito', desc: 'Use sobreposições que adicionem textura e profundidade', icon: '🧅' },
+  { id: 'tip2', title: 'Camadas com propósito', desc: 'Use sobreposições que adicionem textura e profundidade ao visual', icon: '🧅' },
   { id: 'tip3', title: 'Acessórios transformam', desc: 'Um bom relógio, cinto ou colar eleva qualquer look básico', icon: '💎' },
   { id: 'tip4', title: 'Sapatos são protagonistas', desc: 'Invista em calçados versáteis: branco, preto e marrom', icon: '👟' },
   { id: 'tip5', title: 'Fit é tudo', desc: 'Roupas no tamanho certo fazem mais diferença que a marca', icon: '📏' },
@@ -121,8 +128,179 @@ function SeasonalCard({ item }: { item: typeof seasonalPicks[0] }) {
   );
 }
 
+// ============================================================
+// REGIONAL PRODUCT CARD
+// ============================================================
+
+function ProductCard({ product }: { product: RegionalProduct }) {
+  const catConfig = productCategoryConfig[product.category] || { label: product.category, emoji: '📦' };
+  const stars = Math.floor(product.rating);
+  const hasHalf = product.rating - stars >= 0.3;
+
+  return (
+    <motion.div
+      whileTap={{ scale: 0.98 }}
+      className="glass rounded-2xl p-4 flex gap-3 items-start cursor-pointer hover:border-primary/30 transition-colors"
+    >
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-surface-strong text-2xl">
+        {catConfig.emoji}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <span className="text-sm font-semibold block leading-tight">{product.name}</span>
+            <span className="text-[10px] text-muted-foreground block mt-0.5">{product.brand}</span>
+          </div>
+          <div className="text-right shrink-0">
+            <span className="text-sm font-bold text-primary block">
+              {product.currency} {product.price.toLocaleString('pt-BR', { minimumFractionDigits: product.price < 100 ? 2 : 0 })}
+            </span>
+            <div className="flex items-center gap-0.5 justify-end mt-0.5">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star
+                  key={i}
+                  className={cn(
+                    'h-2.5 w-2.5',
+                    i < stars ? 'text-gold fill-gold' : i === stars && hasHalf ? 'text-gold' : 'text-muted-foreground/30',
+                  )}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground leading-relaxed mt-1.5 line-clamp-2">{product.description}</p>
+        <div className="flex items-center justify-between mt-3 pt-2 border-t border-border">
+          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            <MapPin className="h-3 w-3" /> {product.store}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-surface-strong text-muted-foreground capitalize">
+              {catConfig.label}
+            </span>
+            <button className="flex items-center gap-1 text-[10px] text-primary font-medium">
+              Ver <ExternalLink className="h-2.5 w-2.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ============================================================
+// PRODUCT RECOMMENDATIONS SECTION
+// ============================================================
+
+function ProductRecommendations() {
+  const { profile } = useAura();
+  const [filterCategory, setFilterCategory] = useState<string | null>(null);
+
+  const products = useMemo(() => {
+    let filtered = getProductsForRegion(
+      profile.region,
+      profile.budget,
+      profile.skinTypes,
+      profile.hairType,
+    );
+    if (filterCategory) {
+      filtered = filtered.filter((p) => p.category === filterCategory);
+    }
+    return filtered;
+  }, [profile.region, profile.budget, profile.skinTypes, profile.hairType, filterCategory]);
+
+  const categories = useMemo(() => {
+    const cats = new Set(products.map((p) => p.category));
+    return [...cats];
+  }, [products]);
+
+  if (products.length === 0) {
+    return (
+      <section className="mb-8">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+          Produtos para Você
+        </h2>
+        <div className="glass rounded-2xl p-6 text-center">
+          <ShoppingCart className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">
+            Selecione sua região no perfil para ver recomendações com preços locais.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="mb-8">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+            Produtos na sua Região
+          </h2>
+          {profile.region && (
+            <span className="text-xs text-muted-foreground/70 mt-0.5 flex items-center gap-1">
+              <MapPin className="h-3 w-3" /> {profile.region}
+            </span>
+          )}
+        </div>
+        <ShoppingCart className="h-4 w-4 text-primary" />
+      </div>
+
+      {/* Category filters */}
+      {categories.length > 1 && (
+        <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar -mx-1 px-1">
+          <button
+            onClick={() => setFilterCategory(null)}
+            className={cn(
+              'shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-all',
+              !filterCategory
+                ? 'border-transparent bg-aura text-primary-foreground'
+                : 'border-border bg-surface text-muted-foreground',
+            )}
+          >
+            Todos
+          </button>
+          {categories.map((cat) => {
+            const config = productCategoryConfig[cat];
+            return (
+              <button
+                key={cat}
+                onClick={() => setFilterCategory(filterCategory === cat ? null : cat)}
+                className={cn(
+                  'shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-all',
+                  filterCategory === cat
+                    ? 'border-transparent bg-aura text-primary-foreground'
+                    : 'border-border bg-surface text-muted-foreground',
+                )}
+              >
+                {config?.emoji} {config?.label || cat}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="flex flex-col gap-3">
+        {products.map((product, i) => (
+          <motion.div
+            key={product.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05, type: 'spring', stiffness: 300, damping: 30 }}
+          >
+            <ProductCard product={product} />
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ============================================================
+// MAIN SCREEN
+// ============================================================
+
 export default function ExploreScreen() {
-  const { profile, toggleFavorite, favorites } = useAura();
+  const { profile } = useAura();
 
   return (
     <div className="relative z-10 px-4 pt-6 pb-24 max-w-lg mx-auto">
@@ -130,7 +308,7 @@ export default function ExploreScreen() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold">Explorar</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">Tendências e dicas para você</p>
+            <p className="text-sm text-muted-foreground mt-0.5">Tendências, produtos e dicas</p>
           </div>
           <div className="flex h-10 w-10 items-center justify-center rounded-xl glass">
             <TrendingUp className="h-5 w-5 text-primary" />
@@ -147,10 +325,13 @@ export default function ExploreScreen() {
               </span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Conteúdo selecionado com base no seu perfil {profile.styles.map(s => s).join(', ')}
+              Conteúdo selecionado com base no seu perfil {profile.styles.join(', ')}
             </p>
           </div>
         )}
+
+        {/* Product Recommendations - NEW */}
+        <ProductRecommendations />
 
         {/* Trending */}
         <section className="mb-8">

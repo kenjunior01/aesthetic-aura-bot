@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useCallback, useSyncExternalStore } from 'react';
+import { useState, useCallback, useEffect, useSyncExternalStore } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAura } from '@/lib/aura-store';
 import { AuroraBackground } from '@/components/aura/AuroraBackground';
 import WelcomeScreen from '@/components/onboarding/WelcomeScreen';
+import AuthScreen from '@/components/auth/AuthScreen';
 import ProgressBar from '@/components/onboarding/ProgressBar';
 import Step1Basic from '@/components/onboarding/Step1Basic';
 import Step2Face from '@/components/onboarding/Step2Face';
@@ -13,8 +14,7 @@ import Step4Body from '@/components/onboarding/Step4Body';
 import Step5Style from '@/components/onboarding/Step5Style';
 import Step6Lifestyle from '@/components/onboarding/Step6Lifestyle';
 import DashboardScreen from '@/components/dashboard/DashboardScreen';
-
-type AppView = 'welcome' | 'onboarding' | 'dashboard';
+import { getReferrerFromURL, logEvent } from '@/lib/services';
 
 const stepComponents = [
   Step1Basic,
@@ -24,6 +24,8 @@ const stepComponents = [
   Step5Style,
   Step6Lifestyle,
 ];
+
+type AppView = 'welcome' | 'auth' | 'onboarding' | 'dashboard';
 
 const emptySubscribe = () => () => {};
 
@@ -36,15 +38,29 @@ function useMounted() {
 }
 
 export default function Page() {
-  const { onboarded } = useAura();
+  const { onboarded, setReferredBy, referralCode, incrementReferralCount } = useAura();
   const mounted = useMounted();
   const [view, setView] = useState<AppView>('welcome');
   const [step, setStep] = useState(0);
+
+  // Check for referral code in URL on mount
+  useEffect(() => {
+    const ref = getReferrerFromURL();
+    if (ref) {
+      setReferredBy(ref);
+      logEvent('referred_visit', { referralCode: ref });
+    }
+  }, [setReferredBy]);
 
   const initialView: AppView = onboarded ? 'dashboard' : 'welcome';
   const currentView = mounted ? (view === 'welcome' && onboarded ? 'dashboard' : view) : 'welcome';
 
   const startOnboarding = useCallback(() => {
+    setView('auth');
+  }, []);
+
+  const onAuthComplete = useCallback(() => {
+    logEvent('auth_complete');
     setStep(0);
     setView('onboarding');
   }, []);
@@ -60,7 +76,7 @@ export default function Page() {
   const prevStep = useCallback(() => {
     setStep((s) => {
       const prev = s > 0 ? s - 1 : 0;
-      if (prev <= 0) setView('welcome');
+      if (prev <= 0) setView('auth');
       return prev;
     });
   }, []);
@@ -85,6 +101,23 @@ export default function Page() {
             <WelcomeScreen
               onStart={startOnboarding}
               onSkip={() => setView('dashboard')}
+            />
+          </motion.div>
+        )}
+
+        {currentView === 'auth' && (
+          <motion.div
+            key="auth"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="min-h-screen"
+          >
+            <AuroraBackground />
+            <AuthScreen
+              onAuthComplete={onAuthComplete}
+              onBack={() => setView('welcome')}
             />
           </motion.div>
         )}

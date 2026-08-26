@@ -1,8 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { syncProfileToCloud } from './services';
+import { FEATURES } from './firebase-config';
 
 export type Profile = {
   name: string;
+  email: string;
+  phone: string;
   gender: string;
   age: number;
   region: string;
@@ -72,6 +76,8 @@ export type Achievement = {
 
 export const emptyProfile: Profile = {
   name: '',
+  email: '',
+  phone: '',
   gender: '',
   age: 27,
   region: '',
@@ -139,6 +145,18 @@ type AuraState = {
   achievements: Achievement[];
   totalCompletedActivities: number;
 
+  // Auth & Referral
+  authUid: string | null;
+  authEmail: string | null;
+  referralCode: string | null;
+  referralCount: number;
+  referredBy: string | null;
+  lastSyncAt: string | null;
+
+  // Notifications
+  notificationsEnabled: boolean;
+  routineReminders: { id: string; time: string; label: string; enabled: boolean }[];
+
   // Actions
   update: (patch: Partial<Profile>) => void;
   toggleIn: (key: 'skinTypes' | 'hairIssues' | 'styles' | 'occasions' | 'colors', value: string, max?: number) => void;
@@ -157,7 +175,23 @@ type AuraState = {
   initAchievements: (achievements: Achievement[]) => void;
   unlockAchievement: (id: string) => void;
   checkAndUpdateStreak: () => void;
+
+  // Auth & Cloud actions
+  setAuth: (uid: string, email: string) => void;
+  clearAuth: () => void;
+  setReferralCode: (code: string) => void;
+  incrementReferralCount: () => void;
+  setReferredBy: (code: string) => void;
+  syncToCloud: () => Promise<void>;
+
+  // Notification actions
+  setNotificationsEnabled: (enabled: boolean) => void;
+  addRoutineReminder: (reminder: { id: string; time: string; label: string; enabled: boolean }) => void;
+  removeRoutineReminder: (id: string) => void;
+  toggleRoutineReminder: (id: string) => void;
 };
+
+let syncTimeout: ReturnType<typeof setTimeout> | null = null;
 
 export const useAura = create<AuraState>()(
   persist(
@@ -177,6 +211,18 @@ export const useAura = create<AuraState>()(
       achievements: [],
       totalCompletedActivities: 0,
 
+      // Auth & Referral defaults
+      authUid: null,
+      authEmail: null,
+      referralCode: null,
+      referralCount: 0,
+      referredBy: null,
+      lastSyncAt: null,
+
+      // Notifications defaults
+      notificationsEnabled: false,
+      routineReminders: [],
+
       update: (patch) => set((s) => ({ profile: { ...s.profile, ...patch } })),
       toggleIn: (key, value, max) =>
         set((s) => {
@@ -188,7 +234,7 @@ export const useAura = create<AuraState>()(
         }),
       complete: () => set((s) => ({
         onboarded: true,
-        xp: s.xp + 100, // Onboarding completion reward
+        xp: s.xp + 100,
       })),
       reset: () => set({
         profile: emptyProfile,
@@ -203,6 +249,14 @@ export const useAura = create<AuraState>()(
         weeklyGoals: [],
         achievements: [],
         totalCompletedActivities: 0,
+        authUid: null,
+        authEmail: null,
+        referralCode: null,
+        referralCount: 0,
+        referredBy: null,
+        lastSyncAt: null,
+        notificationsEnabled: false,
+        routineReminders: [],
       }),
       addClosetItem: (item) => set((s) => ({ closet: [item, ...s.closet] })),
       removeClosetItem: (id) => set((s) => ({ closet: s.closet.filter((i) => i.id !== id) })),
@@ -258,7 +312,6 @@ export const useAura = create<AuraState>()(
         }),
 
       initAchievements: (achievements) => set((s) => {
-        // Merge: keep existing unlocked state, add new ones
         const existingMap = new Map(s.achievements.map((a) => [a.id, a]));
         const merged = achievements.map((a) => {
           const existing = existingMap.get(a.id);
@@ -284,9 +337,7 @@ export const useAura = create<AuraState>()(
         const todayStr = new Date().toISOString().split('T')[0];
         if (state.lastActiveDate === todayStr) return;
 
-        // Award daily login XP (first login of the day)
         const dailyLoginXp = 5;
-
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         const yesterdayStr = yesterday.toISOString().split('T')[0];
@@ -301,7 +352,80 @@ export const useAura = create<AuraState>()(
           lastActiveDate: todayStr,
         });
       },
+
+      // Auth & Cloud actions
+      setAuth: (uid, email) => set({ authUid: uid, authEmail: email }),
+      clearAuth: () => set({ authUid: null, authEmail: null }),
+      setReferralCode: (code) => set({ referralCode: code }),
+      incrementReferralCount: () => set((s) => ({ referralCount: s.referralCount + 1 })),
+      setReferredBy: (code) => set({ referredBy: code }),
+
+      syncToCloud: async () => {
+        const state = get();
+        if (!state.authUid) return;
+
+        try {
+          const dataToSync = {
+            profile: state.profile,
+            xp: state.xp,
+            streak: state.streak,
+            totalCompletedActivities: state.totalCompletedActivities,
+            achievements: state.achievements,
+            referralCode: state.referralCode,
+            referralCount: state.referralCount,
+            closetCount: state.closet.length,
+          };
+
+          await syncProfileToCloud(state.authUid, dataToSync);
+          set({ lastSyncAt: new Date().toISOString() });
+        } catch (err) {
+          console.error('Cloud sync failed:', err);
+        }
+      },
+
+      // Notification actions
+      setNotificationsEnabled: (enabled) => set({ notificationsEnabled: enabled }),
+      addRoutineReminder: (reminder) => set((s) => ({
+        routineReminders: [...s.routineReminders, reminder],
+      })),
+      removeRoutineReminder: (id) => set((s) => ({
+        routineReminders: s.routineReminders.filter((r) => r.id !== id),
+      })),
+      toggleRoutineReminder: (id) => set((s) => ({
+        routineReminders: s.routineReminders.map((r) =>
+          r.id === id ? { ...r, enabled: !r.enabled } : r
+        ),
+      })),
     }),
-    { name: 'aurastyle-profile' },
+    {
+      name: 'aurastyle-profile',
+      // Auto-sync to cloud on state changes (debounced)
+      partialize: (state) => state,
+      // After rehydration, trigger cloud sync
+      onRehydrateStorage: () => (state) => {
+        if (state && FEATURES.firestoreSync && state.authUid) {
+          // Trigger sync after 2 seconds to avoid blocking UI
+          setTimeout(() => {
+            state.syncToCloud();
+          }, 2000);
+        }
+      },
+    },
   ),
 );
+
+// Debounced auto-sync hook
+export function useAutoSync() {
+  const { syncToCloud, authUid } = useAura();
+
+  // This is called by components on important state changes
+  const triggerSync = () => {
+    if (!authUid) return;
+    if (syncTimeout) clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(() => {
+      syncToCloud();
+    }, 5000);
+  };
+
+  return { triggerSync };
+}

@@ -11,6 +11,9 @@ export type Profile = {
   age: number;
   region: string;
   country: string;
+  city: string;
+  geoLat: number | null;
+  geoLon: number | null;
   priorities: string[];
   selfie: string | null;
   faceShape: string;
@@ -84,6 +87,9 @@ export const emptyProfile: Profile = {
   age: 27,
   region: '',
   country: '',
+  city: '',
+  geoLat: null,
+  geoLon: null,
   priorities: [],
   selfie: null,
   faceShape: '',

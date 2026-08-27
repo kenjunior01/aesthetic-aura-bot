@@ -1,17 +1,21 @@
 'use client';
 
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingBag, Wallet, Tag, Camera, Plus, Trash2, Sparkles, Loader2,
   Check, Clock, ArrowRight, ImageIcon, MapPin, Zap, ScanLine,
+  Barcode, Hand, CircleAlert, BadgeCheck,
 } from 'lucide-react';
 import { useAura } from '@/lib/aura-store';
 import { cn } from '@/lib/utils';
-import { consultShoppingAdvisor, logEvent } from '@/lib/services';
-import type { ShoppingBrand, ShoppingPlanItem } from '@/lib/services';
 import {
-  detectCountry, resolveCountry, localPrioritize, formatMoney,
+  consultShoppingAdvisor, logEvent,
+  lookupProductByBarcode, searchLiveProducts,
+} from '@/lib/services';
+import type { ShoppingBrand, ShoppingPlanItem, LiveProduct } from '@/lib/services';
+import {
+  detectRegion, resolveCountry, localPrioritize, formatMoney,
   SHOPPING_LIST_HINTS,
 } from '@/lib/shopping';
 import type { CountryInfo } from '@/lib/shopping';
@@ -20,7 +24,7 @@ import type { CountryInfo } from '@/lib/shopping';
 // Tipos locais
 // ============================================================
 
-type Mode = 'budget' | 'brands' | 'photo';
+type Mode = 'budget' | 'brands' | 'photo' | 'scan';
 
 type RowProduct = { name: string; price: string; brand?: string };
 
@@ -29,17 +33,17 @@ type PlanResult = {
   totalInside: number;
   totalAll: number;
   advice: string;
-  source: 'gemini' | 'zai' | 'local';
+  source: 'groq' | 'zai' | 'local';
   model?: string;
 };
 
 const SOURCE_LABEL: Record<string, string> = {
-  gemini: 'IA Gemini',
+  groq: 'IA Groq · Llama',
   zai: 'IA Z',
   local: 'Análise local',
 };
 
-function SourceBadge({ source }: { source: 'gemini' | 'zai' | 'local' }) {
+function SourceBadge({ source }: { source: 'groq' | 'zai' | 'local' }) {
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 text-[9px] font-medium uppercase tracking-wider text-primary">
       <Sparkles className="h-2.5 w-2.5" />
@@ -329,19 +333,22 @@ function BudgetMode({ country, initialRows }: { country: CountryInfo; initialRow
 }
 
 // ============================================================
-// MODO MARCAS ACESSÍVEIS
+// MODO MARCAS ACESSÍVEIS (IA mundial + produtos reais ao vivo)
 // ============================================================
 
 function BrandsMode({ country }: { country: CountryInfo }) {
   const { profile } = useAura();
-  const [brands, setBrands] = useState<ShoppingBrand[] | null>(null);
+  const [brands, setBrands] = useState<(ShoppingBrand & { typicalPrice?: string })[] | null>(null);
   const [advice, setAdvice] = useState('');
-  const [source, setSource] = useState<'gemini' | 'zai' | 'local'>('local');
+  const [source, setSource] = useState<'groq' | 'zai' | 'local'>('local');
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [live, setLive] = useState<Record<string, LiveProduct | null>>({});
+  const [liveLoading, setLiveLoading] = useState(false);
 
   const load = async () => {
     setLoading(true);
+    setLive({});
     logEvent('shopping_brands', { country: country.code });
     const res = await consultShoppingAdvisor({ mode: 'brands', profile, country: country.code });
     if (res?.brands?.length) {
@@ -356,13 +363,38 @@ function BrandsMode({ country }: { country: CountryInfo }) {
     setLoaded(true);
   };
 
+  // Verificação ao vivo: anexa um produto REAL (Open Beauty Facts) a cada marca
+  useEffect(() => {
+    if (!brands?.length) return;
+    let cancelled = false;
+    const enrich = async () => {
+      setLiveLoading(true);
+      const top = brands.slice(0, 5);
+      const results = await Promise.allSettled(top.map((b) => searchLiveProducts(b.name)));
+      if (cancelled) return;
+      const map: Record<string, LiveProduct | null> = {};
+      results.forEach((r, i) => {
+        if (r.status === 'fulfilled' && r.value.length) {
+          map[top[i].name] = r.value.find((p) => p.image) || r.value[0];
+        } else {
+          map[top[i].name] = null;
+        }
+      });
+      setLive(map);
+      setLiveLoading(false);
+    };
+    enrich();
+    return () => { cancelled = true; };
+  }, [brands]);
+
   return (
     <div className="flex flex-col gap-4">
       <div className="glass rounded-2xl p-4 text-center">
         <MapPin className="mx-auto mb-2 h-5 w-5 text-primary" />
         <p className="text-sm font-semibold">Marcas acessíveis em {country.name}</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Encontradas em supermercados e farmácias — boas para a tua carteira
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+          A IA conhece o mercado do teu país — e cada sugestão é verificada com produtos
+          reais da base mundial Open Beauty Facts.
         </p>
         <button
           onClick={load}
@@ -370,7 +402,7 @@ function BrandsMode({ country }: { country: CountryInfo }) {
           className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-aura px-5 py-2.5 text-sm font-semibold text-primary-foreground glow disabled:opacity-50"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-          {brands ? 'Atualizar' : 'Ver marcas'}
+          {brands ? 'Atualizar' : 'Ver marcas do meu país'}
         </button>
       </div>
 
@@ -380,35 +412,64 @@ function BrandsMode({ country }: { country: CountryInfo }) {
             <SourceBadge source={source} />
           </div>
           <div className="flex flex-col gap-2.5">
-            {brands.map((b, i) => (
-              <motion.div
-                key={b.name}
-                initial={{ x: 30, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: i * 0.05, type: 'spring', stiffness: 300, damping: 28 }}
-                className="glass flex items-start gap-3 rounded-2xl p-4"
-              >
-                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-aura/15 text-xs font-bold text-primary">
-                  {b.name.slice(0, 2).toUpperCase()}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-semibold">{b.name}</span>
-                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{b.domain}</span>
-                  </div>
-                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{b.why}</p>
-                </div>
-                <span
-                  className={cn(
-                    'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold',
-                    b.priceLevel === 1 ? 'bg-primary/15 text-primary' : 'bg-gold/15 text-gold',
-                  )}
+            {brands.map((b, i) => {
+              const found = live[b.name];
+              return (
+                <motion.div
+                  key={b.name}
+                  initial={{ x: 30, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: i * 0.05, type: 'spring', stiffness: 300, damping: 28 }}
+                  className="glass flex items-start gap-3 rounded-2xl p-4"
                 >
-                  {b.priceLevel === 1 ? '€' : '€€'}
-                </span>
-              </motion.div>
-            ))}
+                  {found?.image ? (
+                    <img
+                      src={found.image}
+                      alt={found.name}
+                      className="h-12 w-12 shrink-0 rounded-xl border border-border object-cover"
+                    />
+                  ) : (
+                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-aura/15 text-xs font-bold text-primary">
+                      {b.name.slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-semibold">{b.name}</span>
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{b.domain}</span>
+                    </div>
+                    <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{b.why}</p>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                      {found && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-medium text-primary">
+                          <BadgeCheck className="h-2.5 w-2.5" />
+                          Produto real: {found.name.slice(0, 34)}
+                        </span>
+                      )}
+                      {b.typicalPrice && (
+                        <span className="rounded-full bg-gold/10 px-2 py-0.5 text-[9px] font-medium text-gold">
+                          ~{b.typicalPrice}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <span
+                    className={cn(
+                      'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold',
+                      b.priceLevel === 1 ? 'bg-primary/15 text-primary' : 'bg-gold/15 text-gold',
+                    )}
+                  >
+                    {b.priceLevel === 1 ? '€' : '€€'}
+                  </span>
+                </motion.div>
+              );
+            })}
           </div>
+          {liveLoading && (
+            <p className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
+              <Loader2 className="h-3 w-3 animate-spin" /> A verificar produtos reais na base mundial...
+            </p>
+          )}
           {advice && (
             <div className="glass rounded-2xl border border-gold/25 p-4">
               <div className="mb-1 flex items-center gap-2">
@@ -418,6 +479,9 @@ function BrandsMode({ country }: { country: CountryInfo }) {
               <p className="text-sm leading-relaxed">{advice}</p>
             </div>
           )}
+          <p className="text-center text-[9px] leading-relaxed text-muted-foreground/60">
+            Verificação de produtos: Open Beauty Facts — base de dados aberta mundial (CC-BY-SA).
+          </p>
         </>
       )}
 
@@ -425,6 +489,290 @@ function BrandsMode({ country }: { country: CountryInfo }) {
         <p className="text-center text-xs text-muted-foreground">
           Nada disponível agora — tenta outra vez em instantes.
         </p>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// MODO ESCANEAR — código de barras de qualquer país do mundo
+// ============================================================
+
+type DetectedCode = { rawValue: string };
+type BarcodeDetectorLike = { detect: (source: HTMLVideoElement) => Promise<DetectedCode[]> };
+type BarcodeDetectorCtor = new (opts?: { formats?: string[] }) => BarcodeDetectorLike;
+
+function ScanMode({ country, onSendToBudget }: { country: CountryInfo; onSendToBudget: (rows: RowProduct[]) => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const loopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [scanning, setScanning] = useState(false);
+  const [detectorReady, setDetectorReady] = useState<boolean | null>(null);
+  const [manual, setManual] = useState('');
+  const [status, setStatus] = useState('');
+  const [product, setProduct] = useState<LiveProduct | null>(null);
+  const [price, setPrice] = useState('');
+  const [basket, setBasket] = useState<RowProduct[]>([]);
+  const [lookup, setLookup] = useState<'idle' | 'loading' | 'notfound'>('idle');
+
+  const stopCamera = () => {
+    if (loopRef.current) clearTimeout(loopRef.current);
+    loopRef.current = null;
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    if (videoRef.current) videoRef.current.srcObject = null;
+    setScanning(false);
+  };
+
+  useEffect(() => () => stopCamera(), []);
+
+  const handleBarcode = async (raw: string) => {
+    setStatus(`Código lido: ${raw}`);
+    setLookup('loading');
+    setProduct(null);
+    logEvent('shopping_scan', { barcode: raw });
+    const found = await lookupProductByBarcode(raw);
+    if (found) {
+      setProduct(found);
+      setLookup('idle');
+      setStatus('');
+    } else {
+      setLookup('notfound');
+    }
+  };
+
+  const startCamera = async () => {
+    setStatus('');
+    const BD = (window as unknown as { BarcodeDetector?: BarcodeDetectorCtor }).BarcodeDetector;
+    if (!('mediaDevices' in navigator)) {
+      setDetectorReady(false);
+      setStatus('Câmera indisponível neste dispositivo — usa o código manual abaixo.');
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+      });
+      streamRef.current = stream;
+      setScanning(true);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+
+      if (!BD) {
+        setDetectorReady(false);
+        setStatus('Leitura automática não suportada neste navegador. Aponta a câmera e digita o código abaixo.');
+        return;
+      }
+      setDetectorReady(true);
+      const detector = new BD({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128'] });
+
+      const tick = async () => {
+        if (!streamRef.current || !videoRef.current) return;
+        try {
+          const codes = await detector.detect(videoRef.current);
+          if (codes?.length && codes[0].rawValue) {
+            stopCamera();
+            await handleBarcode(codes[0].rawValue);
+            return;
+          }
+        } catch { /* frame inválido — continua */ }
+        loopRef.current = setTimeout(tick, 400);
+      };
+      tick();
+    } catch {
+      setDetectorReady(false);
+      setStatus('Não consegui abrir a câmera. Autoriza o acesso ou usa o código manual abaixo.');
+    }
+  };
+
+  const addToBasket = () => {
+    if (!product) return;
+    // Evita marca duplicada quando o nome já a contém ("Nivea" + "Nivea Soft")
+    const hasBrand = product.brand && product.name.toLowerCase().startsWith(product.brand.toLowerCase());
+    const name = product.brand && !hasBrand ? `${product.brand} ${product.name}` : product.name;
+    setBasket((b) => [{ name, price, brand: product.brand || undefined }, ...b]);
+    setProduct(null);
+    setPrice('');
+    setStatus('');
+  };
+
+  const submitManual = async () => {
+    const code = manual.replace(/\D/g, '');
+    if (!code) return;
+    await handleBarcode(code);
+    setManual('');
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Câmera / leitor */}
+      <div className="glass overflow-hidden rounded-2xl p-4">
+        <div className="mb-3 flex items-center gap-2">
+          <ScanLine className="h-4 w-4 text-primary" />
+          <span className="text-sm font-semibold">Escanear código de barras</span>
+        </div>
+        <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
+          Aponta para o código de barras de qualquer produto do mundo — o Aura busca os
+          dados reais na base aberta internacional e encaixa no teu orçamento.
+        </p>
+
+        {!scanning ? (
+          <button
+            onClick={startCamera}
+            className="flex h-32 w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-surface transition-colors hover:border-primary/40"
+          >
+            <Barcode className="h-8 w-8 text-primary" />
+            <span className="text-sm font-medium text-muted-foreground">Abrir câmera e apontar</span>
+          </button>
+        ) : (
+          <div className="relative overflow-hidden rounded-2xl border border-primary/30">
+            <video ref={videoRef} muted playsInline className="h-56 w-full bg-black object-cover" />
+            {/* Moldura + laser */}
+            <div className="pointer-events-none absolute inset-0 grid place-items-center">
+              <div className="relative h-32 w-56 rounded-xl border-2 border-primary/70">
+                <motion.div
+                  animate={{ y: [8, 108, 8] }}
+                  transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
+                  className="absolute left-2 right-2 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent"
+                />
+              </div>
+            </div>
+            <button
+              onClick={stopCamera}
+              className="absolute right-2 top-2 rounded-full bg-black/60 px-3 py-1.5 text-[10px] font-semibold text-white"
+            >
+              Parar
+            </button>
+          </div>
+        )}
+
+        {status && (
+          <p className="mt-2 text-center text-[10px] text-muted-foreground">{status}</p>
+        )}
+
+        {/* Código manual */}
+        <div className="mt-3 flex items-center gap-2">
+          <input
+            value={manual}
+            onChange={(e) => setManual(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && submitManual()}
+            inputMode="numeric"
+            placeholder="Ou digita o código de barras (EAN/UPC)"
+            className="h-11 min-w-0 flex-1 rounded-xl border border-border bg-surface px-3 text-sm outline-none focus:border-primary/50"
+          />
+          <button
+            onClick={submitManual}
+            disabled={!manual.trim() || lookup === 'loading'}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-aura text-primary-foreground disabled:opacity-40"
+            aria-label="Buscar código"
+          >
+            {lookup === 'loading' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Barcode className="h-4 w-4" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Produto encontrado */}
+      <AnimatePresence>
+        {lookup === 'loading' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass flex items-center justify-center gap-2 rounded-2xl p-4 text-xs text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin text-primary" /> A buscar na base mundial...
+          </motion.div>
+        )}
+        {lookup === 'notfound' && (
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-2xl border border-gold/25 p-4">
+            <div className="mb-1 flex items-center gap-2">
+              <CircleAlert className="h-3.5 w-3.5 text-gold" />
+              <span className="text-xs font-bold uppercase tracking-wider text-gold">Ainda não catalogado</span>
+            </div>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Este código não está na base aberta (comum em mercados locais). Escreve o nome e preço
+              no modo <strong className="text-foreground">Orçamento</strong> — a priorização funciona igual.
+            </p>
+          </motion.div>
+        )}
+        {product && (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-2xl border border-primary/30 p-4">
+            <div className="flex items-start gap-3">
+              {product.image ? (
+                <img src={product.image} alt={product.name} className="h-20 w-20 rounded-xl border border-border object-cover" />
+              ) : (
+                <div className="grid h-20 w-20 place-items-center rounded-xl bg-surface-strong">
+                  <Barcode className="h-8 w-8 text-muted-foreground" />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-medium text-primary">
+                  <BadgeCheck className="h-2.5 w-2.5" /> Produto real · Open Beauty Facts
+                </span>
+                <p className="mt-1 text-sm font-semibold leading-snug">{product.name}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {product.brand}{product.quantity ? ` · ${product.quantity}` : ''}
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center gap-2">
+              <div className="flex h-11 flex-1 items-center gap-1 rounded-xl border border-border bg-surface px-2 focus-within:border-primary/50">
+                <span className="text-xs text-muted-foreground">{country.symbol}</span>
+                <input
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  placeholder="Preço na prateleira"
+                  className="w-full bg-transparent text-sm tabular-nums outline-none placeholder:text-muted-foreground/40"
+                />
+              </div>
+              <button
+                onClick={addToBasket}
+                className="flex h-11 items-center gap-1.5 rounded-xl bg-aura px-4 text-xs font-semibold text-primary-foreground glow"
+              >
+                <Plus className="h-3.5 w-3.5" /> Adicionar
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Cesta da sessão */}
+      {basket.length > 0 && (
+        <div className="glass rounded-2xl p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              {basket.length} produto{basket.length > 1 ? 's' : ''} escaneado{basket.length > 1 ? 's' : ''}
+            </span>
+            <Hand className="h-3.5 w-3.5 text-primary" />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {basket.map((b, i) => (
+              <div key={`${b.name}-${i}`} className="flex items-center justify-between gap-2 border-b border-border py-1.5 last:border-0">
+                <span className="min-w-0 truncate text-sm">{b.name}</span>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="text-xs font-bold text-gold">
+                    {b.price ? `${country.symbol} ${b.price}` : '—'}
+                  </span>
+                  <button
+                    onClick={() => setBasket((arr) => arr.filter((_, idx) => idx !== i))}
+                    className="text-muted-foreground hover:text-destructive"
+                    aria-label="Remover"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={() => onSendToBudget(basket)}
+            className="mt-3 flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-aura px-6 py-3.5 text-base font-semibold text-primary-foreground glow"
+          >
+            Priorizar com meu orçamento <ArrowRight className="h-5 w-5" />
+          </motion.button>
+        </div>
       )}
     </div>
   );
@@ -443,7 +791,7 @@ function PhotoMode({ country, onSendToBudget }: { country: CountryInfo; onSendTo
   const [budget, setBudget] = useState('');
   const [detected, setDetected] = useState<{ name: string; brand?: string; price: number; domain: string }[] | null>(null);
   const [observations, setObservations] = useState('');
-  const [source, setSource] = useState<'gemini' | 'zai' | 'local'>('local');
+  const [source, setSource] = useState<'groq' | 'zai' | 'local'>('local');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -608,17 +956,28 @@ export default function ShoppingScreen() {
   const [budgetRows, setBudgetRows] = useState<RowProduct[]>([]);
   const country = useMemo(() => resolveCountry(profile.country), [profile.country]);
 
-  // Detecta país se ainda não está no perfil
+  // Detecta região se ainda não está no perfil
   React.useEffect(() => {
     if (!profile.country) {
-      const detected = detectCountry();
-      if (detected.code !== 'XX') update({ country: detected.code });
+      detectRegion()
+        .then((region) => {
+          if (region.countryCode && region.countryCode !== 'XX') {
+            update({
+              country: region.countryCode,
+              city: region.city || '',
+              geoLat: region.lat ?? null,
+              geoLon: region.lon ?? null,
+            });
+          }
+        })
+        .catch(() => {});
     }
   }, [profile.country, update]);
 
   const modes: { id: Mode; label: string; icon: typeof Wallet }[] = [
     { id: 'budget', label: 'Orçamento', icon: Wallet },
     { id: 'brands', label: 'Marcas', icon: Tag },
+    { id: 'scan', label: 'Escanear', icon: ScanLine },
     { id: 'photo', label: 'Foto', icon: Camera },
   ];
 
@@ -641,11 +1000,11 @@ export default function ShoppingScreen() {
         {/* País */}
         <div className="flex items-center justify-center gap-1.5 rounded-xl bg-surface/60 py-2 text-xs text-muted-foreground">
           <MapPin className="h-3.5 w-3.5 text-primary" />
-          Preços em {country.name} ({country.currency})
+          {profile.city ? `${profile.city} · ` : ''}Preços em {country.name} ({country.currency})
         </div>
 
         {/* Seletor de modo */}
-        <div className="glass flex rounded-2xl p-1">
+        <div className="glass grid grid-cols-4 gap-0.5 rounded-2xl p-1">
           {modes.map((m) => {
             const Icon = m.icon;
             const active = mode === m.id;
@@ -654,7 +1013,7 @@ export default function ShoppingScreen() {
                 key={m.id}
                 onClick={() => setMode(m.id)}
                 className={cn(
-                  'relative flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-semibold transition-colors',
+                  'relative flex flex-col items-center justify-center gap-1 rounded-xl py-2.5 text-[10px] font-semibold transition-colors',
                   active ? 'text-primary-foreground' : 'text-muted-foreground',
                 )}
               >
@@ -689,6 +1048,7 @@ export default function ShoppingScreen() {
               />
             )}
             {mode === 'brands' && <BrandsMode country={country} />}
+            {mode === 'scan' && <ScanMode country={country} onSendToBudget={handleSendToBudget} />}
             {mode === 'photo' && <PhotoMode country={country} onSendToBudget={handleSendToBudget} />}
           </motion.div>
         </AnimatePresence>
@@ -696,3 +1056,4 @@ export default function ShoppingScreen() {
     </div>
   );
 }
+

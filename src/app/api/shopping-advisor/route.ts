@@ -1,22 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { callGemini, callZai } from '@/lib/ai-providers';
+import { callGroq, callZai } from '@/lib/ai-providers';
 import {
   localPrioritize, brandsForCountry, detectCategory, NECESSITY, resolveCountry,
 } from '@/lib/shopping';
 import type { CountryInfo } from '@/lib/shopping';
+
+export const runtime = 'nodejs';
+export const maxDuration = 45;
 
 /**
  * POST /api/shopping-advisor — Consultor de Compras do Aura
  *
  * Modos:
  *  - prioritize: lista de produtos + orçamento → ordem de prioridade para comprar
- *  - brands: país → marcas acessíveis recomendadas por categoria
- *  - photo: foto da prateleira → produtos detectados (IA vision) + priorização
+ *  - brands: país → marcas acessíveis recomendadas (conhecimento mundial da IA)
+ *  - photo: foto da prateleira → produtos detectados (Groq Vision) + priorização
  *
- * Cadeia de provedores: Gemini → z-ai → heurística local (shopping.ts)
+ * Cadeia de provedores: Groq → z-ai → heurística local (shopping.ts)
  */
 
 type ProductIn = { name: string; brand?: string; price?: number };
+
+const JSON_SYSTEM = 'Você é o Aura, consultor de compras de beleza. Responde em português, apenas JSON válido, sem markdown.';
 
 function profileSummary(p: Record<string, unknown> | null | undefined): string {
   const v = (k: string) => (p?.[k] ? String(p[k]) : 'não informado');
@@ -24,10 +29,11 @@ function profileSummary(p: Record<string, unknown> | null | undefined): string {
     const arr = p?.[k];
     return Array.isArray(arr) && arr.length ? arr.join(', ') : 'não informado';
   };
+  const prior = Array.isArray(p?.priorities) && p.priorities.length ? p.priorities.join(' > ') : 'não informado';
   return [
     `- tipo de cabelo: ${v('hairType')} | problemas capilares: ${list('hairIssues')}`,
     `- tipo de pele: ${list('skinTypes')} | clima: ${v('climate')} | região: ${v('region')}`,
-    `- prioridades declaradas: ${list('priorities') || 'não informado'}`,
+    `- prioridades declaradas (1º > ...): ${prior}`,
   ].join('\n');
 }
 
@@ -75,12 +81,13 @@ Regras de ciência capilar/pele:
 }
 
 function brandsPrompt(country: CountryInfo, profile: Record<string, unknown> | null | undefined): string {
-  return `Recomende marcas ACESSÍVEIS de cuidados de cabelo e pele disponíveis em supermercados/farmácias de ${country.name} (moeda ${country.currency}).
+  return `Recomende marcas ACESSÍVEIS de cuidados de cabelo e pele que realmente existem em supermercados/farmácias de ${country.name} (moeda ${country.currency}).
+Use teu conhecimento mundial real sobre o mercado de ${country.name} — não inventes marcas.
 Perfil do usuário:
 ${profileSummary(profile)}
 
 Responda APENAS JSON:
-{"brands":[{"name":"marca","domain":"cabelo|pele|ambos","why":"por que vale a pena (máx 20 palavras)","priceLevel":1}],"advice":"dica prática de compra no país (máx 30 palavras)"}
+{"brands":[{"name":"marca","domain":"cabelo|pele|ambos","why":"por que vale a pena (máx 20 palavras)","priceLevel":1,"typicalPrice":"faixa típica local ex: 1500-3500 AOA"}],"advice":"dica prática de compra no país (máx 30 palavras)"}
 
 priceLevel: 1 = entrada/muito barato, 2 = intermediário acessível. Máximo 8 marcas, priorize as realmente comuns no país.`;
 }
@@ -149,25 +156,24 @@ export async function POST(request: NextRequest) {
       }
 
       const prompt = prioritizePrompt(products, budget, country, profile);
-      const systemPrompt = 'Você é o Aura, consultor de compras de beleza. Responde em português, apenas JSON válido, sem markdown.';
 
-      const gemini = await callGemini({
-        systemPrompt,
-        contents: [{ role: 'user' as const, parts: [{ text: prompt }] }],
+      const groq = await callGroq({
+        systemPrompt: JSON_SYSTEM,
+        turns: [{ role: 'user', content: prompt }],
         jsonMode: true,
         temperature: 0.4,
-        maxOutputTokens: 1200,
+        maxTokens: 1200,
       });
-      if (gemini.ok) {
-        const plan = normalizePlan(parseJsonLoose(gemini.text), products, budget, country);
+      if (groq.ok) {
+        const plan = normalizePlan(parseJsonLoose(groq.text), products, budget, country);
         if (plan) {
-          return NextResponse.json({ ...plan, source: 'gemini', model: gemini.model, currency: country });
+          return NextResponse.json({ ...plan, source: 'groq', model: groq.model, currency: country });
         }
       } else {
-        console.error('[shopping-advisor] Gemini indisponível:', gemini.error);
+        console.error('[shopping-advisor] Groq indisponível:', groq.error);
       }
 
-      const zai = await callZai({ systemPrompt, turns: [{ role: 'user', content: prompt }], maxTokens: 1200 });
+      const zai = await callZai({ systemPrompt: JSON_SYSTEM, turns: [{ role: 'user', content: prompt }], maxTokens: 1200 });
       if (zai.ok) {
         const plan = normalizePlan(parseJsonLoose(zai.text), products, budget, country);
         if (plan) {
@@ -191,31 +197,30 @@ export async function POST(request: NextRequest) {
     if (mode === 'brands') {
       const fallback = brandsForCountry(country);
       const prompt = brandsPrompt(country, profile);
-      const systemPrompt = 'Você é o Aura, consultor de compras de beleza. Responde em português, apenas JSON válido, sem markdown.';
 
-      const gemini = await callGemini({
-        systemPrompt,
-        contents: [{ role: 'user' as const, parts: [{ text: prompt }] }],
+      const groq = await callGroq({
+        systemPrompt: JSON_SYSTEM,
+        turns: [{ role: 'user', content: prompt }],
         jsonMode: true,
         temperature: 0.4,
-        maxOutputTokens: 900,
+        maxTokens: 900,
       });
-      if (gemini.ok) {
-        const parsed = parseJsonLoose(gemini.text);
+      if (groq.ok) {
+        const parsed = parseJsonLoose(groq.text);
         if (parsed && Array.isArray(parsed.brands) && parsed.brands.length) {
           return NextResponse.json({
             country,
             brands: parsed.brands.slice(0, 10),
             advice: String(parsed.advice || ''),
-            source: 'gemini',
-            model: gemini.model,
+            source: 'groq',
+            model: groq.model,
           });
         }
       } else {
-        console.error('[shopping-advisor] Gemini indisponível:', gemini.error);
+        console.error('[shopping-advisor] Groq indisponível:', groq.error);
       }
 
-      const zai = await callZai({ systemPrompt, turns: [{ role: 'user', content: prompt }], maxTokens: 900 });
+      const zai = await callZai({ systemPrompt: JSON_SYSTEM, turns: [{ role: 'user', content: prompt }], maxTokens: 900 });
       if (zai.ok) {
         const parsed = parseJsonLoose(zai.text);
         if (parsed && Array.isArray(parsed.brands) && parsed.brands.length) {
@@ -245,18 +250,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'imageBase64 é obrigatório no modo photo' }, { status: 400 });
     }
 
-    const mime = (body.mimeType as string) || 'image/jpeg';
-    const visionContents = [{ role: 'user' as const, parts: [{ text: photoPrompt(country, budget || undefined) }, { inline_data: { mime_type: mime, data: imageBase64 } }] }];
+    const dataUrl = imageBase64.startsWith('data:')
+      ? imageBase64
+      : `data:${(body.mimeType as string) || 'image/jpeg'};base64,${imageBase64}`;
 
-    const gemini = await callGemini({
+    const groq = await callGroq({
       systemPrompt: 'Você é o Aura, consultor de compras de beleza com visão computacional. Responde em português, apenas JSON válido.',
-      contents: visionContents,
+      turns: [{ role: 'user', content: photoPrompt(country, budget || undefined) }],
+      images: [dataUrl],
       jsonMode: true,
       temperature: 0.3,
-      maxOutputTokens: 1200,
+      maxTokens: 1200,
     });
-    if (gemini.ok) {
-      const parsed = parseJsonLoose(gemini.text);
+    if (groq.ok) {
+      const parsed = parseJsonLoose(groq.text);
       if (parsed && Array.isArray(parsed.products)) {
         return NextResponse.json({
           products: parsed.products.slice(0, 12).map((p: Record<string, unknown>) => {
@@ -265,16 +272,16 @@ export async function POST(request: NextRequest) {
             return { name, brand: p.brand ? String(p.brand) : undefined, price: Number(p.price) || 0, category, domain };
           }),
           observations: String(parsed.observations || ''),
-          source: 'gemini',
-          model: gemini.model,
+          source: 'groq',
+          model: groq.model,
           currency: country,
         });
       }
     } else {
-      console.error('[shopping-advisor] Gemini vision indisponível:', gemini.error);
+      console.error('[shopping-advisor] Groq Vision indisponível:', groq.error);
     }
 
-    // z-ai não tem visão neste ambiente — heurística: pedir digitação manual
+    // Fallback: sem visão disponível — pedir digitação manual
     return NextResponse.json({
       products: [],
       observations: 'A leitura da foto não está disponível agora. Digite os produtos e preços manualmente — a priorização funciona igual.',

@@ -290,7 +290,7 @@ export type VisionAnalysisResult = {
 };
 
 /**
- * Analisa a selfie via /api/analyze-selfie (Gemini Vision → heurística local).
+ * Analisa a selfie via /api/analyze-selfie (Groq Vision → heurística local).
  */
 export async function analyzeSelfie(imageBase64: string): Promise<VisionAnalysisResult> {
   const response = await fetch('/api/analyze-selfie', {
@@ -389,13 +389,13 @@ function generateDemoPlaces(lat: number, lng: number): NearbyPlace[] {
 
 export type AuraAIResponse = {
   reply: string;
-  source: 'gemini' | 'zai' | 'local';
+  source: 'groq' | 'zai' | 'local';
   model?: string;
 };
 
 /**
  * Envia mensagem para o chat "Aura" via /api/ai-chat.
- * O backend tenta Gemini (Google Cloud) → z-ai → regras locais.
+ * O backend tenta Groq (Llama 3.3) → z-ai → regras locais.
  */
 export async function sendToAuraAI(
   message: string,
@@ -451,7 +451,7 @@ export type ShoppingAdvisorResponse = {
   // photo
   products?: { name: string; brand?: string; price: number; category: string; domain: string }[];
   observations?: string;
-  source: 'gemini' | 'zai' | 'local';
+  source: 'groq' | 'zai' | 'local';
   model?: string;
   error?: string;
 };
@@ -476,6 +476,73 @@ export async function consultShoppingAdvisor(payload: {
     return { ...data, mode: payload.mode };
   } catch {
     return null; // Caller deve usar fallback local
+  }
+}
+
+// ============================================================
+// 6c. OPEN DATA — produtos reais mundiais (Open Beauty Facts)
+// ============================================================
+
+export type LiveProduct = {
+  barcode: string;
+  name: string;
+  brand: string;
+  quantity: string;
+  image: string | null;
+  ingredients: string;
+};
+
+/** Busca produtos reais por código de barras (EAN/UPC) — base mundial open data. */
+export async function lookupProductByBarcode(barcode: string): Promise<LiveProduct | null> {
+  try {
+    const res = await fetch(`/api/product-lookup?barcode=${encodeURIComponent(barcode.trim())}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.products?.[0] || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Busca produtos reais por nome/marca — anexa imagens e dados verificáveis às sugestões da IA. */
+export async function searchLiveProducts(search: string, brand?: string): Promise<LiveProduct[]> {
+  try {
+    const params = new URLSearchParams({ search });
+    if (brand) params.set('brands', brand);
+    const res = await fetch(`/api/product-lookup?${params.toString()}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data?.products) ? data.products : [];
+  } catch {
+    return [];
+  }
+}
+
+// ============================================================
+// 6d. CLIMA AO VIVO (Open-Meteo, gratuito) — plano adaptativo
+// ============================================================
+
+export type WeatherInfo = {
+  ok: boolean;
+  temp: number;
+  humidity: number;
+  uv: number;
+  wind: number;
+  code: number;
+  label: string;
+  emoji: string;
+  tips: string[];
+};
+
+/** Clima atual nas coordenadas do usuário — adapta o ritual do dia. */
+export async function fetchWeather(lat: number, lon: number): Promise<WeatherInfo | null> {
+  try {
+    const res = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.ok ? (data as WeatherInfo) : null;
+  } catch {
+    return null;
   }
 }
 

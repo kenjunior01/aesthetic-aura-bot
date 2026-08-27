@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { callGemini, callZai, buildAuraSystemPrompt } from '@/lib/ai-providers';
+import { callGroq, callZai, buildAuraSystemPrompt } from '@/lib/ai-providers';
 
 /**
  * POST /api/ai-chat — Chat "Aura" (JARVIS da beleza)
  *
- * Cadeia de provedores:
- *  1. Gemini (GEMINI_API_KEY) — persona concierge com perfil completo
+ * Cadeia de provedores (todas gratuitas):
+ *  1. Groq (llama-3.3-70b-versatile) — ultrarrápido
  *  2. z-ai-web-dev-sdk — fallback de IA sempre disponível
  *  3. Regras determinísticas — último recurso offline
  *
- * Resposta: { reply, source: 'gemini' | 'zai' | 'local', model? }
+ * Resposta: { reply, source: 'groq' | 'zai' | 'local', model? }
  */
 export async function POST(request: NextRequest) {
   try {
@@ -30,17 +30,12 @@ export async function POST(request: NextRequest) {
       { role: 'user' as const, content: message },
     ];
 
-    // 1) Gemini (Google Cloud)
-    const gemini = await callGemini({
-      systemPrompt,
-      contents: turns.map((t) => ({ role: t.role, parts: [{ text: t.content }] })),
-      temperature: 0.85,
-      maxOutputTokens: 700,
-    });
-    if (gemini.ok) {
-      return NextResponse.json({ reply: gemini.text, source: 'gemini', model: gemini.model });
+    // 1) Groq (Llama 3.3 70B — gratuito e ultrarrápido)
+    const groq = await callGroq({ systemPrompt, turns, temperature: 0.85, maxTokens: 700 });
+    if (groq.ok) {
+      return NextResponse.json({ reply: groq.text, source: 'groq', model: groq.model });
     }
-    console.error('[ai-chat] Gemini indisponível:', gemini.error);
+    console.error('[ai-chat] Groq indisponível:', groq.error);
 
     // 2) z-ai SDK
     const zai = await callZai({ systemPrompt, turns });

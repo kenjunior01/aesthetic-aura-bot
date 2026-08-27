@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Sparkles, MapPin, Check,
+  Sparkles, MapPin, Check, Loader2,
 } from 'lucide-react';
 import { useAura } from '@/lib/aura-store';
 import { GlowButton, SectionTitle } from '@/components/aura/ui';
-import { detectCountry } from '@/lib/shopping';
+import { detectRegion, resolveCountry } from '@/lib/shopping';
 import { GOAL_OPTIONS } from '@/lib/goals';
 import { cn } from '@/lib/utils';
 
@@ -15,12 +15,25 @@ const MAX_PRIORITIES = 3;
 
 export default function StepGoals({ onNext }: { onNext: () => void }) {
   const { profile, update } = useAura();
+  // Já nasce "detectando" se ainda não há país no perfil
+  const [detecting, setDetecting] = useState(() => !profile.country);
 
-  // Detecta o país automaticamente (o app "sabe" onde o usuário está)
+  // Detecta país + cidade em camadas: ipwho.is → geojs → servidor → fuso horário
   useEffect(() => {
     if (!profile.country) {
-      const detected = detectCountry();
-      if (detected.code !== 'XX') update({ country: detected.code });
+      detectRegion()
+        .then((region) => {
+          if (region.countryCode && region.countryCode !== 'XX') {
+            update({
+              country: region.countryCode,
+              city: region.city || '',
+              geoLat: region.lat ?? null,
+              geoLon: region.lon ?? null,
+            });
+          }
+        })
+        .catch(() => {})
+        .finally(() => setDetecting(false));
     }
   }, [profile.country, update]);
 
@@ -34,7 +47,8 @@ export default function StepGoals({ onNext }: { onNext: () => void }) {
   };
 
   const canContinue = profile.priorities.length >= 1;
-  const detected = detectCountry();
+  const detected = resolveCountry(profile.country);
+  const hasRegion = profile.country && detected.code !== 'XX';
 
   return (
     <motion.div
@@ -55,11 +69,18 @@ export default function StepGoals({ onNext }: { onNext: () => void }) {
             </p>
           </div>
 
-          {/* País detectado */}
-          {detected.code !== 'XX' && (
+          {/* Região detectada */}
+          {detecting && (
+            <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+              A detetar a tua região para preços e marcas locais...
+            </div>
+          )}
+          {!detecting && hasRegion && (
             <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
               <MapPin className="h-3.5 w-3.5 text-primary" />
-              Detectei que você está em <span className="font-semibold text-foreground">{detected.name}</span> — preços e marcas serão locais
+              {profile.city ? `Detetei ${profile.city}, ` : 'Detetei '}
+              <span className="font-semibold text-foreground">{detected.name}</span> — preços, marcas e clima serão locais
             </div>
           )}
 

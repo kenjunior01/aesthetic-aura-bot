@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import { useAura, getLevelInfo } from '@/lib/aura-store';
 import { AuroraBackground } from '@/components/aura/AuroraBackground';
+import AuraRadar from '@/components/aura/AuraRadar';
+import AuraClima from '@/components/aura/AuraClima';
 import BottomNav from './BottomNav';
 import type { Tab } from './BottomNav';
 import ClosetScreen from './ClosetScreen';
@@ -861,7 +863,9 @@ export default function DashboardScreen() {
             className='flex flex-col gap-6 pb-24'
           >
             <PriorityFocusCard onGoToMarket={() => setActiveTab('market')} />
+            <AuraRadar onNavigate={setActiveTab} />
             <DailyRecs priorities={profile.priorities || []} />
+            <AuraClima />
             <TrendsSection />
             <RoutineSection />
             <NearbySalons />

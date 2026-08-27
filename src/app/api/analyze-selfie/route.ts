@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { callGemini } from '@/lib/ai-providers';
+import { callGroq } from '@/lib/ai-providers';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
@@ -8,7 +8,7 @@ export const maxDuration = 30;
  * POST /api/analyze-selfie — Análise estética da selfie
  *
  * Cadeia:
- *  1. Gemini multimodal (visão) com saída JSON estruturada
+ *  1. Groq Vision (Llama 4 Scout, gratuito) com saída JSON estruturada
  *  2. Heurística local real: análise de pixels com sharp
  *     (luminância média → tom de pele 1-14; razão R/B → subtom)
  *
@@ -21,36 +21,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'imageBase64 is required' }, { status: 400 });
     }
 
+    const dataUrl = imageBase64.startsWith('data:')
+      ? imageBase64
+      : `data:image/jpeg;base64,${imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64}`;
     const base64 = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
-    const mime = imageBase64.match(/^data:(.+?);/)?.[1] || 'image/jpeg';
 
-    // 1) Gemini Vision
-    const gemini = await callGemini({
+    // 1) Groq Vision (Llama 4 Scout — multimodal, gratuito)
+    const groq = await callGroq({
       systemPrompt:
         'Você é um consultor de imagem do AuraStyle. Analise selfies e retorne APENAS JSON válido, sem texto fora do JSON.',
-      contents: [
+      turns: [
         {
           role: 'user',
-          parts: [
-            {
-              text: 'Analise esta selfie e estime os atributos estéticos. Responda somente com JSON no formato exato: {"skinTone": <inteiro 1-14, 1=mais claro, 14=mais escuro>, "undertone": "quente"|"frio"|"neutro"|"oliva", "skinType": "oleosa"|"seca"|"mista"|"sensivel"|"normal", "faceShape": "oval"|"redondo"|"quadrado"|"retangular"|"coracao"|"diamante"|"losango", "hairColor": "loiro-claro"|"loiro-escuro"|"castanho-medio"|"castanho-escuro"|"ruivo"|"preto"|"grisalho"|"colorido", "confidence": <0-1>, "observations": "<1 frase em pt-BR>"}. Se não conseguir ver rosto, use confidence baixo e estime pelos dados visíveis.',
-            },
-            { inline_data: { mime_type: mime, data: base64 } },
-          ],
+          content:
+            'Analise esta selfie e estime os atributos estéticos. Responda somente com JSON no formato exato: {"skinTone": <inteiro 1-14, 1=mais claro, 14=mais escuro>, "undertone": "quente"|"frio"|"neutro"|"oliva", "skinType": "oleosa"|"seca"|"mista"|"sensivel"|"normal", "faceShape": "oval"|"redondo"|"quadrado"|"retangular"|"coracao"|"diamante"|"losango", "hairColor": "loiro-claro"|"loiro-escuro"|"castanho-medio"|"castanho-escuro"|"ruivo"|"preto"|"grisalho"|"colorido", "confidence": <0-1>, "observations": "<1 frase em pt-BR>"}. Se não conseguir ver rosto, use confidence baixo e estime pelos dados visíveis.',
         },
       ],
+      images: [dataUrl],
       jsonMode: true,
       temperature: 0.3,
-      maxOutputTokens: 400,
+      maxTokens: 400,
     });
 
-    if (gemini.ok) {
-      const parsed = safeParseAnalysis(gemini.text);
+    if (groq.ok) {
+      const parsed = safeParseAnalysis(groq.text);
       if (parsed) {
-        return NextResponse.json({ ...parsed, source: 'gemini', model: gemini.model });
+        return NextResponse.json({ ...parsed, source: 'groq', model: groq.model });
       }
     } else {
-      console.error('[analyze-selfie] Gemini indisponível:', gemini.error);
+      console.error('[analyze-selfie] Groq Vision indisponível:', groq.error);
     }
 
     // 2) Heurística local (análise real de pixels)

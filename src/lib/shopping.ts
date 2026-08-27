@@ -23,7 +23,12 @@ export type CountryInfo = {
   timezones: string[];
 };
 
+/**
+ * Mapa mundial de moedas/fusos (infraestrutura ISO — não são marcas).
+ * Serve de fallback offline; a detecção primária usa IP/headers do deploy.
+ */
 export const COUNTRIES: CountryInfo[] = [
+  // Lusofonia + África Austral/Ocidental
   { code: 'AO', name: 'Angola', currency: 'AOA', symbol: 'Kz', timezones: ['Africa/Luanda'] },
   { code: 'MZ', name: 'Moçambique', currency: 'MZN', symbol: 'MT', timezones: ['Africa/Maputo'] },
   { code: 'PT', name: 'Portugal', currency: 'EUR', symbol: '€', timezones: ['Europe/Lisbon', 'Atlantic/Azores', 'Atlantic/Madeira'] },
@@ -31,17 +36,86 @@ export const COUNTRIES: CountryInfo[] = [
   { code: 'CV', name: 'Cabo Verde', currency: 'CVE', symbol: '$', timezones: ['Atlantic/Cape_Verde'] },
   { code: 'GW', name: 'Guiné-Bissau', currency: 'XOF', symbol: 'CFA', timezones: ['Africa/Bissau'] },
   { code: 'ST', name: 'São Tomé e Príncipe', currency: 'STN', symbol: 'Db', timezones: ['Africa/Sao_Tome'] },
-  { code: 'NG', name: 'Nigéria', currency: 'NGN', symbol: '₦', timezones: ['Africa/Lagos'] },
+  { code: 'TL', name: 'Timor-Leste', currency: 'USD', symbol: '$', timezones: ['Asia/Dili'] },
+  // África
   { code: 'ZA', name: 'África do Sul', currency: 'ZAR', symbol: 'R', timezones: ['Africa/Johannesburg'] },
   { code: 'NA', name: 'Namíbia', currency: 'NAD', symbol: 'N$', timezones: ['Africa/Windhoek'] },
+  { code: 'BW', name: 'Botsuana', currency: 'BWP', symbol: 'P', timezones: ['Africa/Gaborone'] },
+  { code: 'ZW', name: 'Zimbábue', currency: 'USD', symbol: '$', timezones: ['Africa/Harare'] },
+  { code: 'ZM', name: 'Zâmbia', currency: 'ZMW', symbol: 'K', timezones: ['Africa/Lusaka'] },
+  { code: 'TZ', name: 'Tanzânia', currency: 'TZS', symbol: 'TSh', timezones: ['Africa/Dar_es_Salaam'] },
   { code: 'KE', name: 'Quénia', currency: 'KES', symbol: 'KSh', timezones: ['Africa/Nairobi'] },
+  { code: 'UG', name: 'Uganda', currency: 'UGX', symbol: 'USh', timezones: ['Africa/Kampala'] },
+  { code: 'RW', name: 'Ruanda', currency: 'RWF', symbol: 'FRw', timezones: ['Africa/Kigali'] },
+  { code: 'NG', name: 'Nigéria', currency: 'NGN', symbol: '₦', timezones: ['Africa/Lagos'] },
   { code: 'GH', name: 'Gana', currency: 'GHS', symbol: '₵', timezones: ['Africa/Accra'] },
-  { code: 'CM', name: 'Camarões', currency: 'XAF', symbol: 'FCFA', timezones: ['Africa/Douala'] },
   { code: 'CI', name: 'Costa do Marfim', currency: 'XOF', symbol: 'CFA', timezones: ['Africa/Abidjan'] },
   { code: 'SN', name: 'Senegal', currency: 'XOF', symbol: 'CFA', timezones: ['Africa/Dakar'] },
-  { code: 'FR', name: 'França', currency: 'EUR', symbol: '€', timezones: ['Europe/Paris'] },
+  { code: 'CM', name: 'Camarões', currency: 'XAF', symbol: 'FCFA', timezones: ['Africa/Douala'] },
+  { code: 'CD', name: 'RD Congo', currency: 'CDF', symbol: 'FC', timezones: ['Africa/Kinshasa'] },
+  { code: 'EG', name: 'Egito', currency: 'EGP', symbol: 'E£', timezones: ['Africa/Cairo'] },
+  { code: 'MA', name: 'Marrocos', currency: 'MAD', symbol: 'DH', timezones: ['Africa/Casablanca'] },
+  { code: 'ET', name: 'Etiópia', currency: 'ETB', symbol: 'Br', timezones: ['Africa/Addis_Ababa'] },
+  // Europa
   { code: 'ES', name: 'Espanha', currency: 'EUR', symbol: '€', timezones: ['Europe/Madrid', 'Atlantic/Canary'] },
+  { code: 'FR', name: 'França', currency: 'EUR', symbol: '€', timezones: ['Europe/Paris'] },
+  { code: 'GB', name: 'Reino Unido', currency: 'GBP', symbol: '£', timezones: ['Europe/London'] },
+  { code: 'DE', name: 'Alemanha', currency: 'EUR', symbol: '€', timezones: ['Europe/Berlin'] },
+  { code: 'IT', name: 'Itália', currency: 'EUR', symbol: '€', timezones: ['Europe/Rome'] },
+  { code: 'NL', name: 'Países Baixos', currency: 'EUR', symbol: '€', timezones: ['Europe/Amsterdam'] },
+  { code: 'BE', name: 'Bélgica', currency: 'EUR', symbol: '€', timezones: ['Europe/Brussels'] },
+  { code: 'CH', name: 'Suíça', currency: 'CHF', symbol: 'CHF', timezones: ['Europe/Zurich'] },
+  { code: 'AT', name: 'Áustria', currency: 'EUR', symbol: '€', timezones: ['Europe/Vienna'] },
+  { code: 'LU', name: 'Luxemburgo', currency: 'EUR', symbol: '€', timezones: ['Europe/Luxembourg'] },
+  { code: 'IE', name: 'Irlanda', currency: 'EUR', symbol: '€', timezones: ['Europe/Dublin'] },
+  // Américas
   { code: 'US', name: 'Estados Unidos', currency: 'USD', symbol: '$', timezones: ['America/New_York', 'America/Chicago', 'America/Los_Angeles', 'America/Denver'] },
+  { code: 'CA', name: 'Canadá', currency: 'CAD', symbol: 'C$', timezones: ['America/Toronto', 'America/Vancouver'] },
+  { code: 'MX', name: 'México', currency: 'MXN', symbol: 'MX$', timezones: ['America/Mexico_City'] },
+  { code: 'CO', name: 'Colômbia', currency: 'COP', symbol: 'COL$', timezones: ['America/Bogota'] },
+  { code: 'PE', name: 'Peru', currency: 'PEN', symbol: 'S/', timezones: ['America/Lima'] },
+  { code: 'CL', name: 'Chile', currency: 'CLP', symbol: 'CLP$', timezones: ['America/Santiago'] },
+  { code: 'AR', name: 'Argentina', currency: 'ARS', symbol: 'AR$', timezones: ['America/Buenos_Aires'] },
+  { code: 'VE', name: 'Venezuela', currency: 'USD', symbol: '$', timezones: ['America/Caracas'] },
+  { code: 'EC', name: 'Equador', currency: 'USD', symbol: '$', timezones: ['America/Guayaquil'] },
+  // Ásia / Oceania / Médio Oriente
+  { code: 'AE', name: 'Emirados Árabes', currency: 'AED', symbol: 'AED', timezones: ['Asia/Dubai'] },
+  { code: 'SA', name: 'Arábia Saudita', currency: 'SAR', symbol: 'SAR', timezones: ['Asia/Riyadh'] },
+  { code: 'IL', name: 'Israel', currency: 'ILS', symbol: '₪', timezones: ['Asia/Jerusalem'] },
+  { code: 'QA', name: 'Catar', currency: 'QAR', symbol: 'QR', timezones: ['Asia/Qatar'] },
+  { code: 'IN', name: 'Índia', currency: 'INR', symbol: '₹', timezones: ['Asia/Kolkata'] },
+  { code: 'PK', name: 'Paquistão', currency: 'PKR', symbol: 'Rs', timezones: ['Asia/Karachi'] },
+  { code: 'BD', name: 'Bangladesh', currency: 'BDT', symbol: '৳', timezones: ['Asia/Dhaka'] },
+  { code: 'CN', name: 'China', currency: 'CNY', symbol: '¥', timezones: ['Asia/Shanghai'] },
+  { code: 'HK', name: 'Hong Kong', currency: 'HKD', symbol: 'HK$', timezones: ['Asia/Hong_Kong'] },
+  { code: 'MO', name: 'Macau', currency: 'MOP', symbol: 'MOP$', timezones: ['Asia/Macau'] },
+  { code: 'JP', name: 'Japão', currency: 'JPY', symbol: '¥', timezones: ['Asia/Tokyo'] },
+  { code: 'KR', name: 'Coreia do Sul', currency: 'KRW', symbol: '₩', timezones: ['Asia/Seoul'] },
+  { code: 'SG', name: 'Singapura', currency: 'SGD', symbol: 'S$', timezones: ['Asia/Singapore'] },
+  { code: 'MY', name: 'Malásia', currency: 'MYR', symbol: 'RM', timezones: ['Asia/Kuala_Lumpur'] },
+  { code: 'TH', name: 'Tailândia', currency: 'THB', symbol: '฿', timezones: ['Asia/Bangkok'] },
+  { code: 'PH', name: 'Filipinas', currency: 'PHP', symbol: '₱', timezones: ['Asia/Manila'] },
+  { code: 'ID', name: 'Indonésia', currency: 'IDR', symbol: 'Rp', timezones: ['Asia/Jakarta'] },
+  { code: 'VN', name: 'Vietnã', currency: 'VND', symbol: '₫', timezones: ['Asia/Ho_Chi_Minh'] },
+  { code: 'TR', name: 'Turquia', currency: 'TRY', symbol: '₺', timezones: ['Europe/Istanbul'] },
+  // Europa de Leste / Nórdicos
+  { code: 'PL', name: 'Polônia', currency: 'PLN', symbol: 'zł', timezones: ['Europe/Warsaw'] },
+  { code: 'CZ', name: 'Chéquia', currency: 'CZK', symbol: 'Kč', timezones: ['Europe/Prague'] },
+  { code: 'RO', name: 'Romênia', currency: 'RON', symbol: 'lei', timezones: ['Europe/Bucharest'] },
+  { code: 'HU', name: 'Hungria', currency: 'HUF', symbol: 'Ft', timezones: ['Europe/Budapest'] },
+  { code: 'GR', name: 'Grécia', currency: 'EUR', symbol: '€', timezones: ['Europe/Athens'] },
+  { code: 'SE', name: 'Suécia', currency: 'SEK', symbol: 'kr', timezones: ['Europe/Stockholm'] },
+  { code: 'NO', name: 'Noruega', currency: 'NOK', symbol: 'kr', timezones: ['Europe/Oslo'] },
+  { code: 'DK', name: 'Dinamarca', currency: 'DKK', symbol: 'kr', timezones: ['Europe/Copenhagen'] },
+  { code: 'RU', name: 'Rússia', currency: 'RUB', symbol: '₽', timezones: ['Europe/Moscow'] },
+  // América Central + Oceania
+  { code: 'CR', name: 'Costa Rica', currency: 'CRC', symbol: '₡', timezones: ['America/Costa_Rica'] },
+  { code: 'PA', name: 'Panamá', currency: 'USD', symbol: '$', timezones: ['America/Panama'] },
+  { code: 'DO', name: 'República Dominicana', currency: 'DOP', symbol: 'RD$', timezones: ['America/Santo_Domingo'] },
+  { code: 'GT', name: 'Guatemala', currency: 'GTQ', symbol: 'Q', timezones: ['America/Guatemala'] },
+  { code: 'AU', name: 'Austrália', currency: 'AUD', symbol: 'A$', timezones: ['Australia/Sydney'] },
+  { code: 'NZ', name: 'Nova Zelândia', currency: 'NZD', symbol: 'NZ$', timezones: ['Pacific/Auckland'] },
+  { code: 'FJ', name: 'Fiji', currency: 'FJD', symbol: 'FJ$', timezones: ['Pacific/Fiji'] },
 ];
 
 export const GENERIC_COUNTRY: CountryInfo = {
@@ -62,6 +136,99 @@ export function detectCountry(): CountryInfo {
   } catch {
     return GENERIC_COUNTRY;
   }
+}
+
+// ============================================================
+// 1b. DETECÇÃO REGIONAL EM CAMADAS (mundial, gratuito, sem chave)
+// ============================================================
+
+export type RegionDetection = {
+  countryCode: string;
+  city?: string;
+  lat?: number;
+  lon?: number;
+  via: 'ipwhois' | 'geojs' | 'server' | 'timezone' | 'none';
+};
+
+async function fetchWithTimeout(url: string, ms: number): Promise<Response | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    return res.ok ? res : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Detecção completa da região do usuário — tenta a fonte mais precisa
+ * primeiro e cai para camadas mais leves. 100% gratuito, sem chaves:
+ *   1. ipwho.is (IP real do usuário, com cidade/coords, CORS aberto)
+ *   2. get.geojs.io (IP → país, CORS aberto)
+ *   3. /api/geo (headers do deploy + IP do servidor)
+ *   4. fuso horário do dispositivo (offline)
+ */
+export async function detectRegion(): Promise<RegionDetection> {
+  // 1) ipwho.is — mais completo
+  try {
+    const res = await fetchWithTimeout('https://ipwho.is/', 2500);
+    if (res) {
+      const data = (await res.json()) as {
+        success?: boolean; country_code?: string; city?: string; latitude?: number; longitude?: number;
+      };
+      if (data.success && data.country_code) {
+        return {
+          countryCode: data.country_code,
+          city: data.city || undefined,
+          lat: data.latitude ?? undefined,
+          lon: data.longitude ?? undefined,
+          via: 'ipwhois',
+        };
+      }
+    }
+  } catch { /* próxima camada */ }
+
+  // 2) geojs
+  try {
+    const res = await fetchWithTimeout('https://get.geojs.io/v1/ip/country.json', 2500);
+    if (res) {
+      const data = (await res.json()) as { country?: string; country_3?: string; name?: string };
+      if (data.country) {
+        return { countryCode: data.country, via: 'geojs' };
+      }
+    }
+  } catch { /* próxima camada */ }
+
+  // 3) Servidor (headers do deploy / IP do servidor / timezone)
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const res = await fetchWithTimeout(`/api/geo?tz=${encodeURIComponent(tz)}`, 3500);
+    if (res) {
+      const data = (await res.json()) as {
+        ok?: boolean; code?: string; countryCode?: string; city?: string; lat?: number; lon?: number; via?: string;
+      };
+      const code = data.code || data.countryCode;
+      if (data.ok && code) {
+        return {
+          countryCode: code,
+          city: data.city,
+          lat: data.lat,
+          lon: data.lon,
+          via: 'server',
+        };
+      }
+    }
+  } catch { /* próxima camada */ }
+
+  // 4) Fuso horário local
+  const local = detectCountry();
+  return {
+    countryCode: local.code,
+    via: local.code === 'XX' ? 'none' : 'timezone',
+  };
 }
 
 /** Resolve país a partir do perfil (campo country = código) com fallback de detecção. */
@@ -251,7 +418,7 @@ export type BudgetPlan = {
   totalInside: number;
   totalAll: number;
   advice: string;
-  source: 'gemini' | 'zai' | 'local';
+  source: 'groq' | 'zai' | 'local';
   model?: string;
 };
 

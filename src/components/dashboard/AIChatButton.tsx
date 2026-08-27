@@ -3,60 +3,103 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  MessageCircle, X, Send, Sparkles, Bot, Brain,
+  MessageCircle, X, Send, Sparkles, Bot, Brain, Zap,
 } from 'lucide-react';
 import { useAura, getLevelInfo } from '@/lib/aura-store';
 import { cn } from '@/lib/utils';
-import { sendToAuraAI, logEvent } from '@/lib/services';
-import type { AuraAIResponse } from '@/lib/services';
+import { logEvent } from '@/lib/services';
 
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
-  source?: 'gemini' | 'zai' | 'local';
+  source?: 'groq' | 'zai' | 'local';
+  streaming?: boolean;
 }
 
 const SOURCE_META: Record<string, { label: string; title: string }> = {
-  gemini: { label: 'via Gemini', title: 'Google Gemini respondeu esta mensagem' },
+  groq: { label: 'via Groq · Llama', title: 'Groq (Llama 3.3 70B) respondeu esta mensagem' },
   zai: { label: 'via Aura IA', title: 'Motor de IA Aura (fallback) respondeu esta mensagem' },
   local: { label: 'modo offline', title: 'Resposta gerada localmente no dispositivo' },
 };
 
+/** Resposta local de emergência (sem rede) */
 function generateContextualResponse(message: string, profile: ReturnType<typeof useAura>['profile']): string {
   const msg = message.toLowerCase();
 
   if (msg.includes('cabelo') && profile.hairType) {
-    return `Baseado no seu cabelo ${profile.hairType}${profile.hairIssues.length > 0 ? ` com ${profile.hairIssues.join(', ')}` : ''}, recomendo: usar produtos sem sulfato, hidratar 2-3x por semana e proteger do calor. Quer que eu sugira produtos específicos para a sua região?`;
+    return `Baseado no seu cabelo ${profile.hairType}${profile.hairIssues.length > 0 ? ` com ${profile.hairIssues.join(', ')}` : ''}, recomendo: produtos sem sulfato, hidratação 2-3x por semana e proteção do calor. No Mercado, eu priorizo as compras pelo teu orçamento!`;
   }
-
   if (msg.includes('pele') && profile.skinTypes.length > 0) {
-    return `Para sua pele ${profile.skinTypes.join(' e ')}, a rotina ideal é: limpeza matinal, hidratante com FPS e esfoliação semanal. ${profile.climate === 'tropical' ? 'No clima tropical, reaplique o FPS a cada 2h.' : ''} Posso detalhar cada passo!`;
+    return `Para sua pele ${profile.skinTypes.join(' e ')}, a rotina ideal é: limpeza matinal, hidratante com FPS e esfoliação semanal. ${profile.climate === 'tropical' ? 'No clima tropical, reaplique o FPS a cada 2h.' : ''}`;
   }
-
   if (msg.includes('look') || msg.includes('roupa') || msg.includes('estilo')) {
     const styleHint = profile.styles.length > 0 ? `Seu estilo é ${profile.styles.join(', ')}` : 'Seu perfil está sendo construído';
-    return `${styleHint}. Dica: invista em peças versáteis (camiseta branca, jeans escuro, tênis minimalista) que formam a base de qualquer look. Verifique a aba Explorar para tendências atualizadas!`;
+    return `${styleHint}. Invista em peças versáteis (camiseta branca, jeans escuro, tênis minimalista) — formam a base de qualquer look.`;
   }
-
-  if (msg.includes('produto') || msg.includes('recomend') || msg.includes('comprar')) {
-    if (profile.region) {
-      return `Confira a aba Explorar -> "Produtos na sua Região" para recomendações personalizadas em ${profile.region} com preços e onde encontrar! Os produtos são filtrados pelo seu orçamento (${profile.budget || 'não definido'}) e tipo de pele/cabelo.`;
-    }
-    return 'Para recomendações de produtos com preços da sua região, selecione sua região no perfil! Vá em Perfil > editar para configurar.';
+  if (msg.includes('produto') || msg.includes('recomend') || msg.includes('comprar') || msg.includes('mercado')) {
+    return profile.country
+      ? `No Mercado eu priorizo tuas compras pelo orçamento e recomendo marcas acessíveis do teu país — tudo na ordem certa para o teu dinheiro render.`
+      : 'Define teu país no perfil para recomendações com preços e marcas locais!';
   }
-
   if (msg.includes('rotina') || msg.includes('atividade')) {
-    return 'Visite a aba "Atividades" para ver seus desafios diários personalizados! Complete desafios para ganhar XP, subir de nível e desbloquear conquistas. A consistência é o segredo!';
+    return 'Visite a aba "Atividades" para ver seus desafios diários personalizados! Complete desafios para ganhar XP, subir de nível e desbloquear conquistas.';
   }
-
   if (msg.includes('olá') || msg.includes('oi') || msg.includes('hey')) {
     const firstName = profile.name?.split(' ')[0] || '';
-    return `Olá${firstName ? `, ${firstName}` : ''}! Sou seu assistente de estilo pessoal. Posso ajudar com dicas de cabelo, pele, looks, produtos e rotinas. O que você quer saber?`;
+    return `Olá${firstName ? `, ${firstName}` : ''}! Sou o Aura, teu concierge de estilo. Posso ajudar com cabelo, pele, looks, produtos e compras inteligentes.`;
   }
+  return 'Posso ajudar com dicas personalizadas sobre cabelo, pele, estilo, produtos e rotinas! Pergunte-me qualquer coisa relacionada ao teu perfil estético.';
+}
 
-  return 'Posso ajudar com dicas personalizadas sobre cabelo, pele, estilo, produtos e rotinas de cuidados! Pergunte-me qualquer coisa relacionada ao seu perfil estético.';
+/** Lê o stream SSE do /api/ai-chat-stream token a token */
+async function streamAuraChat(
+  message: string,
+  profile: ReturnType<typeof useAura>['profile'],
+  history: { role: string; content: string }[],
+  onDelta: (text: string) => void,
+): Promise<{ source: 'groq' | 'zai' | 'local'; full: string } | null> {
+  try {
+    const res = await fetch('/api/ai-chat-stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, profile, history }),
+    });
+    if (!res.ok || !res.body) return null;
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let full = '';
+    let source: 'groq' | 'zai' | 'local' = 'local';
+
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data:')) continue;
+        try {
+          const evt = JSON.parse(trimmed.slice(5)) as {
+            delta?: string; done?: boolean; source?: 'groq' | 'zai' | 'local'; error?: string;
+          };
+          if (evt.delta) {
+            full += evt.delta;
+            onDelta(evt.delta);
+          }
+          if (evt.source) source = evt.source;
+          if (evt.error) return null;
+        } catch { /* fragmento inválido */ }
+      }
+    }
+    return full.trim() ? { source, full: full.trim() } : null;
+  } catch {
+    return null;
+  }
 }
 
 export default function AIChatButton() {
@@ -65,70 +108,68 @@ export default function AIChatButton() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [aiSource, setAiSource] = useState<'gemini' | 'zai' | 'local'>('local');
+  const [aiSource, setAiSource] = useState<'groq' | 'zai' | 'local'>('local');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
+  }, [messages]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
 
+    const question = input.trim();
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
-      content: input.trim(),
+      content: question,
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
-    const question = input.trim();
+    const assistantId = crypto.randomUUID();
+    setMessages((prev) => [
+      ...prev,
+      userMsg,
+      { id: assistantId, role: 'assistant', content: '', timestamp: new Date(), streaming: true },
+    ]);
     setInput('');
-    setIsTyping(true);
     logEvent('ai_chat_message', { source: 'user' });
 
-    // Cadeia: /api/ai-chat (Gemini → z-ai) → resposta local
-    let aiReply: AuraAIResponse | null = null;
-    try {
-      aiReply = await sendToAuraAI(
-        question,
-        profile,
-        messages.map((m) => ({ role: m.role, content: m.content })),
+    // Streaming: Groq token a token (fallback z-ai/local no mesmo stream)
+    const result = await streamAuraChat(
+      question,
+      profile,
+      messages.slice(-10).map((m) => ({ role: m.role, content: m.content })),
+      (delta) => {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === assistantId ? { ...m, content: m.content + delta } : m)),
+        );
+      },
+    );
+
+    if (result) {
+      setAiSource(result.source);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantId
+            ? { ...m, content: result.full, source: result.source, streaming: false }
+            : m,
+        ),
       );
-    } catch {
-      aiReply = null;
-    }
-
-    if (aiReply?.reply) {
-      const source = aiReply.source || 'local';
-      const aiMsg: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content: aiReply.reply,
-        timestamp: new Date(),
-        source,
-      };
-      setMessages((prev) => [...prev, aiMsg]);
-      setAiSource(source);
-      logEvent('ai_chat_message', { source });
+      logEvent('ai_chat_message', { source: result.source });
     } else {
-      // Fallback local
-      const response = generateContextualResponse(question, profile);
-      const aiMsg: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content: response,
-        timestamp: new Date(),
-        source: 'local',
-      };
-      setMessages((prev) => [...prev, aiMsg]);
+      // Fallback local imediato
+      const localReply = generateContextualResponse(question, profile);
       setAiSource('local');
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantId
+            ? { ...m, content: localReply, source: 'local', streaming: false }
+            : m,
+        ),
+      );
     }
-
-    setIsTyping(false);
   };
 
   const firstName = profile.name?.split(' ')[0] || '';
@@ -141,6 +182,7 @@ export default function AIChatButton() {
         whileHover={{ scale: 1.05 }}
         onClick={() => setOpen(!open)}
         className='fixed bottom-20 right-4 z-50 h-14 w-14 rounded-full bg-aura flex items-center justify-center glow shadow-2xl'
+        aria-label='Abrir chat do Aura'
       >
         <AnimatePresence mode='wait'>
           {open ? (
@@ -178,13 +220,13 @@ export default function AIChatButton() {
                     <Brain className='h-3 w-3 text-primary' title={`Fonte atual: ${aiSource}`} />
                   </div>
                   <span className='text-[10px] text-muted-foreground'>
-                    Seu concierge de estilo · Gemini + fallback
+                    Seu concierge de estilo · Groq ultrarrápido
                   </span>
                 </div>
               </div>
               <div className='flex items-center gap-1.5'>
-                <div className='h-2 w-2 rounded-full bg-green-400 animate-pulse' />
-                <span className='text-[10px] text-muted-foreground'>Online</span>
+                <Zap className='h-3 w-3 text-gold' />
+                <span className='text-[10px] font-semibold text-gold'>Turbo</span>
               </div>
             </div>
 
@@ -196,11 +238,11 @@ export default function AIChatButton() {
                   <div>
                     <p className='text-sm font-semibold'>Olá{firstName ? `, ${firstName}` : ''}!</p>
                     <p className='text-xs text-muted-foreground mt-1 max-w-[240px]'>
-                      Pergunte sobre cabelo, pele, estilo, produtos ou rotinas. Estou aqui para ajudar!
+                      Pergunte sobre cabelo, pele, estilo, produtos ou compras. Respostas em tempo real!
                     </p>
                   </div>
                   <div className='flex flex-wrap gap-2 mt-2 justify-center'>
-                    {['Dica de cabelo', 'Estou no mercado, o que compro primeiro?', 'Sugestão de look', 'Rotina de pele', 'Análise de selfie'].map((suggestion) => (
+                    {['Estou no mercado, o que compro primeiro?', 'Dica de cabelo', 'Sugestão de look', 'Rotina de pele', 'Marcas baratas no meu país'].map((suggestion) => (
                       <button
                         key={suggestion}
                         onClick={() => { setInput(suggestion); }}
@@ -229,7 +271,21 @@ export default function AIChatButton() {
                     )}
                   >
                     {msg.content}
-                    {msg.source && SOURCE_META[msg.source] && (
+                    {msg.streaming && !msg.content && (
+                      <span className='flex gap-1 py-1'>
+                        <motion.span className='h-2 w-2 rounded-full bg-muted-foreground' animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 0.6 }} />
+                        <motion.span className='h-2 w-2 rounded-full bg-muted-foreground' animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.15 }} />
+                        <motion.span className='h-2 w-2 rounded-full bg-muted-foreground' animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.3 }} />
+                      </span>
+                    )}
+                    {msg.streaming && msg.content && (
+                      <motion.span
+                        animate={{ opacity: [1, 0.2, 1] }}
+                        transition={{ repeat: Infinity, duration: 0.9 }}
+                        className='ml-0.5 inline-block h-3.5 w-[2px] translate-y-0.5 rounded-full bg-primary'
+                      />
+                    )}
+                    {msg.source && SOURCE_META[msg.source] && !msg.streaming && (
                       <span
                         className='block text-[8px] uppercase tracking-wider text-primary/60 mt-1'
                         title={SOURCE_META[msg.source].title}
@@ -240,16 +296,6 @@ export default function AIChatButton() {
                   </div>
                 </motion.div>
               ))}
-
-              {isTyping && (
-                <div className='flex justify-start'>
-                  <div className='bg-surface-strong rounded-2xl rounded-bl-md px-4 py-3 flex gap-1'>
-                    <motion.span className='h-2 w-2 rounded-full bg-muted-foreground' animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} />
-                    <motion.span className='h-2 w-2 rounded-full bg-muted-foreground' animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.15 }} />
-                    <motion.span className='h-2 w-2 rounded-full bg-muted-foreground' animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.3 }} />
-                  </div>
-                </div>
-              )}
               <div ref={messagesEndRef} />
             </div>
 
@@ -260,7 +306,7 @@ export default function AIChatButton() {
                   type='text'
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
                   placeholder='Pergunte sobre estilo...'
                   className='flex-1 h-10 rounded-xl border border-border bg-surface px-3 text-sm outline-none transition-all focus:border-primary/50 placeholder:text-muted-foreground/50'
                 />
@@ -269,6 +315,7 @@ export default function AIChatButton() {
                   onClick={handleSend}
                   disabled={!input.trim()}
                   className='h-10 w-10 rounded-xl bg-aura flex items-center justify-center disabled:opacity-40'
+                  aria-label='Enviar mensagem'
                 >
                   <Send className='h-4 w-4 text-primary-foreground' />
                 </motion.button>

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit, Manrope } from "next/font/google";
 import "./globals.css";
 
@@ -17,11 +17,30 @@ const manrope = Manrope({
 export const metadata: Metadata = {
   title: "AuraStyle — Seu estilo, reinventado pela inteligência",
   description:
-    "Assistente de estética e estilo personalizado. Descubra o que combina perfeitamente com você.",
-  keywords: ["estilo", "beleza", "moda", "personalização", "IA", "assistente"],
-  icons: {
-    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>",
+    "Assistente de estética e estilo personalizado. Prioridades, compras inteligentes com orçamento e consultor no bolso.",
+  keywords: ["estilo", "beleza", "moda", "personalização", "IA", "assistente", "compras"],
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "AuraStyle",
   },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icons/icon-512.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [{ url: "/icons/icon-192.png", sizes: "192x192" }],
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover", // Capacitor / iOS notch safe areas
+  themeColor: "#0b0b0d", // Champagne Noir — fundo oklch(0.115 0.008 70)
 };
 
 export default function RootLayout({

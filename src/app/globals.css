@@ -4,8 +4,9 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * AuraStyle design system — premium dark, aurora gradients (violet/blue/gold),
- * glassmorphism surfaces. All colors in oklch, all tokens semantic.
+ * AuraStyle design system — "Champagne Noir": preto absoluto quente + champanhe
+ * rosé (#E8C39E), glassmorphism sutil, vibe Apple beauty counter.
+ * All colors in oklch, all tokens semantic.
  */
 
 @theme inline {
@@ -50,48 +51,49 @@
 
 :root {
   --radius: 1.25rem;
-  --background: oklch(0.16 0.035 285);
-  --foreground: oklch(0.97 0.008 285);
-  --card: oklch(0.22 0.04 285 / 55%);
-  --card-foreground: oklch(0.97 0.008 285);
-  --popover: oklch(0.2 0.04 285);
-  --popover-foreground: oklch(0.97 0.008 285);
-  --primary: oklch(0.65 0.21 295);
-  --primary-foreground: oklch(0.99 0.01 285);
-  --primary-glow: oklch(0.72 0.17 255);
-  --secondary: oklch(0.26 0.045 285);
-  --secondary-foreground: oklch(0.95 0.01 285);
-  --muted: oklch(0.25 0.035 285);
-  --muted-foreground: oklch(0.72 0.03 285);
-  --accent: oklch(0.68 0.16 250);
-  --accent-foreground: oklch(0.15 0.03 285);
-  --gold: oklch(0.82 0.14 85);
+  /* Champagne Noir — preto absoluto quente + champanhe rosé #E8C39E */
+  --background: oklch(0.115 0.008 70);
+  --foreground: oklch(0.96 0.012 85);
+  --card: oklch(0.17 0.012 70 / 55%);
+  --card-foreground: oklch(0.96 0.012 85);
+  --popover: oklch(0.16 0.012 70);
+  --popover-foreground: oklch(0.96 0.012 85);
+  --primary: oklch(0.87 0.07 72); /* #E8C39E champanhe rosé */
+  --primary-foreground: oklch(0.20 0.035 60);
+  --primary-glow: oklch(0.82 0.095 55); /* rosé profundo */
+  --secondary: oklch(0.21 0.014 70);
+  --secondary-foreground: oklch(0.94 0.015 85);
+  --muted: oklch(0.20 0.012 70);
+  --muted-foreground: oklch(0.67 0.02 75);
+  --accent: oklch(0.80 0.09 45); /* blush rosé */
+  --accent-foreground: oklch(0.18 0.03 45);
+  --gold: oklch(0.85 0.10 85); /* ouro champanhe */
   --destructive: oklch(0.62 0.22 22);
-  --destructive-foreground: oklch(0.98 0.01 285);
-  --border: oklch(0.99 0.01 285 / 12%);
-  --input: oklch(0.99 0.01 285 / 14%);
-  --ring: oklch(0.65 0.21 295);
-  --surface: oklch(0.99 0.01 285 / 6%);
-  --surface-strong: oklch(0.99 0.01 285 / 11%);
-  --chart-1: oklch(0.65 0.21 295);
-  --chart-2: oklch(0.72 0.17 255);
-  --chart-3: oklch(0.82 0.14 85);
-  --chart-4: oklch(0.7 0.16 330);
-  --chart-5: oklch(0.75 0.15 170);
+  --destructive-foreground: oklch(0.98 0.01 70);
+  --border: oklch(0.95 0.02 80 / 12%);
+  --input: oklch(0.95 0.02 80 / 14%);
+  --ring: oklch(0.87 0.07 72);
+  --surface: oklch(0.95 0.02 80 / 6%);
+  --surface-strong: oklch(0.95 0.02 80 / 11%);
+  --chart-1: oklch(0.87 0.07 72);
+  --chart-2: oklch(0.82 0.095 55);
+  --chart-3: oklch(0.85 0.10 85);
+  --chart-4: oklch(0.75 0.08 30);
+  --chart-5: oklch(0.78 0.06 100);
 
   --gradient-aura: linear-gradient(
     120deg,
-    oklch(0.65 0.21 295),
-    oklch(0.72 0.17 255),
-    oklch(0.82 0.14 85)
+    oklch(0.87 0.07 72),
+    oklch(0.82 0.095 55),
+    oklch(0.85 0.10 85)
   );
   --gradient-soft: linear-gradient(
     160deg,
-    oklch(0.99 0.01 285 / 12%),
-    oklch(0.99 0.01 285 / 3%)
+    oklch(0.95 0.02 80 / 12%),
+    oklch(0.95 0.02 80 / 3%)
   );
-  --shadow-glow: 0 18px 50px -18px oklch(0.65 0.21 295 / 70%);
-  --shadow-card: 0 24px 60px -30px oklch(0.05 0.02 285 / 90%);
+  --shadow-glow: 0 18px 50px -18px oklch(0.87 0.07 72 / 40%);
+  --shadow-card: 0 24px 60px -30px oklch(0.02 0.005 70 / 95%);
 }
 
 @layer base {
@@ -151,6 +153,15 @@
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* Capacitor/PWA safe areas — respeita notch e status bar */
+@utility pt-safe {
+  padding-top: max(1.5rem, env(safe-area-inset-top));
+}
+
+@utility pb-safe {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
 
 @keyframes aura-pan {

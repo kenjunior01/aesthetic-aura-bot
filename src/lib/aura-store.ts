@@ -10,6 +10,8 @@ export type Profile = {
   gender: string;
   age: number;
   region: string;
+  country: string;
+  priorities: string[];
   selfie: string | null;
   faceShape: string;
   skinTone: number;
@@ -81,6 +83,8 @@ export const emptyProfile: Profile = {
   gender: '',
   age: 27,
   region: '',
+  country: '',
+  priorities: [],
   selfie: null,
   faceShape: '',
   skinTone: 5,

@@ -1,16 +1,17 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Home, Shirt, Compass, User, Zap } from 'lucide-react';
+import { Home, Shirt, Compass, User, Zap, ShoppingBag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type Tab = 'home' | 'activities' | 'closet' | 'explore' | 'profile';
+type Tab = 'home' | 'activities' | 'market' | 'closet' | 'explore' | 'profile';
 
 export type { Tab };
 
 const tabs: { id: Tab; label: string; icon: typeof Home }[] = [
   { id: 'home', label: 'Início', icon: Home },
   { id: 'activities', label: 'Atividades', icon: Zap },
+  { id: 'market', label: 'Mercado', icon: ShoppingBag },
   { id: 'closet', label: 'Armário', icon: Shirt },
   { id: 'explore', label: 'Explorar', icon: Compass },
   { id: 'profile', label: 'Perfil', icon: User },
@@ -34,7 +35,7 @@ export default function BottomNav({
               key={tab.id}
               onClick={() => onChange(tab.id)}
               className={cn(
-                'relative flex flex-col items-center gap-0.5 py-1 px-2 transition-colors',
+                'relative flex flex-col items-center gap-0.5 py-1 px-1.5 transition-colors',
                 isActive ? 'text-foreground' : 'text-muted-foreground',
               )}
             >

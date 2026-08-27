@@ -7,6 +7,7 @@ import { AuroraBackground } from '@/components/aura/AuroraBackground';
 import WelcomeScreen from '@/components/onboarding/WelcomeScreen';
 import AuthScreen from '@/components/auth/AuthScreen';
 import ProgressBar from '@/components/onboarding/ProgressBar';
+import StepGoals from '@/components/onboarding/StepGoals';
 import Step1Basic from '@/components/onboarding/Step1Basic';
 import Step2Face from '@/components/onboarding/Step2Face';
 import Step3Hair from '@/components/onboarding/Step3Hair';
@@ -17,6 +18,7 @@ import DashboardScreen from '@/components/dashboard/DashboardScreen';
 import { getReferrerFromURL, logEvent, syncFullProfileOnComplete, loadFullProfileFromCloud } from '@/lib/services';
 
 const stepComponents = [
+  StepGoals,
   Step1Basic,
   Step2Face,
   Step3Hair,
@@ -78,8 +80,8 @@ export default function Page() {
 
   const nextStep = useCallback(() => {
     setStep((s) => {
-      const next = s < 5 ? s + 1 : s;
-      if (next >= 5) {
+      const next = s < 6 ? s + 1 : s;
+      if (next >= 6) {
         // Onboarding complete — mark onboarded, sync to cloud
         const store = useAura.getState();
         store.complete();

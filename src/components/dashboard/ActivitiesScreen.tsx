@@ -41,8 +41,8 @@ function LevelBar() {
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          <Flame className={cn('h-4 w-4', streak > 0 ? 'text-orange-400' : 'text-muted-foreground')} />
-          <span className={cn('text-sm font-bold', streak > 0 ? 'text-orange-400' : 'text-muted-foreground')}>
+          <Flame className={cn('h-4 w-4', streak > 0 ? 'text-gold' : 'text-muted-foreground')} />
+          <span className={cn('text-sm font-bold', streak > 0 ? 'text-gold' : 'text-muted-foreground')}>
             {streak}d
           </span>
         </div>
@@ -63,10 +63,10 @@ function LevelBar() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-3 flex items-center gap-2 rounded-xl bg-orange-500/10 px-3 py-2"
+          className="mt-3 flex items-center gap-2 rounded-xl bg-gold/10 px-3 py-2"
         >
-          <Flame className="h-4 w-4 text-orange-400" />
-          <span className="text-xs font-medium text-orange-300">
+          <Flame className="h-4 w-4 text-gold" />
+          <span className="text-xs font-medium text-gold/90">
             {streak >= 30 ? 'Mês de ouro! ' : streak >= 7 ? 'Semana perfeita! ' : ''}
             {streak} dias consecutivos de dedicação
           </span>
@@ -153,13 +153,22 @@ function DailyChallengesSection() {
     const today = todayStr();
     const lastDate = dailyActivities.length > 0 ? dailyActivities[0].date : null;
     if (lastDate !== today) {
-      // Smart selection: prioritize categories relevant to profile
+      // Smart selection: prioridades do usuário primeiro, depois perfil
       const priorityCategories: string[] = [];
-      if (profile.skinTypes.length > 0) priorityCategories.push('pele');
-      if (profile.hairType) priorityCategories.push('cabelo');
-      if (profile.styles.length > 0) priorityCategories.push('estilo');
-      priorityCategories.push('bem-estar');
-      if (Math.random() > 0.5) priorityCategories.push('desafio');
+      const userPriorities: string[] = (profile as { priorities?: string[] }).priorities || [];
+      for (const p of userPriorities) {
+        if (p === 'cabelo' && !priorityCategories.includes('cabelo')) priorityCategories.push('cabelo');
+        else if (p === 'pele' && !priorityCategories.includes('pele')) priorityCategories.push('pele');
+        else if (p === 'estilo' && !priorityCategories.includes('estilo')) priorityCategories.push('estilo');
+        else if ((p === 'rotina' || p === 'corpo') && !priorityCategories.includes('bem-estar')) priorityCategories.push('bem-estar');
+        else if (p === 'compras' && !priorityCategories.includes('desafio')) priorityCategories.push('desafio');
+      }
+      // Fallback pelo perfil estético
+      if (profile.skinTypes.length > 0 && !priorityCategories.includes('pele')) priorityCategories.push('pele');
+      if (profile.hairType && !priorityCategories.includes('cabelo')) priorityCategories.push('cabelo');
+      if (profile.styles.length > 0 && !priorityCategories.includes('estilo')) priorityCategories.push('estilo');
+      if (!priorityCategories.includes('bem-estar')) priorityCategories.push('bem-estar');
+      if (Math.random() > 0.5 && !priorityCategories.includes('desafio')) priorityCategories.push('desafio');
 
       const prioritized = [...dailyChallenges].sort((a, b) => {
         const aIdx = priorityCategories.indexOf(a.category);
@@ -497,10 +506,10 @@ function StatsSection() {
   const stats = [
     { label: 'Nível', value: level, icon: Sparkles, color: 'text-primary' },
     { label: 'XP Total', value: xp, icon: Zap, color: 'text-gold' },
-    { label: 'Streak', value: `${streak}d`, icon: Flame, color: 'text-orange-400' },
+    { label: 'Streak', value: `${streak}d`, icon: Flame, color: 'text-gold' },
     { label: 'Atividades', value: totalCompletedActivities, icon: TrendingUp, color: 'text-green-400' },
     { label: 'Conquistas', value: unlockedCount, icon: Trophy, color: 'text-yellow-400' },
-    { label: 'Peças', value: closet.length, icon: Star, color: 'text-blue-400' },
+    { label: 'Peças', value: closet.length, icon: Star, color: 'text-accent' },
   ];
 
   return (

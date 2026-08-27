@@ -2,9 +2,9 @@
 
 import { motion } from 'framer-motion';
 
-const stepLabels = ['Básico', 'Rosto', 'Cabelo', 'Corpo', 'Estilo', 'Vida'];
+const stepLabels = ['Prioridades', 'Básico', 'Rosto', 'Cabelo', 'Corpo', 'Estilo', 'Vida'];
 
-export default function ProgressBar({ current, total = 6 }: { current: number; total?: number }) {
+export default function ProgressBar({ current, total = 7 }: { current: number; total?: number }) {
   const progress = ((current + 1) / total) * 100;
 
   return (

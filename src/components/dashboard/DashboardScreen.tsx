@@ -6,7 +6,7 @@ import {
   Sparkles, Scissors, TrendingUp,
   Droplets, Sun, Moon, Palette, ArrowRight,
   Flame, Zap, Share2, Star, Cloud, CloudOff,
-  Bell, BellOff, Settings, LogOut, Download, Upload,
+  Bell, BellOff, Settings, LogOut, Download, Upload, ShoppingBag,
 } from 'lucide-react';
 import { useAura, getLevelInfo } from '@/lib/aura-store';
 import { AuroraBackground } from '@/components/aura/AuroraBackground';
@@ -15,12 +15,15 @@ import type { Tab } from './BottomNav';
 import ClosetScreen from './ClosetScreen';
 import ExploreScreen from './ExploreScreen';
 import ActivitiesScreen from './ActivitiesScreen';
+import ShoppingScreen from './ShoppingScreen';
 import AIChatButton from './AIChatButton';
 import ReferralSection from './ReferralSection';
 import NearbySalons from './NearbySalons';
 import { useAchievements } from '@/hooks/use-achievements';
 import { signOut, logEvent, requestNotificationPermission, scheduleRoutineReminder, exportAllData, downloadJSON, importData, loadFullProfileFromCloud } from '@/lib/services';
 import ProfileEditScreen from './ProfileEditScreen';
+import { GOAL_OPTIONS, getGoal } from '@/lib/goals';
+import { COUNTRIES } from '@/lib/shopping';
 
 const dailyRecs = [
   {
@@ -28,21 +31,32 @@ const dailyRecs = [
     title: 'Look do dia',
     desc: 'Baseado no seu estilo casual + clima tropical',
     icon: Sparkles,
-    gradient: 'from-purple-500/20 to-blue-500/20',
+    domain: 'estilo',
+    gradient: 'from-primary/15 to-gold/10',
   },
   {
     id: '2',
     title: 'Corte de cabelo',
     desc: 'Sugestão para rosto oval com cabelo cacheado',
     icon: Scissors,
-    gradient: 'from-gold/20 to-orange-500/20',
+    domain: 'cabelo',
+    gradient: 'from-gold/20 to-primary-glow/15',
   },
   {
     id: '3',
     title: 'Cuidado com a pele',
     desc: 'Rotina matinal para pele mista',
     icon: Droplets,
-    gradient: 'from-blue-500/20 to-teal-500/20',
+    domain: 'pele',
+    gradient: 'from-accent/15 to-gold/10',
+  },
+  {
+    id: '4',
+    title: 'Plano de compras',
+    desc: 'O que comprar primeiro com o teu orçamento',
+    icon: ShoppingBag,
+    domain: 'compras',
+    gradient: 'from-gold/15 to-primary/10',
   },
 ];
 
@@ -61,6 +75,56 @@ const routineItems = [
   { id: 'r4', label: 'Água micelar', time: '21:00', icon: Moon },
   { id: 'r5', label: 'Creme noturno', time: '21:10', icon: Moon },
 ];
+
+/** Reordena as recomendações do dia conforme as prioridades do usuário */
+function priorityOrder(items: typeof dailyRecs, priorities: string[]): typeof dailyRecs {
+  const rank = (domain: string) => {
+    const idx = priorities.indexOf(domain);
+    return idx >= 0 ? idx : 99;
+  };
+  return [...items].sort((a, b) => rank(a.domain) - rank(b.domain));
+}
+
+/** Cartão do foco nº 1 — o coração do design adaptativo */
+function PriorityFocusCard({ onGoToMarket }: { onGoToMarket?: () => void }) {
+  const { profile } = useAura();
+  const top = profile.priorities?.[0];
+  const goal = top ? getGoal(top) : undefined;
+  const Icon = goal?.icon || Sparkles;
+  const isShopping = top === 'compras';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="glass rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 to-transparent p-4"
+    >
+      <div className="mb-2 flex items-center gap-2">
+        <span className="rounded-full bg-aura px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-primary-foreground">
+          Prioridade nº 1
+        </span>
+        <span className="text-xs font-semibold text-primary">{goal?.label || 'Seu foco'}</span>
+      </div>
+      <div className="flex items-start gap-3">
+        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-aura/20">
+          <Icon className="h-5 w-5 text-primary" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm leading-relaxed">{goal?.focusLine || 'Define tuas prioridades para o app se adaptar a ti.'}</p>
+          {isShopping && onGoToMarket && (
+            <button
+              onClick={onGoToMarket}
+              className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-aura px-3.5 py-2 text-xs font-semibold text-primary-foreground glow"
+            >
+              <ShoppingBag className="h-3.5 w-3.5" />
+              Abrir Consultor de Compras
+            </button>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
 function ProfileSummaryCard() {
   const { profile } = useAura();
@@ -131,10 +195,10 @@ function StreakAndLevelBar() {
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className='flex items-center gap-1 rounded-full bg-orange-500/15 px-2.5 py-1.5 shrink-0'
+          className='flex items-center gap-1 rounded-full bg-gold/15 px-2.5 py-1.5 shrink-0'
         >
-          <Flame className='h-3.5 w-3.5 text-orange-400' />
-          <span className='text-xs font-bold text-orange-400'>{streak}</span>
+          <Flame className='h-3.5 w-3.5 text-gold' />
+          <span className='text-xs font-bold text-gold'>{streak}</span>
         </motion.div>
       )}
 
@@ -150,17 +214,18 @@ function StreakAndLevelBar() {
   );
 }
 
-function DailyRecs() {
+function DailyRecs({ priorities }: { priorities: string[] }) {
+  const ordered = priorityOrder(dailyRecs, priorities);
   return (
     <div>
       <div className='flex items-center justify-between mb-3'>
         <h2 className='text-sm font-semibold uppercase tracking-widest text-muted-foreground'>
           Recomendações do Dia
         </h2>
-        <span className='text-xs text-primary'>Ver tudo</span>
+        <span className='text-xs text-primary'>Na tua ordem</span>
       </div>
       <div className='flex flex-col gap-3'>
-        {dailyRecs.map((rec, i) => {
+        {ordered.map((rec, i) => {
           const Icon = rec.icon;
           return (
             <motion.div
@@ -338,6 +403,68 @@ function ShareSection() {
   );
 }
 
+/** Editor compacto de prioridades + país (aba Perfil) */
+function PrioritiesEditor() {
+  const { profile, update } = useAura();
+  const priorities = profile.priorities || [];
+
+  const toggle = (id: string) => {
+    if (priorities.includes(id)) {
+      update({ priorities: priorities.filter((p) => p !== id) });
+    } else if (priorities.length < 3) {
+      update({ priorities: [...priorities, id] });
+    }
+  };
+
+  return (
+    <div className='glass rounded-2xl p-4'>
+      <h3 className='text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-3'>
+        Minhas Prioridades
+      </h3>
+      <p className='text-xs text-muted-foreground mb-3'>
+        A ordem define o que o app mostra primeiro. Toque para adicionar/remover (máx. 3).
+      </p>
+      <div className='flex flex-wrap gap-2'>
+        {GOAL_OPTIONS.map((g) => {
+          const idx = priorities.indexOf(g.id);
+          const selected = idx >= 0;
+          return (
+            <button
+              key={g.id}
+              onClick={() => toggle(g.id)}
+              className={
+                selected
+                  ? 'inline-flex items-center gap-1.5 rounded-full bg-aura px-3 py-1.5 text-xs font-semibold text-primary-foreground'
+                  : 'inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground'
+              }
+            >
+              {selected && <span className="text-[10px] font-bold">{idx + 1}º</span>}
+              {g.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* País — usado pelo Consultor de Compras */}
+      <div className='mt-4 flex items-center justify-between gap-3 py-2 border-t border-border'>
+        <span className='text-sm text-muted-foreground'>País (preços locais)</span>
+        <select
+          value={profile.country || ''}
+          onChange={(e) => update({ country: e.target.value })}
+          className='h-10 max-w-[190px] rounded-xl border border-border bg-surface px-2 text-sm capitalize outline-none focus:border-primary/50'
+        >
+          <option value=''>Detectar automaticamente</option>
+          {COUNTRIES.map((c) => (
+            <option key={c.code} value={c.code}>
+              {c.name} ({c.currency})
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+}
+
 function ProfileTab() {
   const {
     profile, xp, streak, totalCompletedActivities, achievements,
@@ -440,7 +567,7 @@ function ProfileTab() {
           </div>
           <div className='h-8 w-px bg-border' />
           <div className='text-center'>
-            <span className='text-lg font-bold text-orange-400 block'>{streak}d</span>
+            <span className='text-lg font-bold text-gold block'>{streak}d</span>
             <span className='text-[10px] text-muted-foreground uppercase'>Streak</span>
           </div>
           <div className='h-8 w-px bg-border' />
@@ -464,11 +591,14 @@ function ProfileTab() {
           <span className='text-[10px] text-muted-foreground uppercase tracking-wider'>Atividades</span>
         </div>
         <div className='glass rounded-2xl p-3 text-center'>
-          <Flame className='h-4 w-4 text-orange-400 mx-auto mb-1' />
+          <Flame className='h-4 w-4 text-gold mx-auto mb-1' />
           <span className='text-base font-bold block'>{streak}d</span>
           <span className='text-[10px] text-muted-foreground uppercase tracking-wider'>Melhor streak</span>
         </div>
       </div>
+
+      {/* Prioridades + país */}
+      <PrioritiesEditor />
 
       {/* Referral Section */}
       <ReferralSection />
@@ -694,12 +824,13 @@ export default function DashboardScreen() {
   useAchievements();
 
   const firstName = profile.name?.split(' ')[0] || 'Estilista';
+  const topGoal = profile.priorities?.[0] ? getGoal(profile.priorities[0]) : undefined;
 
   return (
     <div className='relative min-h-screen'>
       <AuroraBackground />
 
-      {activeTab !== 'activities' && activeTab !== 'closet' && activeTab !== 'explore' && (
+      {activeTab !== 'activities' && activeTab !== 'closet' && activeTab !== 'explore' && activeTab !== 'market' && (
         <div className='relative z-10 px-4 pt-6 max-w-lg mx-auto'>
           <motion.div
             initial={{ y: -20, opacity: 0 }}
@@ -710,7 +841,9 @@ export default function DashboardScreen() {
               Olá, {firstName}! <Sparkles className='inline h-6 w-6 text-gold' />
             </h1>
             <p className='text-sm text-muted-foreground mt-1'>
-              Suas recomendações personalizadas estão prontas
+              {topGoal
+                ? `Foco de hoje: ${topGoal.label}`
+                : 'Suas recomendações personalizadas estão prontas'}
             </p>
           </motion.div>
 
@@ -727,8 +860,8 @@ export default function DashboardScreen() {
             animate={{ opacity: 1 }}
             className='flex flex-col gap-6 pb-24'
           >
-            <ProfileSummaryCard />
-            <DailyRecs />
+            <PriorityFocusCard onGoToMarket={() => setActiveTab('market')} />
+            <DailyRecs priorities={profile.priorities || []} />
             <TrendsSection />
             <RoutineSection />
             <NearbySalons />
@@ -738,6 +871,7 @@ export default function DashboardScreen() {
       )}
 
       {activeTab === 'activities' && <ActivitiesScreen />}
+      {activeTab === 'market' && <ShoppingScreen />}
       {activeTab === 'closet' && <ClosetScreen />}
       {activeTab === 'explore' && <ExploreScreen />}
       {activeTab === 'profile' && (

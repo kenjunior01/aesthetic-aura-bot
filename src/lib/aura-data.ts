@@ -407,7 +407,7 @@ export const regionalProducts: RegionalProduct[] = [
 // HELPER: Get products for a region
 // ============================================================
 
-export function getProductsForRegion(region: string, budget?: string, skinTypes?: string[], hairType?: string[]): RegionalProduct[] {
+export function getProductsForRegion(region: string, budget?: string, skinTypes?: string[], hairType?: string): RegionalProduct[] {
   let products = regionalProducts.filter((p) => p.region === region);
 
   // If no products for exact region, show all as fallback

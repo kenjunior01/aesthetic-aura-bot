@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   MessageCircle, X, Send, Sparkles, Bot, Brain, Zap,
 } from 'lucide-react';
-import { useAura, getLevelInfo } from '@/lib/aura-store';
+import { useAura, getLevelInfo, type AuraState } from '@/lib/aura-store';
 import { cn } from '@/lib/utils';
 import { logEvent } from '@/lib/services';
 
@@ -25,7 +25,7 @@ const SOURCE_META: Record<string, { label: string; title: string }> = {
 };
 
 /** Resposta local de emergência (sem rede) */
-function generateContextualResponse(message: string, profile: ReturnType<typeof useAura>['profile']): string {
+function generateContextualResponse(message: string, profile: AuraState['profile']): string {
   const msg = message.toLowerCase();
 
   if (msg.includes('cabelo') && profile.hairType) {
@@ -56,7 +56,7 @@ function generateContextualResponse(message: string, profile: ReturnType<typeof 
 /** Lê o stream SSE do /api/ai-chat-stream token a token */
 async function streamAuraChat(
   message: string,
-  profile: ReturnType<typeof useAura>['profile'],
+  profile: AuraState['profile'],
   history: { role: string; content: string }[],
   onDelta: (text: string) => void,
 ): Promise<{ source: 'groq' | 'zai' | 'local'; full: string } | null> {
@@ -217,7 +217,9 @@ export default function AIChatButton() {
                 <div>
                   <div className='flex items-center gap-2'>
                     <span className='text-sm font-bold block'>Aura AI</span>
-                    <Brain className='h-3 w-3 text-primary' title={`Fonte atual: ${aiSource}`} />
+                    <span title={`Fonte atual: ${aiSource}`} className='inline-flex'>
+                      <Brain className='h-3 w-3 text-primary' />
+                    </span>
                   </div>
                   <span className='text-[10px] text-muted-foreground'>
                     Seu concierge de estilo · Groq ultrarrápido

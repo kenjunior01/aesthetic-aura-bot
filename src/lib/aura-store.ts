@@ -139,7 +139,7 @@ export function getLevelInfo(xp: number) {
   return { level, currentXp, xpNeeded, progress };
 }
 
-type AuraState = {
+export type AuraState = {
   profile: Profile;
   onboarded: boolean;
   closet: ClosetItem[];

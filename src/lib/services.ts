@@ -120,8 +120,8 @@ export async function signUpWithEmail(email: string, password: string, name: str
   try {
     if (FEATURES.firebaseAuth && typeof window !== 'undefined') {
       const { createUserWithEmailAndPassword, updateProfile } = await import(/* webpackIgnore: true */ 'firebase/auth');
-      const { getAuth, app } = await initFirebase();
-      const cred = await createUserWithEmailAndPassword(getAuth(app), email, password);
+      const { auth } = await initFirebase();
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName: name });
       const user: AuthUser = {
         uid: cred.user.uid,
@@ -159,8 +159,8 @@ export async function signInWithEmail(email: string, password: string): Promise<
   try {
     if (FEATURES.firebaseAuth && typeof window !== 'undefined') {
       const { signInWithEmailAndPassword } = await import(/* webpackIgnore: true */ 'firebase/auth');
-      const { getAuth, app } = await initFirebase();
-      const cred = await signInWithEmailAndPassword(getAuth(app), email, password);
+      const { auth } = await initFirebase();
+      const cred = await signInWithEmailAndPassword(auth, email, password);
       const user: AuthUser = {
         uid: cred.user.uid,
         email: cred.user.email || email,
@@ -187,8 +187,9 @@ export async function signInWithEmail(email: string, password: string): Promise<
 export async function signOut(): Promise<void> {
   try {
     if (FEATURES.firebaseAuth && typeof window !== 'undefined') {
-      const { getAuth, signOut: fbSignOut, app } = await initFirebase();
-      await fbSignOut(getAuth(app));
+      const { signOut: fbSignOut } = await import(/* webpackIgnore: true */ 'firebase/auth');
+      const { auth } = await initFirebase();
+      await fbSignOut(auth);
     }
   } catch {
     // Firebase not available

@@ -283,63 +283,38 @@ export type VisionAnalysisResult = {
   dominantColors: string[];
   faceShape: string;
   hairColor: string;
+  undertone?: string;
   confidence: number;
+  source?: string;
+  observations?: string;
 };
 
+/**
+ * Analisa a selfie via /api/analyze-selfie (Gemini Vision → heurística local).
+ */
 export async function analyzeSelfie(imageBase64: string): Promise<VisionAnalysisResult> {
-  if (FEATURES.visionAnalysis && VISION_API_KEY) {
-    const response = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${VISION_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requests: [{
-            image: { content: imageBase64.split(',')[1] || imageBase64 },
-            features: [
-              { type: 'FACE_DETECTION', maxResults: 5 },
-              { type: 'IMAGE_PROPERTIES', maxResults: 5 },
-              { type: 'LABEL_DETECTION', maxResults: 20 },
-              { type: 'OBJECT_LOCALIZATION', maxResults: 10 },
-            ],
-          }],
-        }),
-      }
-    );
-    const data = await response.json();
-    return parseVisionResponse(data);
+  const response = await fetch('/api/analyze-selfie', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageBase64 }),
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body?.error || 'Não foi possível analisar a selfie');
   }
 
-  // Demo mode — simulate analysis
-  await new Promise((r) => setTimeout(r, 1500 + Math.random() * 1000));
+  const data = await response.json();
   return {
-    skinTone: Math.floor(Math.random() * 8) + 3,
-    skinType: ['oleosa', 'mista', 'seca', 'normal'][Math.floor(Math.random() * 4)],
-    dominantColors: ['warm', 'neutral', 'cool'].sort(() => Math.random() - 0.5).slice(0, 2),
-    faceShape: ['oval', 'redondo', 'quadrado', 'retangular'][Math.floor(Math.random() * 4)],
-    hairColor: ['castanho-escuro', 'preto', 'loiro-claro', 'ruivo'][Math.floor(Math.random() * 4)],
-    confidence: 0.82 + Math.random() * 0.15,
-  };
-}
-
-function parseVisionResponse(data: any): VisionAnalysisResult {
-  const annotations = data.responses?.[0];
-  if (!annotations) throw new Error('Não foi possível analisar a imagem');
-
-  const faces = annotations.faceAnnotations || [];
-  const props = annotations.imagePropertiesAnnotation || {};
-  const labels = annotations.labelAnnotations || [];
-
-  // Extract dominant colors
-  const colors = (props.dominantColors || []).map((c: any) => c.color || {});
-
-  return {
-    skinTone: 5, // Will be calculated from color analysis
-    skinType: 'mista',
-    dominantColors: colors.slice(0, 3).map((c: any) => `${c.red},${c.green},${c.blue}`),
-    faceShape: 'oval',
-    hairColor: 'castanho-escuro',
-    confidence: faces[0]?.detectionConfidence || 0.5,
+    skinTone: Math.min(14, Math.max(1, Math.round(Number(data.skinTone) || 5))),
+    skinType: String(data.skinType || 'normal'),
+    dominantColors: Array.isArray(data.dominantColors) ? data.dominantColors : [],
+    faceShape: String(data.faceShape || 'oval'),
+    hairColor: String(data.hairColor || 'castanho-escuro'),
+    undertone: data.undertone ? String(data.undertone) : undefined,
+    confidence: Math.min(0.98, Math.max(0.1, Number(data.confidence) || 0.5)),
+    source: data.source || 'local',
+    observations: data.observations ? String(data.observations) : undefined,
   };
 }
 
@@ -412,29 +387,96 @@ function generateDemoPlaces(lat: number, lng: number): NearbyPlace[] {
 // 6. LOVABLE AI CHAT INTEGRATION
 // ============================================================
 
-export async function sendToLovableAI(message: string, profile: Profile, history: { role: string; content: string }[]): Promise<string> {
-  if (FEATURES.lovableAI && LOVABLE_AI_ENDPOINT) {
-    const response = await fetch(LOVABLE_AI_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${LOVABLE_AI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        messages: [
-          { role: 'system', content: `Você é o AuraStyle AI, um assistente de estética pessoal. Dados do usuário: nome=${profile.name}, cabelo=${profile.hairType}, pele=${profile.skinTypes.join(',')}, região=${profile.region}, orçamento=${profile.budget}. Responda em português de forma amigável e personalizada.` },
-          ...history,
-          { role: 'user', content: message },
-        ],
-        max_tokens: 500,
-      }),
-    });
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || data.content || data.reply || 'Desculpe, não consegui processar sua mensagem.';
-  }
+export type AuraAIResponse = {
+  reply: string;
+  source: 'gemini' | 'zai' | 'local';
+  model?: string;
+};
 
-  // Fallback to local contextual responses
-  return null; // Caller should use local fallback
+/**
+ * Envia mensagem para o chat "Aura" via /api/ai-chat.
+ * O backend tenta Gemini (Google Cloud) → z-ai → regras locais.
+ */
+export async function sendToAuraAI(
+  message: string,
+  profile: Profile,
+  history: { role: string; content: string }[],
+): Promise<AuraAIResponse | null> {
+  try {
+    const response = await fetch('/api/ai-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, profile, history }),
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (!data?.reply) return null;
+    return { reply: data.reply, source: data.source || 'local', model: data.model };
+  } catch {
+    return null; // Caller should use local fallback
+  }
+}
+
+// ============================================================
+// 6b. SHOPPING ADVISOR — Consultor de Compras
+// ============================================================
+
+export type ShoppingPlanItem = {
+  name: string;
+  brand?: string;
+  price: number;
+  category: string;
+  domain: string;
+  priority: number;
+  verdict: 'comprar' | 'depois';
+  reason: string;
+};
+
+export type ShoppingBrand = {
+  name: string;
+  domain: string;
+  why: string;
+  priceLevel: number;
+};
+
+export type ShoppingAdvisorResponse = {
+  mode: 'prioritize' | 'brands' | 'photo';
+  country: { code: string; name: string; currency: string; symbol: string };
+  // prioritize
+  items?: ShoppingPlanItem[];
+  totalInside?: number;
+  advice?: string;
+  // brands
+  brands?: ShoppingBrand[];
+  // photo
+  products?: { name: string; brand?: string; price: number; category: string; domain: string }[];
+  observations?: string;
+  source: 'gemini' | 'zai' | 'local';
+  model?: string;
+  error?: string;
+};
+
+export async function consultShoppingAdvisor(payload: {
+  mode: 'prioritize' | 'brands' | 'photo';
+  profile: Profile;
+  country?: string;
+  budget?: number;
+  products?: { name: string; brand?: string; price?: number }[];
+  imageBase64?: string;
+  mimeType?: string;
+}): Promise<ShoppingAdvisorResponse | null> {
+  try {
+    const response = await fetch('/api/shopping-advisor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    return { ...data, mode: payload.mode };
+  } catch {
+    return null; // Caller deve usar fallback local
+  }
 }
 
 // ============================================================

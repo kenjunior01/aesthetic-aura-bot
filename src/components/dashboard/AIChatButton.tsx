@@ -3,21 +3,26 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  MessageCircle, X, Send, Sparkles, Bot,
-  Brain, Wifi, WifiOff,
+  MessageCircle, X, Send, Sparkles, Bot, Brain,
 } from 'lucide-react';
 import { useAura, getLevelInfo } from '@/lib/aura-store';
 import { cn } from '@/lib/utils';
-import { sendToLovableAI, logEvent } from '@/lib/services';
-import { FEATURES } from '@/lib/firebase-config';
+import { sendToAuraAI, logEvent } from '@/lib/services';
+import type { AuraAIResponse } from '@/lib/services';
 
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
-  source?: 'local' | 'lovable' | 'gcloud';
+  source?: 'gemini' | 'zai' | 'local';
 }
+
+const SOURCE_META: Record<string, { label: string; title: string }> = {
+  gemini: { label: 'via Gemini', title: 'Google Gemini respondeu esta mensagem' },
+  zai: { label: 'via Aura IA', title: 'Motor de IA Aura (fallback) respondeu esta mensagem' },
+  local: { label: 'modo offline', title: 'Resposta gerada localmente no dispositivo' },
+};
 
 function generateContextualResponse(message: string, profile: ReturnType<typeof useAura>['profile']): string {
   const msg = message.toLowerCase();
@@ -61,7 +66,7 @@ export default function AIChatButton() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [aiSource, setAiSource] = useState<'local' | 'lovable'>('local');
+  const [aiSource, setAiSource] = useState<'gemini' | 'zai' | 'local'>('local');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll on new messages
@@ -85,30 +90,32 @@ export default function AIChatButton() {
     setIsTyping(true);
     logEvent('ai_chat_message', { source: 'user' });
 
-    // Try Lovable AI first, fall back to local
+    // Cadeia: /api/ai-chat (Gemini → z-ai) → resposta local
+    let aiReply: AuraAIResponse | null = null;
     try {
-      const aiReply = await sendToLovableAI(
+      aiReply = await sendToAuraAI(
         question,
         profile,
         messages.map((m) => ({ role: m.role, content: m.content })),
       );
-
-      if (aiReply) {
-        const aiMsg: ChatMessage = {
-          id: crypto.randomUUID(),
-          role: 'assistant',
-          content: aiReply,
-          timestamp: new Date(),
-          source: 'lovable',
-        };
-        setMessages((prev) => [...prev, aiMsg]);
-        setAiSource('lovable');
-        logEvent('ai_chat_message', { source: 'lovable' });
-      } else {
-        throw new Error('fallback');
-      }
     } catch {
-      // Local fallback
+      aiReply = null;
+    }
+
+    if (aiReply?.reply) {
+      const source = aiReply.source || 'local';
+      const aiMsg: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: aiReply.reply,
+        timestamp: new Date(),
+        source,
+      };
+      setMessages((prev) => [...prev, aiMsg]);
+      setAiSource(source);
+      logEvent('ai_chat_message', { source });
+    } else {
+      // Fallback local
       const response = generateContextualResponse(question, profile);
       const aiMsg: ChatMessage = {
         id: crypto.randomUUID(),
@@ -168,14 +175,10 @@ export default function AIChatButton() {
                 <div>
                   <div className='flex items-center gap-2'>
                     <span className='text-sm font-bold block'>Aura AI</span>
-                    {FEATURES.lovableAI ? (
-                      <Brain className='h-3 w-3 text-primary' title='Lovable AI' />
-                    ) : (
-                      <WifiOff className='h-3 w-3 text-muted-foreground' title='Modo local' />
-                    )}
+                    <Brain className='h-3 w-3 text-primary' title={`Fonte atual: ${aiSource}`} />
                   </div>
                   <span className='text-[10px] text-muted-foreground'>
-                    {FEATURES.lovableAI ? 'Powered by Lovable AI' : 'Seu assistente de estilo pessoal'}
+                    Seu concierge de estilo · Gemini + fallback
                   </span>
                 </div>
               </div>
@@ -197,7 +200,7 @@ export default function AIChatButton() {
                     </p>
                   </div>
                   <div className='flex flex-wrap gap-2 mt-2 justify-center'>
-                    {['Dica de cabelo', 'Recomendar produto', 'Sugestão de look', 'Rotina de pele', 'Análise de selfie'].map((suggestion) => (
+                    {['Dica de cabelo', 'Estou no mercado, o que compro primeiro?', 'Sugestão de look', 'Rotina de pele', 'Análise de selfie'].map((suggestion) => (
                       <button
                         key={suggestion}
                         onClick={() => { setInput(suggestion); }}
@@ -226,8 +229,13 @@ export default function AIChatButton() {
                     )}
                   >
                     {msg.content}
-                    {msg.source === 'lovable' && (
-                      <span className='block text-[8px] text-primary/60 mt-1'>via Lovable AI</span>
+                    {msg.source && SOURCE_META[msg.source] && (
+                      <span
+                        className='block text-[8px] uppercase tracking-wider text-primary/60 mt-1'
+                        title={SOURCE_META[msg.source].title}
+                      >
+                        {SOURCE_META[msg.source].label}
+                      </span>
                     )}
                   </div>
                 </motion.div>

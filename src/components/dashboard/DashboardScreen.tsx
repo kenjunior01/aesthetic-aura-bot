@@ -6,7 +6,7 @@ import {
   Sparkles, Scissors, TrendingUp,
   Droplets, Sun, Moon, Palette, ArrowRight,
   Flame, Zap, Share2, Star, Cloud, CloudOff,
-  Bell, BellOff, Settings, LogOut,
+  Bell, BellOff, Settings, LogOut, Download, Upload,
 } from 'lucide-react';
 import { useAura, getLevelInfo } from '@/lib/aura-store';
 import { AuroraBackground } from '@/components/aura/AuroraBackground';
@@ -19,7 +19,8 @@ import AIChatButton from './AIChatButton';
 import ReferralSection from './ReferralSection';
 import NearbySalons from './NearbySalons';
 import { useAchievements } from '@/hooks/use-achievements';
-import { signOut, logEvent, requestNotificationPermission, scheduleRoutineReminder } from '@/lib/services';
+import { signOut, logEvent, requestNotificationPermission, scheduleRoutineReminder, exportAllData, downloadJSON, importData, loadFullProfileFromCloud } from '@/lib/services';
+import ProfileEditScreen from './ProfileEditScreen';
 
 const dailyRecs = [
   {
@@ -342,11 +343,15 @@ function ProfileTab() {
     profile, xp, streak, totalCompletedActivities, achievements,
     reset, authUid, authEmail, referralCode, referralCount,
     lastSyncAt, notificationsEnabled, syncToCloud, clearAuth,
+    closet, favorites, routineDone, weeklyGoals, dailyActivities,
   } = useAura();
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [importMsg, setImportMsg] = useState('');
   const { level } = getLevelInfo(xp);
   const unlockedCount = achievements.filter((a) => a.unlockedAt).length;
+  const importRef = React.useRef<HTMLInputElement>(null);
 
   const handleSync = async () => {
     setSyncing(true);
@@ -359,6 +364,63 @@ function ProfileTab() {
     clearAuth();
     logEvent('sign_out');
   };
+
+  const handleExport = () => {
+    const state = useAura.getState();
+    const json = exportAllData(state);
+    const filename = `aurastyle-backup-${new Date().toISOString().split('T')[0]}.json`;
+    downloadJSON(json, filename);
+    logEvent('data_exported');
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const data = importData(reader.result as string);
+      if (!data) {
+        setImportMsg('Arquivo inválido');
+        setTimeout(() => setImportMsg(''), 3000);
+        return;
+      }
+      const store = useAura.getState();
+      if (data.profile) store.update(data.profile as any);
+      if (data.gamification) {
+        // XP and achievements are read-only via actions, but we can trigger them
+      }
+      setImportMsg('Dados importados com sucesso!');
+      logEvent('data_imported');
+      setTimeout(() => setImportMsg(''), 3000);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleLoadFromCloud = async () => {
+    if (!authUid) return;
+    setSyncing(true);
+    try {
+      const cloudData = await loadFullProfileFromCloud(authUid);
+      if (cloudData?.profile) {
+        const store = useAura.getState();
+        store.update(cloudData.profile);
+        setImportMsg('Perfil carregado da nuvem!');
+        logEvent('profile_loaded_from_cloud');
+        setTimeout(() => setImportMsg(''), 3000);
+      } else {
+        setImportMsg('Nenhum dado encontrado na nuvem');
+        setTimeout(() => setImportMsg(''), 3000);
+      }
+    } catch {
+      setImportMsg('Erro ao carregar da nuvem');
+      setTimeout(() => setImportMsg(''), 3000);
+    }
+    setSyncing(false);
+  };
+
+  if (editing) {
+    return <ProfileEditScreen onClose={() => setEditing(false)} />;
+  }
 
   return (
     <div className='flex flex-col gap-6 py-4'>
@@ -464,12 +526,58 @@ function ProfileTab() {
 
           <motion.button
             whileTap={{ scale: 0.98 }}
-            onClick={() => reset()}
+            onClick={() => setEditing(true)}
             className='rounded-xl border border-border bg-surface p-3 flex items-center gap-3 text-left hover:border-primary/30 transition-colors'
           >
-            <Settings className='h-4 w-4 text-muted-foreground' />
+            <Settings className='h-4 w-4 text-primary' />
             <span className='text-sm font-medium'>Editar Perfil</span>
           </motion.button>
+
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={handleExport}
+            className='rounded-xl border border-border bg-surface p-3 flex items-center gap-3 text-left hover:border-primary/30 transition-colors'
+          >
+            <Download className='h-4 w-4 text-muted-foreground' />
+            <span className='text-sm font-medium'>Exportar dados (JSON)</span>
+          </motion.button>
+
+          <label className='rounded-xl border border-border bg-surface p-3 flex items-center gap-3 text-left hover:border-primary/30 transition-colors cursor-pointer'>
+            <Upload className='h-4 w-4 text-muted-foreground' />
+            <span className='text-sm font-medium'>Importar backup</span>
+            <input
+              ref={importRef}
+              type='file'
+              accept='.json'
+              onChange={handleImport}
+              className='hidden'
+            />
+          </label>
+
+          {authUid && (
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              onClick={handleLoadFromCloud}
+              disabled={syncing}
+              className='rounded-xl border border-border bg-surface p-3 flex items-center gap-3 text-left hover:border-primary/30 transition-colors'
+            >
+              {syncing
+                ? <Sparkles className='h-4 w-4 text-primary animate-pulse' />
+                : <Cloud className='h-4 w-4 text-primary' />
+              }
+              <span className='text-sm font-medium'>{syncing ? 'Carregando...' : 'Restaurar da nuvem'}</span>
+            </motion.button>
+          )}
+
+          {importMsg && (
+            <motion.p
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className='text-xs text-center py-1 font-medium text-primary'
+            >
+              {importMsg}
+            </motion.p>
+          )}
 
           {authUid && (
             <motion.button

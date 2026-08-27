@@ -37,7 +37,75 @@ export type AuthState = {
  */
 const AUTH_KEY = 'aurastyle-auth';
 
-function getStoredAuth(): AuthUser | null {
+export async function signInWithGoogle(): Promise<AuthUser> {
+  // Try Firebase Google Sign-In
+  try {
+    if (FEATURES.firebaseAuth && typeof window !== 'undefined') {
+      const { GoogleAuthProvider, signInWithPopup, getAdditionalUserInfo } = await import(/* webpackIgnore: true */ 'firebase/auth');
+      const { auth } = await initFirebase();
+      const provider = new GoogleAuthProvider();
+      provider.addScope('profile');
+      provider.addScope('email');
+      const cred = await signInWithPopup(auth, provider);
+      const info = getAdditionalUserInfo(cred);
+      const isNewUser = info?.isNewUser || false;
+      const user: AuthUser = {
+        uid: cred.user.uid,
+        email: cred.user.email || '',
+        displayName: cred.user.displayName || '',
+        photoURL: cred.user.photoURL || undefined,
+        createdAt: cred.user.metadata.creationTime || new Date().toISOString(),
+      };
+      localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+      if (isNewUser) {
+        logEvent('signup_google', { uid: user.uid });
+      } else {
+        logEvent('login_google', { uid: user.uid });
+      }
+      return user;
+    }
+  } catch (err: any) {
+    // Firebase popup might be blocked or cancelled
+    if (err?.code === 'auth/popup-closed-by-user') {
+      throw new Error('Login cancelado pelo usuário');
+    }
+    if (err?.code === 'auth/popup-blocked') {
+      throw new Error('Pop-up bloqueado pelo navegador. Permita pop-ups para este site.');
+    }
+    // Firebase not available, fall through to demo
+  }
+
+  // Demo mode — simulate Google login
+  await new Promise((r) => setTimeout(r, 800));
+  const demoName = 'Usuário Google';
+  const user: AuthUser = {
+    uid: crypto.randomUUID(),
+    email: `google_${Date.now()}@demo.aurastyle.app`,
+    displayName: demoName,
+    photoURL: undefined,
+    createdAt: new Date().toISOString(),
+  };
+  localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+  logEvent('signup_google_demo');
+  return user;
+}
+
+export async function resetPassword(email: string): Promise<boolean> {
+  try {
+    if (FEATURES.firebaseAuth && typeof window !== 'undefined') {
+      const { sendPasswordResetEmail } = await import(/* webpackIgnore: true */ 'firebase/auth');
+      const { auth } = await initFirebase();
+      await sendPasswordResetEmail(auth, email);
+      return true;
+    }
+  } catch {
+    // Firebase not available
+  }
+  // Demo: always succeeds
+  return true;
+}
+
+export function getStoredAuth(): AuthUser | null {
   if (typeof window === 'undefined') return null;
   try {
     const raw = localStorage.getItem(AUTH_KEY);
@@ -422,4 +490,92 @@ export function getReferrerFromURL(): string | null {
   if (typeof window === 'undefined') return null;
   const params = new URLSearchParams(window.location.search);
   return params.get('ref');
+}
+
+// ============================================================
+// 9. DATA EXPORT / IMPORT (offline backup & restore)
+// ============================================================
+
+export type ExportData = {
+  version: string;
+  exportedAt: string;
+  profile: Record<string, any>;
+  gamification: {
+    xp: number;
+    streak: number;
+    totalCompletedActivities: number;
+    achievements: any[];
+  };
+  closet: any[];
+  favorites: string[];
+  routineDone: string[];
+  referralCode: string | null;
+};
+
+export function exportAllData(state: Record<string, any>): string {
+  const data: ExportData = {
+    version: '1.0.0',
+    exportedAt: new Date().toISOString(),
+    profile: state.profile || {},
+    gamification: {
+      xp: state.xp || 0,
+      streak: state.streak || 0,
+      totalCompletedActivities: state.totalCompletedActivities || 0,
+      achievements: state.achievements || [],
+    },
+    closet: state.closet || [],
+    favorites: state.favorites || [],
+    routineDone: state.routineDone || [],
+    referralCode: state.referralCode || null,
+  };
+  return JSON.stringify(data, null, 2);
+}
+
+export function importData(jsonString: string): ExportData | null {
+  try {
+    const data = JSON.parse(jsonString);
+    if (!data.version || !data.profile) return null;
+    return data as ExportData;
+  } catch {
+    return null;
+  }
+}
+
+export function downloadJSON(content: string, filename: string): void {
+  const blob = new Blob([content], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// 10. FULL PROFILE SYNC (onboarding complete → cloud)
+// ============================================================
+
+export async function syncFullProfileOnComplete(uid: string, state: Record<string, any>): Promise<void> {
+  const fullData = {
+    profile: state.profile || {},
+    xp: state.xp || 0,
+    streak: state.streak || 0,
+    totalCompletedActivities: state.totalCompletedActivities || 0,
+    achievements: state.achievements || [],
+    weeklyGoals: state.weeklyGoals || [],
+    dailyActivities: state.dailyActivities || [],
+    referralCode: state.referralCode || null,
+    referralCount: state.referralCount || 0,
+    referredBy: state.referredBy || null,
+    closetCount: (state.closet || []).length,
+    favoritesCount: (state.favorites || []).length,
+    onboarded: true,
+  };
+  await syncProfileToCloud(uid, fullData);
+}
+
+export async function loadFullProfileFromCloud(uid: string): Promise<Record<string, any> | null> {
+  return loadProfileFromCloud(uid);
 }

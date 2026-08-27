@@ -14,7 +14,7 @@ import Step4Body from '@/components/onboarding/Step4Body';
 import Step5Style from '@/components/onboarding/Step5Style';
 import Step6Lifestyle from '@/components/onboarding/Step6Lifestyle';
 import DashboardScreen from '@/components/dashboard/DashboardScreen';
-import { getReferrerFromURL, logEvent } from '@/lib/services';
+import { getReferrerFromURL, logEvent, syncFullProfileOnComplete, loadFullProfileFromCloud } from '@/lib/services';
 
 const stepComponents = [
   Step1Basic,
@@ -50,6 +50,17 @@ export default function Page() {
       setReferredBy(ref);
       logEvent('referred_visit', { referralCode: ref });
     }
+
+    // Auto-load profile from cloud for returning authenticated users
+    const store = useAura.getState();
+    if (store.authUid && store.onboarded) {
+      loadFullProfileFromCloud(store.authUid).then((cloudData) => {
+        if (cloudData?.profile) {
+          store.update(cloudData.profile);
+          logEvent('profile_auto_restored');
+        }
+      }).catch(() => {});
+    }
   }, [setReferredBy]);
 
   const initialView: AppView = onboarded ? 'dashboard' : 'welcome';
@@ -68,7 +79,17 @@ export default function Page() {
   const nextStep = useCallback(() => {
     setStep((s) => {
       const next = s < 5 ? s + 1 : s;
-      if (next >= 5) setView('dashboard');
+      if (next >= 5) {
+        // Onboarding complete — mark onboarded, sync to cloud
+        const store = useAura.getState();
+        store.complete();
+        logEvent('onboarding_complete');
+        // Sync full profile to cloud if user has account
+        if (store.authUid) {
+          syncFullProfileOnComplete(store.authUid, store).catch(() => {});
+        }
+        setView('dashboard');
+      }
       return next;
     });
   }, []);

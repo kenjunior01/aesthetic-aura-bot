@@ -6,6 +6,7 @@ import {
   MessageCircle, X, Send, Sparkles, Bot, Brain, Zap,
 } from 'lucide-react';
 import { useAura, getLevelInfo, type AuraState } from '@/lib/aura-store';
+import { API_BASE } from '@/lib/api-base';
 import { cn } from '@/lib/utils';
 import { logEvent } from '@/lib/services';
 
@@ -61,7 +62,7 @@ async function streamAuraChat(
   onDelta: (text: string) => void,
 ): Promise<{ source: 'groq' | 'zai' | 'local'; full: string } | null> {
   try {
-    const res = await fetch('/api/ai-chat-stream', {
+    const res = await fetch(`${API_BASE}/api/ai-chat-stream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message, profile, history }),

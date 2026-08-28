@@ -42,6 +42,7 @@
     "examples",
     "scripts",
     "skills",
-    "tool-results"
+    "tool-results",
+    "capacitor.config.ts"
   ]
 }

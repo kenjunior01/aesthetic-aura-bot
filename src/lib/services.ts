@@ -11,6 +11,7 @@
  */
 
 import { firebaseConfig, FEATURES, VISION_API_KEY, PLACES_API_KEY, LOVABLE_AI_ENDPOINT, LOVABLE_AI_API_KEY } from './firebase-config';
+import { API_BASE } from './api-base';
 import type { Profile } from './aura-store';
 
 // ============================================================
@@ -294,7 +295,7 @@ export type VisionAnalysisResult = {
  * Analisa a selfie via /api/analyze-selfie (Groq Vision → heurística local).
  */
 export async function analyzeSelfie(imageBase64: string): Promise<VisionAnalysisResult> {
-  const response = await fetch('/api/analyze-selfie', {
+  const response = await fetch(`${API_BASE}/api/analyze-selfie`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ imageBase64 }),
@@ -404,7 +405,7 @@ export async function sendToAuraAI(
   history: { role: string; content: string }[],
 ): Promise<AuraAIResponse | null> {
   try {
-    const response = await fetch('/api/ai-chat', {
+    const response = await fetch(`${API_BASE}/api/ai-chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message, profile, history }),
@@ -467,7 +468,7 @@ export async function consultShoppingAdvisor(payload: {
   mimeType?: string;
 }): Promise<ShoppingAdvisorResponse | null> {
   try {
-    const response = await fetch('/api/shopping-advisor', {
+    const response = await fetch(`${API_BASE}/api/shopping-advisor`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -496,7 +497,7 @@ export type LiveProduct = {
 /** Busca produtos reais por código de barras (EAN/UPC) — base mundial open data. */
 export async function lookupProductByBarcode(barcode: string): Promise<LiveProduct | null> {
   try {
-    const res = await fetch(`/api/product-lookup?barcode=${encodeURIComponent(barcode.trim())}`);
+    const res = await fetch(`${API_BASE}/api/product-lookup?barcode=${encodeURIComponent(barcode.trim())}`);
     if (!res.ok) return null;
     const data = await res.json();
     return data?.products?.[0] || null;
@@ -510,7 +511,7 @@ export async function searchLiveProducts(search: string, brand?: string): Promis
   try {
     const params = new URLSearchParams({ search });
     if (brand) params.set('brands', brand);
-    const res = await fetch(`/api/product-lookup?${params.toString()}`);
+    const res = await fetch(`${API_BASE}/api/product-lookup?${params.toString()}`);
     if (!res.ok) return [];
     const data = await res.json();
     return Array.isArray(data?.products) ? data.products : [];
@@ -538,7 +539,7 @@ export type WeatherInfo = {
 /** Clima atual nas coordenadas do usuário — adapta o ritual do dia. */
 export async function fetchWeather(lat: number, lon: number): Promise<WeatherInfo | null> {
   try {
-    const res = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
+    const res = await fetch(`${API_BASE}/api/weather?lat=${lat}&lon=${lon}`);
     if (!res.ok) return null;
     const data = await res.json();
     return data?.ok ? (data as WeatherInfo) : null;

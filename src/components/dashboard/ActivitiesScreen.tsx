@@ -6,7 +6,7 @@ import {
   Flame, Zap, Trophy, Target, ChevronRight, Star,
   Check, Lock, TrendingUp, Sparkles,
 } from 'lucide-react';
-import { useAura, getLevelInfo } from '@/lib/aura-store';
+import { useAura, getLevelInfo, nextStreakMilestone, STREAK_MILESTONES } from '@/lib/aura-store';
 import type { DailyActivity } from '@/lib/aura-store';
 import {
   dailyChallenges,
@@ -58,6 +58,9 @@ function LevelBar() {
         />
       </div>
 
+      {/* Escada de marcos do streak — próximo bônus visível */}
+      <StreakLadder streak={streak} />
+
       {/* Streak banner */}
       {streak >= 3 && (
         <motion.div
@@ -71,6 +74,72 @@ function LevelBar() {
             {streak} dias consecutivos de dedicação
           </span>
         </motion.div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// STREAK LADDER — marcos visuais com bônus XP (7d → +50…)
+// ============================================================
+
+function StreakLadder({ streak }: { streak: number }) {
+  const next = nextStreakMilestone(streak);
+  const last = STREAK_MILESTONES[STREAK_MILESTONES.length - 1];
+  const isMax = !next;
+
+  return (
+    <div className="mt-3 rounded-xl bg-surface-strong/60 px-3 py-2.5">
+      {/* Nós dos marcos: 3 · 7 · 14 · 30 · 60 · 100 */}
+      <div className="flex items-center justify-between mb-2">
+        {STREAK_MILESTONES.map((m) => {
+          const reached = streak >= m.days;
+          const isNext = next?.days === m.days;
+          return (
+            <div key={m.days} className="flex flex-col items-center gap-0.5">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: m.days * 0.01, type: 'spring', stiffness: 300, damping: 20 }}
+                className={cn(
+                  'grid h-6 w-6 place-items-center rounded-full border text-[9px] font-bold',
+                  reached
+                    ? 'border-gold bg-gold/20 text-gold'
+                    : isNext
+                      ? 'border-primary bg-primary/15 text-primary glow'
+                      : 'border-border text-muted-foreground/50',
+                )}
+              >
+                {reached ? <Flame className="h-3 w-3" /> : m.days}
+              </motion.div>
+              <span className={cn('text-[8px] uppercase tracking-wide', reached ? 'text-gold/80' : 'text-muted-foreground/50')}>
+                {m.days}d
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Barra até o próximo marco */}
+      {!isMax && next ? (
+        <>
+          <div className="h-1.5 rounded-full bg-background/60 overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.min((streak / next.days) * 100, 100)}%` }}
+              transition={{ type: 'spring', stiffness: 200, damping: 30 }}
+              className="h-full rounded-full bg-gradient-to-r from-gold/70 to-gold"
+            />
+          </div>
+          <span className="mt-1.5 block text-[10px] text-muted-foreground">
+            Faltam <b className="text-gold">{next.days - streak} dia{next.days - streak > 1 ? 's' : ''}</b> para{' '}
+            <b className="text-primary">{next.label}</b> → <b className="text-gold">+{next.xp} XP</b>
+          </span>
+        </>
+      ) : (
+        <span className="block text-[10px] text-gold font-semibold">
+          {last.label} atingido — {streak} dias de lendário! {last.xp} XP já é teu
+        </span>
       )}
     </div>
   );

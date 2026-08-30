@@ -79,6 +79,31 @@ export type Achievement = {
   xp: number;
 };
 
+/** Marcos de streak — bônus XP ao cruzar cada um (7d, 14d, 30d…) */
+export const STREAK_MILESTONES: { days: number; xp: number; label: string }[] = [
+  { days: 3, xp: 30, label: 'Aquecimento' },
+  { days: 7, xp: 50, label: 'Semana perfeita' },
+  { days: 14, xp: 75, label: 'Duas semanas' },
+  { days: 30, xp: 150, label: 'Mês de ouro' },
+  { days: 60, xp: 300, label: 'Lenda' },
+  { days: 100, xp: 600, label: 'Ícone' },
+];
+
+/** Bônus XP por completar TODA a rotina AM/PM de um dia */
+export const ROUTINE_COMPLETE_XP = 25;
+
+/** Nº de passos da rotina diária (3 AM + 2 PM) — mantém store e UI sincronizados */
+export const ROUTINE_COUNT = 5;
+
+/** Próximo marco de streak acima de `streak` */
+export function nextStreakMilestone(streak: number) {
+  return STREAK_MILESTONES.find((m) => m.days > streak) || null;
+}
+
+export function todayKey(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
 export const emptyProfile: Profile = {
   name: '',
   email: '',
@@ -145,6 +170,8 @@ export type AuraState = {
   closet: ClosetItem[];
   favorites: string[];
   routineDone: string[];
+  /** Data (YYYY-MM-DD) em que a rotina atual foi marcada — reset diário automático */
+  routineDate: string | null;
 
   // Gamification
   xp: number;
@@ -176,6 +203,8 @@ export type AuraState = {
   removeClosetItem: (id: string) => void;
   toggleFavorite: (id: string) => void;
   toggleRoutine: (id: string) => void;
+  /** Reseta a rotina diária se o dia mudou (chamar no mount da tela) */
+  ensureRoutineDay: () => void;
 
   // Gamification actions
   setDailyActivities: (activities: DailyActivity[]) => void;
@@ -211,6 +240,7 @@ export const useAura = create<AuraState>()(
       closet: [],
       favorites: [],
       routineDone: [],
+      routineDate: null,
 
       // Gamification defaults
       xp: 0,
@@ -252,6 +282,7 @@ export const useAura = create<AuraState>()(
         closet: [],
         favorites: [],
         routineDone: [],
+        routineDate: null,
         xp: 0,
         streak: 0,
         lastActiveDate: null,
@@ -276,12 +307,28 @@ export const useAura = create<AuraState>()(
             ? s.favorites.filter((f) => f !== id)
             : [...s.favorites, id],
         })),
+      ensureRoutineDay: () =>
+        set((s) => (s.routineDate === todayKey() ? s : { routineDone: [], routineDate: todayKey() })),
+
       toggleRoutine: (id) =>
-        set((s) => ({
-          routineDone: s.routineDone.includes(id)
-            ? s.routineDone.filter((f) => f !== id)
-            : [...s.routineDone, id],
-        })),
+        set((s) => {
+          const today = todayKey();
+          // Reset diário automático: novo dia → lista zerada
+          const sameDay = s.routineDate === today;
+          const done = sameDay ? s.routineDone : [];
+          const next = done.includes(id)
+            ? done.filter((f) => f !== id)
+            : [...done, id];
+          // Bônus: rotina completa (5 itens) uma vez por dia
+          const fullRoutine = ROUTINE_COUNT > 0 && next.length >= ROUTINE_COUNT;
+          const alreadyBonus = sameDay && done.length >= ROUTINE_COUNT;
+          const bonusXp = fullRoutine && !alreadyBonus ? ROUTINE_COMPLETE_XP : 0;
+          return {
+            routineDone: next,
+            routineDate: today,
+            xp: s.xp + bonusXp,
+          };
+        }),
 
       // Gamification actions
       setDailyActivities: (activities) => set({ dailyActivities: activities }),
@@ -344,7 +391,7 @@ export const useAura = create<AuraState>()(
 
       checkAndUpdateStreak: () => {
         const state = get();
-        const todayStr = new Date().toISOString().split('T')[0];
+        const todayStr = todayKey();
         if (state.lastActiveDate === todayStr) return;
 
         const dailyLoginXp = 5;
@@ -356,8 +403,12 @@ export const useAura = create<AuraState>()(
           ? state.streak + 1
           : 1;
 
+        // Bônus XP ao cruzar um marco de streak (7d, 14d, 30d…)
+        const milestone = STREAK_MILESTONES.find((m) => m.days === newStreak);
+        const milestoneXp = milestone ? milestone.xp : 0;
+
         set({
-          xp: state.xp + dailyLoginXp,
+          xp: state.xp + dailyLoginXp + milestoneXp,
           streak: newStreak,
           lastActiveDate: todayStr,
         });

@@ -15,7 +15,7 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "AuraStyle — Seu estilo, reinventado pela inteligência",
+  title: "AuraStyle — Seu estilo, com precisão",
   description:
     "Assistente de estética e estilo personalizado. Prioridades, compras inteligentes com orçamento e consultor no bolso.",
   keywords: ["estilo", "beleza", "moda", "personalização", "IA", "assistente", "compras"],

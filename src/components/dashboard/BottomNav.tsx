@@ -10,7 +10,7 @@ export type { Tab };
 
 const tabs: { id: Tab; label: string; icon: typeof Home }[] = [
   { id: 'home', label: 'Início', icon: Home },
-  { id: 'activities', label: 'Atividades', icon: Zap },
+  { id: 'activities', label: 'Dia', icon: Zap },
   { id: 'market', label: 'Mercado', icon: ShoppingBag },
   { id: 'closet', label: 'Armário', icon: Shirt },
   { id: 'explore', label: 'Explorar', icon: Compass },
@@ -25,8 +25,8 @@ export default function BottomNav({
   onChange: (tab: Tab) => void;
 }) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border">
-      <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
+    <nav className='pointer-events-none fixed inset-x-0 bottom-0 z-50 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]'>
+      <div className='glass-deep pointer-events-auto mx-auto flex h-[4.25rem] max-w-lg items-center justify-around rounded-[1.4rem] px-1.5'>
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = active === tab.id;
@@ -35,27 +35,44 @@ export default function BottomNav({
               key={tab.id}
               onClick={() => onChange(tab.id)}
               className={cn(
-                'relative flex flex-col items-center gap-0.5 py-1 px-1.5 transition-colors',
-                isActive ? 'text-foreground' : 'text-muted-foreground',
+                'relative flex h-full w-[3.4rem] flex-col items-center justify-center gap-1 transition-colors duration-200',
+                isActive ? 'text-primary' : 'text-muted-foreground/80 active:text-foreground',
               )}
+              aria-label={tab.label}
+              aria-current={isActive ? 'page' : undefined}
             >
+              {/* Notch de precisão — marcação usinada do item ativo */}
               {isActive && (
-                <motion.div
-                  layoutId="nav-indicator"
-                  className="absolute -top-px left-1.5 right-1.5 h-0.5 rounded-full bg-aura"
-                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                <motion.span
+                  layoutId='nav-notch'
+                  transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                  className='absolute top-2 h-[2px] w-4 rounded-full bg-aura'
                 />
               )}
-              <Icon className={cn('h-5 w-5', isActive && 'text-primary')} strokeWidth={isActive ? 2.5 : 2} />
-              <span className={cn('text-[10px] font-medium', isActive && 'text-primary')}>
+              {/* Base do ativo: micro-plataforma sob o ícone */}
+              {isActive && (
+                <motion.span
+                  layoutId='nav-base'
+                  transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                  className='absolute inset-x-2 bottom-2 top-2 rounded-xl bg-primary/[0.07]'
+                />
+              )}
+              <Icon
+                className={cn('relative h-[1.15rem] w-[1.15rem] transition-transform', isActive && 'scale-[1.04]')}
+                strokeWidth={isActive ? 2.2 : 1.8}
+              />
+              <span
+                className={cn(
+                  'relative text-[8px] font-semibold uppercase tracking-[0.14em]',
+                  isActive ? 'text-primary' : 'text-muted-foreground/70',
+                )}
+              >
                 {tab.label}
               </span>
             </button>
           );
         })}
       </div>
-      {/* Safe area bottom for iOS */}
-      <div className="h-[env(safe-area-inset-bottom)]" />
     </nav>
   );
 }

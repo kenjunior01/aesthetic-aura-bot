@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Flame, Zap, Trophy, Target, ChevronRight, Star,
-  Check, Lock, TrendingUp, Sparkles,
+  Check, Lock, TrendingUp, Gauge,
 } from 'lucide-react';
 import { useAura, getLevelInfo, nextStreakMilestone, STREAK_MILESTONES } from '@/lib/aura-store';
 import type { DailyActivity } from '@/lib/aura-store';
@@ -30,8 +30,16 @@ function LevelBar() {
     <div className="glass rounded-2xl p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className="relative h-12 w-12 rounded-full bg-aura flex items-center justify-center glow">
-            <span className="text-lg font-bold text-primary-foreground">{level}</span>
+          <div
+            className="relative grid h-12 w-12 place-items-center rounded-full"
+            style={{
+              background:
+                'conic-gradient(from 210deg, oklch(0.55 0.04 75), oklch(0.92 0.06 78) 18%, oklch(0.70 0.05 72) 38%, oklch(0.95 0.05 82) 55%, oklch(0.62 0.05 68) 74%, oklch(0.88 0.06 76) 92%, oklch(0.55 0.04 75))',
+            }}
+          >
+            <div className="grid h-[82%] w-[82%] place-items-center rounded-full bg-[oklch(0.13_0.008_70)] shadow-[inset_0_2px_5px_oklch(0.01_0.004_70/0.85)]">
+              <span className="text-base font-semibold text-primary">{level}</span>
+            </div>
           </div>
           <div>
             <span className="text-sm font-bold block">Nível {level}</span>
@@ -151,6 +159,7 @@ function StreakLadder({ streak }: { streak: number }) {
 
 function ActivityCard({ activity, onComplete }: { activity: DailyActivity; onComplete: () => void }) {
   const catConfig = activityCategoryConfig[activity.category] || activityCategoryConfig['bem-estar'];
+  const CatIcon = catConfig.icon;
 
   return (
     <motion.div
@@ -164,11 +173,8 @@ function ActivityCard({ activity, onComplete }: { activity: DailyActivity; onCom
         activity.completed && 'opacity-60',
       )}
     >
-      <div className={cn(
-        'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br',
-        catConfig.color,
-      )}>
-        <span className="text-lg">{catConfig.emoji}</span>
+      <div className='machined flex h-11 w-11 shrink-0 items-center justify-center rounded-xl'>
+        <CatIcon className={cn('h-5 w-5', catConfig.tint)} strokeWidth={1.9} />
       </div>
 
       <div className="flex-1 min-w-0">
@@ -367,12 +373,12 @@ function DailyChallengesSection() {
               initial={{ scale: 0, rotate: -10 }}
               animate={{ scale: 1, rotate: 0 }}
               exit={{ scale: 0, rotate: 10 }}
-              className="glass rounded-3xl p-8 text-center glow"
+              className="glass-deep rounded-3xl p-8 text-center"
             >
-              <span className="text-5xl block mb-3">🎉</span>
-              <h3 className="text-xl font-bold mb-1">Dia Perfeito!</h3>
+              <Trophy className="h-12 w-12 mx-auto mb-3 text-gold" strokeWidth={1.6} />
+              <h3 className="font-display text-xl font-light mb-1">Dia perfeito</h3>
               <p className="text-sm text-muted-foreground">
-                Todos os desafios concluídos! +150 XP bônus
+                Todos os desafios concluídos · +150 XP bônus
               </p>
             </motion.div>
           </motion.div>
@@ -573,7 +579,7 @@ function StatsSection() {
   const unlockedCount = achievements.filter((a) => a.unlockedAt).length;
 
   const stats = [
-    { label: 'Nível', value: level, icon: Sparkles, color: 'text-primary' },
+    { label: 'Nível', value: level, icon: Gauge, color: 'text-primary' },
     { label: 'XP Total', value: xp, icon: Zap, color: 'text-gold' },
     { label: 'Streak', value: `${streak}d`, icon: Flame, color: 'text-gold' },
     { label: 'Atividades', value: totalCompletedActivities, icon: TrendingUp, color: 'text-green-400' },
@@ -636,7 +642,7 @@ export default function ActivitiesScreen() {
             <p className="text-sm text-muted-foreground mt-0.5">Desafios, metas e evolução</p>
           </div>
           <div className="flex h-10 w-10 items-center justify-center rounded-xl glass">
-            <Sparkles className="h-5 w-5 text-gold" />
+            <Gauge className="h-5 w-5 text-primary" strokeWidth={1.8} />
           </div>
         </div>
 

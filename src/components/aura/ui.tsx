@@ -29,7 +29,8 @@ export function GlowButton({
       disabled={disabled}
       className={cn(
         'relative inline-flex h-13 items-center justify-center gap-2 overflow-hidden rounded-2xl px-6 py-3.5 text-base font-semibold transition-opacity disabled:cursor-not-allowed disabled:opacity-40',
-        variant === 'primary' && 'bg-aura text-primary-foreground glow',
+        variant === 'primary' &&
+          'bg-aura text-primary-foreground shadow-[0_14px_30px_-12px_oklch(0.87_0.07_72/0.5),inset_0_1px_0_oklch(0.99_0.01_85/0.4),inset_0_-2px_6px_-2px_oklch(0.55_0.05_65/0.45)]',
         variant === 'outline' && 'glass text-foreground',
         variant === 'ghost' && 'text-muted-foreground hover:text-foreground',
         className,
@@ -68,7 +69,7 @@ export function SelectCard({
         <motion.span
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full bg-aura"
+          className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full bg-aura shadow-[inset_0_1px_0_oklch(0.99_0.01_85/0.4)]"
         >
           <Check className="h-3 w-3 text-primary-foreground" strokeWidth={3} />
         </motion.span>
@@ -95,7 +96,7 @@ export function Chip({
       className={cn(
         'inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all',
         selected
-          ? 'border-transparent bg-aura text-primary-foreground glow'
+          ? 'border-transparent bg-aura text-primary-foreground shadow-[0_8px_18px_-8px_oklch(0.87_0.07_72/0.5),inset_0_1px_0_oklch(0.99_0.01_85/0.4)]'
           : 'border-border bg-surface text-muted-foreground hover:text-foreground',
       )}
     >

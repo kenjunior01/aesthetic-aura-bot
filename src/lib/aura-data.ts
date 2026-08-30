@@ -1,3 +1,6 @@
+import type { LucideIcon } from 'lucide-react';
+import { Droplets, Scissors, Shirt, Leaf, Target, Sparkles, SprayCan, Flower2, Glasses, Layers, Gem, Footprints, Ruler, Repeat2, CircleCheck } from 'lucide-react';
+
 export const genders = [
   { id: 'feminino', label: 'Feminino' },
   { id: 'masculino', label: 'Masculino' },
@@ -452,18 +455,18 @@ export function getProductsForRegion(region: string, budget?: string, skinTypes?
 // ACTIVITY CATEGORY CONFIG
 // ============================================================
 
-export const activityCategoryConfig: Record<string, { label: string; color: string; emoji: string }> = {
-  'pele': { label: 'Pele', color: 'from-blue-500/20 to-teal-500/20', emoji: '🧴' },
-  'cabelo': { label: 'Cabelo', color: 'from-gold/20 to-orange-500/20', emoji: '💇' },
-  'estilo': { label: 'Estilo', color: 'from-primary/10 to-primary-glow/10', emoji: '👗' },
-  'bem-estar': { label: 'Bem-estar', color: 'from-green-500/20 to-emerald-500/20', emoji: '🧘' },
-  'desafio': { label: 'Desafio', color: 'from-purple-500/20 to-pink-500/20', emoji: '🎯' },
+export const activityCategoryConfig: Record<string, { label: string; icon: LucideIcon; tint: string }> = {
+  'pele': { label: 'Pele', icon: Droplets, tint: 'text-sky-300' },
+  'cabelo': { label: 'Cabelo', icon: Scissors, tint: 'text-gold' },
+  'estilo': { label: 'Estilo', icon: Shirt, tint: 'text-primary' },
+  'bem-estar': { label: 'Bem-estar', icon: Leaf, tint: 'text-emerald-300' },
+  'desafio': { label: 'Desafio', icon: Target, tint: 'text-accent' },
 };
 
-export const productCategoryConfig: Record<string, { label: string; emoji: string }> = {
-  'pele': { label: 'Pele', emoji: '🧴' },
-  'cabelo': { label: 'Cabelo', emoji: '💇' },
-  'maquiagem': { label: 'Maquiagem', emoji: '💄' },
-  'fragrância': { label: 'Fragrância', emoji: '🌸' },
-  'acessório': { label: 'Acessório', emoji: '🕶️' },
+export const productCategoryConfig: Record<string, { label: string; icon: LucideIcon; tint: string }> = {
+  'pele': { label: 'Pele', icon: SprayCan, tint: 'text-sky-300' },
+  'cabelo': { label: 'Cabelo', icon: Scissors, tint: 'text-gold' },
+  'maquiagem': { label: 'Maquiagem', icon: Sparkles, tint: 'text-accent' },
+  'fragrância': { label: 'Fragrância', icon: Flower2, tint: 'text-rose-300' },
+  'acessório': { label: 'Acessório', icon: Glasses, tint: 'text-primary' },
 };

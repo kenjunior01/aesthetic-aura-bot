@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  MessageCircle, X, Send, Sparkles, Bot, Brain, Zap,
+  MessageCircle, X, Send, Bot, Brain,
 } from 'lucide-react';
 import { useAura, getLevelInfo, type AuraState } from '@/lib/aura-store';
 import { API_BASE } from '@/lib/api-base';
@@ -177,25 +177,31 @@ export default function AIChatButton() {
 
   return (
     <>
-      {/* FAB Button */}
+      {/* FAB — lente usinada: aro metálico + vidro escuro, sem brilho de IA */}
       <motion.button
-        whileTap={{ scale: 0.9 }}
-        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.92 }}
         onClick={() => setOpen(!open)}
-        className='fixed bottom-20 right-4 z-50 h-14 w-14 rounded-full bg-aura flex items-center justify-center glow shadow-2xl'
+        className='fixed bottom-24 right-4 z-50 grid h-14 w-14 place-items-center rounded-full'
+        style={{
+          background:
+            'conic-gradient(from 200deg, oklch(0.50 0.03 75), oklch(0.90 0.06 78) 22%, oklch(0.62 0.04 72) 45%, oklch(0.93 0.05 82) 62%, oklch(0.55 0.04 70) 85%, oklch(0.50 0.03 75))',
+          boxShadow: '0 18px 36px -14px oklch(0.01 0.004 70 / 90%)',
+        }}
         aria-label='Abrir chat do Aura'
       >
-        <AnimatePresence mode='wait'>
-          {open ? (
-            <motion.div key='close' initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }}>
-              <X className='h-6 w-6 text-primary-foreground' />
-            </motion.div>
-          ) : (
-            <motion.div key='open' initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }}>
-              <MessageCircle className='h-6 w-6 text-primary-foreground' />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <span className='grid h-[3.1rem] w-[3.1rem] place-items-center rounded-full bg-[oklch(0.13_0.008_70)] shadow-[inset_0_2px_6px_oklch(0.01_0.004_70/0.8)]'>
+          <AnimatePresence mode='wait'>
+            {open ? (
+              <motion.div key='close' initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }}>
+                <X className='h-5 w-5 text-primary' strokeWidth={2.2} />
+              </motion.div>
+            ) : (
+              <motion.div key='open' initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }}>
+                <MessageCircle className='h-5 w-5 text-primary' strokeWidth={2.2} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </span>
       </motion.button>
 
       {/* Chat Panel */}
@@ -206,30 +212,35 @@ export default function AIChatButton() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className='fixed bottom-36 right-4 left-4 z-50 max-w-lg mx-auto glass rounded-3xl flex flex-col overflow-hidden'
+            className='fixed bottom-40 right-4 left-4 z-50 max-w-lg mx-auto glass-deep rounded-3xl flex flex-col overflow-hidden'
             style={{ height: 'min(480px, 70vh)' }}
           >
-            {/* Header */}
-            <div className='flex items-center justify-between p-4 border-b border-border shrink-0'>
+            {/* Header — terminal de concierge */}
+            <div className='flex items-center justify-between border-b border-border px-4 py-3 shrink-0'>
               <div className='flex items-center gap-3'>
-                <div className='h-10 w-10 rounded-full bg-aura flex items-center justify-center'>
-                  <Sparkles className='h-5 w-5 text-primary-foreground' />
+                <div className='machined grid h-10 w-10 place-items-center rounded-full'>
+                  <span
+                    className='font-display text-base font-semibold text-primary'
+                    style={{ textShadow: '0 1px 0 oklch(0.01 0.004 70 / 0.8)' }}
+                  >
+                    A
+                  </span>
                 </div>
                 <div>
                   <div className='flex items-center gap-2'>
-                    <span className='text-sm font-bold block'>Aura AI</span>
+                    <span className='text-sm font-bold block'>Aura</span>
                     <span title={`Fonte atual: ${aiSource}`} className='inline-flex'>
-                      <Brain className='h-3 w-3 text-primary' />
+                      <Brain className='h-3 w-3 text-primary/70' />
                     </span>
                   </div>
-                  <span className='text-[10px] text-muted-foreground'>
-                    Seu concierge de estilo · Groq ultrarrápido
+                  <span className='flex items-center gap-1.5 text-[10px] text-muted-foreground'>
+                    <span className='relative flex h-1.5 w-1.5'>
+                      <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-60' />
+                      <span className='relative inline-flex h-1.5 w-1.5 rounded-full bg-green-400' />
+                    </span>
+                    Concierge de estilo · online
                   </span>
                 </div>
-              </div>
-              <div className='flex items-center gap-1.5'>
-                <Zap className='h-3 w-3 text-gold' />
-                <span className='text-[10px] font-semibold text-gold'>Turbo</span>
               </div>
             </div>
 

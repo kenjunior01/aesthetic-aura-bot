@@ -1,66 +1,53 @@
 'use client';
 
-const particles = Array.from({ length: 26 }, (_, i) => {
-  const seed = (i * 9301 + 49297) % 233280;
-  const r = seed / 233280;
-  const r2 = ((i * 4177 + 12345) % 65536) / 65536;
-  return {
-    x: Math.round(r * 100),
-    y: Math.round(r2 * 100),
-    s: 2 + Math.round(r * 3),
-    o: 0.2 + r2 * 0.5,
-    d: 10 + Math.round(r2 * 14),
-    delay: Math.round(r * 6),
-  };
-});
-
+/**
+ * DepthField — superfície fotográfica em vez de "aurora de IA".
+ *
+ * Uma laje de obsidiana iluminada por softbox superior: queda de luz
+ * vertical, um spotlight champanhe larguíssimo e grão de filme fino.
+ * Sem blobs coloridos, sem partículas flutuantes — realismo de estúdio.
+ */
 export function AuroraBackground({ dense = false }: { dense?: boolean }) {
   return (
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      {/* Queda de luz vertical — a superfície responde à luz como material real */}
       <div
-        className="absolute -left-24 -top-32 h-[70vh] w-[70vh] rounded-full opacity-50 blur-[100px]"
+        className="absolute inset-0"
         style={{
-          background: 'radial-gradient(circle, var(--primary), transparent 65%)',
-          animation: 'float-slow 14s ease-in-out infinite',
+          background:
+            'linear-gradient(180deg, oklch(0.19 0.010 80 / 85%) 0%, oklch(0.13 0.007 75 / 40%) 26%, oklch(0.105 0.006 70) 58%, oklch(0.085 0.005 70) 100%)',
         }}
       />
+
+      {/* Spotlight champanhe de estúdio — largura total, difuso, sem cor de "IA" */}
       <div
-        className="absolute -right-32 top-[18vh] h-[60vh] w-[60vh] rounded-full opacity-40 blur-[110px]"
+        className="absolute inset-x-0 -top-[30vh] h-[80vh]"
         style={{
-          background: 'radial-gradient(circle, var(--primary-glow), transparent 65%)',
-          animation: 'float-slow 18s ease-in-out infinite reverse',
+          background:
+            'radial-gradient(ellipse 90% 62% at 50% 0%, oklch(0.87 0.07 72 / 13%) 0%, oklch(0.87 0.07 72 / 5%) 42%, transparent 72%)',
         }}
       />
+
+      {/* Reflexo frio lateral mínimo — dá volume sem chamar atenção */}
       <div
-        className="absolute bottom-[-20vh] left-[10vw] h-[55vh] w-[55vh] rounded-full opacity-25 blur-[120px]"
+        className="absolute -right-[20vw] top-[30vh] h-[50vh] w-[60vw]"
         style={{
-          background: 'radial-gradient(circle, var(--gold), transparent 65%)',
-          animation: 'float-slow 22s ease-in-out infinite',
+          background:
+            'radial-gradient(ellipse at center, oklch(0.75 0.02 90 / 5%) 0%, transparent 65%)',
         }}
       />
-      {dense && (
-        <div className="absolute inset-0">
-          {particles.map((p, i) => (
-            <span
-              key={i}
-              className="absolute rounded-full bg-foreground/50"
-              style={{
-                left: `${p.x}%`,
-                top: `${p.y}%`,
-                width: p.s,
-                height: p.s,
-                opacity: p.o,
-                animation: `float-slow ${p.d}s ease-in-out ${p.delay}s infinite`,
-              }}
-            />
-          ))}
-        </div>
-      )}
+
+      {/* Grão de filme — remove o aspecto "plástico digital" */}
       <div
-        className="absolute inset-0 opacity-[0.05]"
+        className="grain-layer absolute inset-0 opacity-[0.05] mix-blend-overlay"
+        style={{ transform: 'translateZ(0)' }}
+      />
+
+      {/* Vinheta inferior — ancora o conteúdo */}
+      <div
+        className="absolute inset-x-0 bottom-0 h-[30vh]"
         style={{
-          backgroundImage: 'radial-gradient(var(--foreground) 1px, transparent 1px)',
-          backgroundSize: '26px 26px',
+          background: 'linear-gradient(0deg, oklch(0.06 0.004 70 / 75%) 0%, transparent 100%)',
         }}
       />
     </div>

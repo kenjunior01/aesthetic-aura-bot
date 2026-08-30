@@ -5,6 +5,8 @@ import {
   TrendingUp, Heart, Share2,
   Flame, Star, Sparkles, ShoppingCart,
   MapPin, ExternalLink, Check,
+  Target, Layers, Gem, Footprints, Ruler, Repeat2,
+  Shirt, Glasses, Briefcase, CheckCircle2, type LucideIcon,
 } from 'lucide-react';
 import { useAura } from '@/lib/aura-store';
 import {
@@ -57,20 +59,20 @@ const trendingTopics = [
 ];
 
 const styleTips = [
-  { id: 'tip1', title: 'Regra do 3', desc: 'Combine no máximo 3 cores por look para harmonia visual', icon: '🎯' },
-  { id: 'tip2', title: 'Camadas com propósito', desc: 'Use sobreposições que adicionem textura e profundidade ao visual', icon: '🧅' },
-  { id: 'tip3', title: 'Acessórios transformam', desc: 'Um bom relógio, cinto ou colar eleva qualquer look básico', icon: '💎' },
-  { id: 'tip4', title: 'Sapatos são protagonistas', desc: 'Invista em calçados versáteis: branco, preto e marrom', icon: '👟' },
-  { id: 'tip5', title: 'Fit é tudo', desc: 'Roupas no tamanho certo fazem mais diferença que a marca', icon: '📏' },
-  { id: 'tip6', title: 'Identifique seu uniforme', desc: 'Descubra o combo que te faz sentir confiante e repita com variações', icon: '✨' },
+  { id: 'tip1', title: 'Regra do 3', desc: 'Combine no máximo 3 cores por look para harmonia visual', icon: Target },
+  { id: 'tip2', title: 'Camadas com propósito', desc: 'Use sobreposições que adicionem textura e profundidade ao visual', icon: Layers },
+  { id: 'tip3', title: 'Acessórios transformam', desc: 'Um bom relógio, cinto ou colar eleva qualquer look básico', icon: Gem },
+  { id: 'tip4', title: 'Sapatos são protagonistas', desc: 'Invista em calçados versáteis: branco, preto e marrom', icon: Footprints },
+  { id: 'tip5', title: 'Fit é tudo', desc: 'Roupas no tamanho certo fazem mais diferença que a marca', icon: Ruler },
+  { id: 'tip6', title: 'Identifique seu uniforme', desc: 'Descubra o combo que te faz sentir confiante e repita com variações', icon: Repeat2 },
 ];
 
 const seasonalPicks = [
-  { id: 's1', title: 'Blazer oversized', reason: 'Versátil do casual ao formal', emoji: '🧥' },
-  { id: 's2', title: 'Tênis minimalista branco', reason: 'Funciona com tudo', emoji: '👟' },
-  { id: 's3', title: 'Calça wide leg', reason: 'Conforto e elegância', emoji: '👖' },
-  { id: 's4', title: 'Camiseta oversized preta', reason: 'Base infinita do armário', emoji: '👕' },
-  { id: 's5', title: 'Óculos de sol vintage', reason: 'Acessório com personalidade', emoji: '🕶️' },
+  { id: 's1', title: 'Blazer oversized', reason: 'Versátil do casual ao formal', icon: Briefcase },
+  { id: 's2', title: 'Tênis minimalista branco', reason: 'Funciona com tudo', icon: Footprints },
+  { id: 's3', title: 'Calça wide leg', reason: 'Conforto e elegância', icon: Layers },
+  { id: 's4', title: 'Camiseta oversized preta', reason: 'Base infinita do armário', icon: Shirt },
+  { id: 's5', title: 'Óculos de sol vintage', reason: 'Acessório com personalidade', icon: Glasses },
 ];
 
 // ============================================================
@@ -98,12 +100,15 @@ function Toast({ message, visible }: { message: string; visible: boolean }) {
 }
 
 function TipCard({ tip }: { tip: typeof styleTips[0] }) {
+  const Icon: LucideIcon = tip.icon;
   return (
     <motion.div
       whileTap={{ scale: 0.98 }}
       className="glass rounded-2xl p-4 flex gap-3 items-start cursor-pointer"
     >
-      <span className="text-2xl mt-0.5">{tip.icon}</span>
+      <div className="machined grid h-10 w-10 shrink-0 place-items-center rounded-xl">
+        <Icon className="h-[1.1rem] w-[1.1rem] text-primary" strokeWidth={1.9} />
+      </div>
       <div>
         <span className="text-sm font-semibold block">{tip.title}</span>
         <span className="text-xs text-muted-foreground leading-relaxed block mt-0.5">{tip.desc}</span>
@@ -164,12 +169,15 @@ function TrendCard({ topic, index, onToast }: { topic: typeof trendingTopics[0];
 }
 
 function SeasonalCard({ item }: { item: typeof seasonalPicks[0] }) {
+  const Icon: LucideIcon = item.icon;
   return (
     <motion.div
       whileTap={{ scale: 0.96 }}
       className="glass rounded-2xl p-4 min-w-[150px] flex-shrink-0 cursor-pointer"
     >
-      <span className="text-2xl block mb-2">{item.emoji}</span>
+      <div className="machined mb-2.5 grid h-9 w-9 place-items-center rounded-lg">
+        <Icon className="h-[1.05rem] w-[1.05rem] text-primary" strokeWidth={1.9} />
+      </div>
       <span className="text-sm font-semibold block">{item.title}</span>
       <span className="text-[10px] text-muted-foreground block mt-0.5">{item.reason}</span>
     </motion.div>
@@ -181,7 +189,8 @@ function SeasonalCard({ item }: { item: typeof seasonalPicks[0] }) {
 // ============================================================
 
 function ProductCard({ product }: { product: RegionalProduct }) {
-  const catConfig = productCategoryConfig[product.category] || { label: product.category, emoji: '📦' };
+  const catConfig = productCategoryConfig[product.category] || { label: product.category, icon: CheckCircle2 as LucideIcon, tint: 'text-primary' };
+  const CatIcon: LucideIcon = catConfig.icon;
   const stars = Math.floor(product.rating);
   const hasHalf = product.rating - stars >= 0.3;
 
@@ -190,8 +199,8 @@ function ProductCard({ product }: { product: RegionalProduct }) {
       whileTap={{ scale: 0.98 }}
       className="glass rounded-2xl p-4 flex gap-3 items-start cursor-pointer hover:border-primary/30 transition-colors"
     >
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-surface-strong text-2xl">
-        {catConfig.emoji}
+      <div className="machined flex h-12 w-12 shrink-0 items-center justify-center rounded-xl">
+        <CatIcon className={cn('h-5 w-5', catConfig.tint)} strokeWidth={1.8} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
@@ -320,7 +329,7 @@ function ProductRecommendations({ onToast }: { onToast: (msg: string) => void })
                     : 'border-border bg-surface text-muted-foreground',
                 )}
               >
-                {config?.emoji} {config?.label || cat}
+                {config?.label || cat}
               </button>
             );
           })}

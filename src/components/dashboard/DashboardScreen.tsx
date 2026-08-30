@@ -197,24 +197,26 @@ function PriorityFocusCard({ onGoToMarket }: { onGoToMarket?: () => void }) {
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="glass rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 to-transparent p-4"
+      className='glass relative overflow-hidden rounded-2xl p-4'
     >
-      <div className="mb-2 flex items-center gap-2">
-        <span className="rounded-full bg-aura px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-primary-foreground">
+      {/* Filete de luz no topo — material respondendo ao softbox */}
+      <div className='pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent' />
+      <div className='mb-2 flex items-center gap-2'>
+        <span className='machined rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.16em] text-primary'>
           Prioridade nº 1
         </span>
-        <span className="text-xs font-semibold text-primary">{goal?.label || 'Seu foco'}</span>
+        <span className='text-xs font-semibold text-primary'>{goal?.label || 'Seu foco'}</span>
       </div>
-      <div className="flex items-start gap-3">
-        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-aura/20">
-          <Icon className="h-5 w-5 text-primary" />
+      <div className='flex items-start gap-3'>
+        <div className='machined grid h-11 w-11 shrink-0 place-items-center rounded-xl'>
+          <Icon className='h-5 w-5 text-primary' strokeWidth={2} />
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm leading-relaxed">{goal?.focusLine || 'Define tuas prioridades para o app se adaptar a ti.'}</p>
           {isShopping && onGoToMarket && (
             <button
               onClick={onGoToMarket}
-              className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-aura px-3.5 py-2 text-xs font-semibold text-primary-foreground glow"
+              className='mt-2 inline-flex items-center gap-1.5 rounded-xl bg-aura px-3.5 py-2 text-xs font-semibold text-primary-foreground shadow-[0_8px_18px_-8px_oklch(0.87_0.07_72/0.5),inset_0_1px_0_oklch(0.99_0.01_85/0.35)]'
             >
               <ShoppingBag className="h-3.5 w-3.5" />
               Abrir Consultor de Compras
@@ -272,16 +274,25 @@ function StreakAndLevelBar() {
       animate={{ opacity: 1, y: 0 }}
       className='glass rounded-2xl p-3 flex items-center gap-3'
     >
-      <div className='h-10 w-10 rounded-full bg-aura flex items-center justify-center shrink-0'>
-        <span className='text-sm font-bold text-primary-foreground'>{level}</span>
+      {/* Coroa de nível em miniatura — bezel metálico + mostrador */}
+      <div
+        className='grid h-10 w-10 shrink-0 place-items-center rounded-full'
+        style={{
+          background:
+            'conic-gradient(from 210deg, oklch(0.55 0.04 75), oklch(0.92 0.06 78) 18%, oklch(0.70 0.05 72) 38%, oklch(0.95 0.05 82) 55%, oklch(0.62 0.05 68) 74%, oklch(0.88 0.06 76) 92%, oklch(0.55 0.04 75))',
+        }}
+      >
+        <div className='grid h-[82%] w-[82%] place-items-center rounded-full bg-[oklch(0.13_0.008_70)] shadow-[inset_0_2px_5px_oklch(0.01_0.004_70/0.85)]'>
+          <span className='text-[13px] font-semibold text-primary'>{level}</span>
+        </div>
       </div>
 
       <div className='flex-1 min-w-0'>
         <div className='flex items-center justify-between mb-1'>
-          <span className='text-[10px] text-muted-foreground'>Nível {level}</span>
-          <span className='text-[10px] text-gold font-medium'>{xp} XP</span>
+          <span className='text-[10px] uppercase tracking-[0.14em] text-muted-foreground'>Nível {level}</span>
+          <span className='text-[10px] font-semibold text-primary'>{xp} XP</span>
         </div>
-        <div className='h-1.5 rounded-full bg-surface-strong overflow-hidden'>
+        <div className='h-1.5 rounded-full bg-surface-strong overflow-hidden shadow-[inset_0_1px_2px_oklch(0.01_0.004_70/0.6)]'>
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(progress * 100, 100)}%` }}
@@ -295,7 +306,7 @@ function StreakAndLevelBar() {
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className='flex items-center gap-1 rounded-full bg-gold/15 px-2.5 py-1.5 shrink-0'
+          className='machined flex items-center gap-1 rounded-full px-2.5 py-1.5 shrink-0'
         >
           <Flame className='h-3.5 w-3.5 text-gold' />
           <span className='text-xs font-bold text-gold'>{streak}</span>
@@ -816,7 +827,7 @@ function ProfileTab() {
               className='rounded-xl border border-border bg-surface p-3 flex items-center gap-3 text-left hover:border-primary/30 transition-colors'
             >
               {syncing
-                ? <Sparkles className='h-4 w-4 text-primary animate-pulse' />
+                ? <Cloud className='h-4 w-4 text-primary animate-pulse' />
                 : <Cloud className='h-4 w-4 text-primary' />
               }
               <span className='text-sm font-medium'>{syncing ? 'Sincronizando...' : 'Sincronizar agora'}</span>
@@ -861,7 +872,7 @@ function ProfileTab() {
               className='rounded-xl border border-border bg-surface p-3 flex items-center gap-3 text-left hover:border-primary/30 transition-colors'
             >
               {syncing
-                ? <Sparkles className='h-4 w-4 text-primary animate-pulse' />
+                ? <Cloud className='h-4 w-4 text-primary animate-pulse' />
                 : <Cloud className='h-4 w-4 text-primary' />
               }
               <span className='text-sm font-medium'>{syncing ? 'Carregando...' : 'Restaurar da nuvem'}</span>
@@ -1002,17 +1013,17 @@ export default function DashboardScreen() {
       {activeTab !== 'activities' && activeTab !== 'closet' && activeTab !== 'explore' && activeTab !== 'market' && (
         <div className='relative z-10 px-4 pt-6 max-w-lg mx-auto'>
           <motion.div
-            initial={{ y: -20, opacity: 0 }}
+            initial={{ y: -16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             className='mb-4'
           >
-            <h1 className='text-2xl font-bold'>
-              Olá, {firstName}! <Sparkles className='inline h-6 w-6 text-gold' />
+            <h1 className='font-display text-[1.65rem] font-light tracking-tight text-foreground'>
+              Olá, {firstName}
             </h1>
-            <p className='text-sm text-muted-foreground mt-1'>
+            <p className='mt-0.5 text-[11px] font-medium uppercase tracking-[0.2em] text-primary/90'>
               {topGoal
-                ? `Foco de hoje: ${topGoal.label}`
-                : 'Suas recomendações personalizadas estão prontas'}
+                ? topGoal.label
+                : 'Teu estilo, em precisão'}
             </p>
           </motion.div>
 

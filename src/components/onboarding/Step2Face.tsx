@@ -42,9 +42,7 @@ export default function Step2Face({
 
   return (
     <motion.div
-      initial={{ x: 60, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.35, ease: 'easeOut' }}
+      initial={false}
       className="flex min-h-full flex-col"
     >
       <div className="flex-1 overflow-y-auto px-1 pb-6">

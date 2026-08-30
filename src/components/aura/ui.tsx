@@ -141,10 +141,10 @@ export function FloatingInput({
 export function SectionTitle({ title, hint }: { title: string; hint?: string }) {
   return (
     <div className="mb-3">
-      <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+      <h3 className="text-sm font-semibold uppercase tracking-widest text-foreground/90">
         {title}
       </h3>
-      {hint && <p className="mt-1 text-xs text-muted-foreground/70">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }

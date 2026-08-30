@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAura, getLevelInfo, type AuraState } from '@/lib/aura-store';
 import { API_BASE } from '@/lib/api-base';
+import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
 import { logEvent } from '@/lib/services';
 
@@ -117,10 +118,9 @@ export default function AIChatButton() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
-
-    const question = input.trim();
+  const handleSend = async (override?: string) => {
+    const question = (override ?? input).trim();
+    if (!question) return;
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -248,7 +248,7 @@ export default function AIChatButton() {
                     {['Estou no mercado, o que compro primeiro?', 'Dica de cabelo', 'Sugestão de look', 'Rotina de pele', 'Marcas baratas no meu país'].map((suggestion) => (
                       <button
                         key={suggestion}
-                        onClick={() => { setInput(suggestion); }}
+                        onClick={() => { handleSend(suggestion); }}
                         className='rounded-full border border-border bg-surface px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all'
                       >
                         {suggestion}
@@ -273,7 +273,13 @@ export default function AIChatButton() {
                         : 'bg-surface-strong text-foreground rounded-bl-md',
                     )}
                   >
-                    {msg.content}
+                    {msg.role === 'user' ? (
+                      msg.content
+                    ) : (
+                      <div className="[&_strong]:font-semibold [&_strong]:text-primary [&_em]:italic [&_code]:text-[11px] [&_li]:ml-3">
+                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      </div>
+                    )}
                     {msg.streaming && !msg.content && (
                       <span className='flex gap-1 py-1'>
                         <motion.span className='h-2 w-2 rounded-full bg-muted-foreground' animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 0.6 }} />
@@ -315,7 +321,7 @@ export default function AIChatButton() {
                 />
                 <motion.button
                   whileTap={{ scale: 0.9 }}
-                  onClick={handleSend}
+                  onClick={() => { handleSend(); }}
                   disabled={!input.trim()}
                   className='h-10 w-10 rounded-xl bg-aura flex items-center justify-center disabled:opacity-40'
                   aria-label='Enviar mensagem'

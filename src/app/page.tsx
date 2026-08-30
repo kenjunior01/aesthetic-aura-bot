@@ -79,22 +79,22 @@ export default function Page() {
   }, []);
 
   const nextStep = useCallback(() => {
-    setStep((s) => {
-      const next = s < 6 ? s + 1 : s;
-      if (next >= 6) {
-        // Onboarding complete — mark onboarded, sync to cloud
-        const store = useAura.getState();
-        store.complete();
-        logEvent('onboarding_complete');
-        // Sync full profile to cloud if user has account
-        if (store.authUid) {
-          syncFullProfileOnComplete(store.authUid, store).catch(() => {});
-        }
-        setView('dashboard');
+    // Última etapa (índice 6 = Lifestyle) → completa e vai ao dashboard.
+    // Tudo FORA de updaters de setState: chamar setState/store dentro do
+    // updater dispara warning "Cannot update a component while rendering".
+    if (step >= 6) {
+      const store = useAura.getState();
+      store.complete();
+      logEvent('onboarding_complete');
+      // Sync full profile to cloud if user has account
+      if (store.authUid) {
+        syncFullProfileOnComplete(store.authUid, store).catch(() => {});
       }
-      return next;
-    });
-  }, []);
+      setView('dashboard');
+      return;
+    }
+    setStep(step + 1);
+  }, [step]);
 
   const prevStep = useCallback(() => {
     setStep((s) => {

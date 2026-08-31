@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Scissors, TrendingUp,
-  Droplets, Sun, Moon, Palette, ArrowRight, Shirt, Target,
+  Droplets, Sun, Moon, Palette, ArrowRight, Shirt, Target, Fingerprint,
   Flame, Zap, Share2, Star, Cloud, CloudOff,
   Bell, BellOff, Settings, LogOut, Download, Upload, ShoppingBag,
 } from 'lucide-react';
@@ -25,6 +25,7 @@ import NearbySalons from './NearbySalons';
 import { useAchievements } from '@/hooks/use-achievements';
 import { signOut, logEvent, requestNotificationPermission, scheduleRoutineReminder, exportAllData, downloadJSON, importData, loadFullProfileFromCloud } from '@/lib/services';
 import ProfileEditScreen from './ProfileEditScreen';
+import LookAlikeScreen from './LookAlikeScreen';
 import { GOAL_OPTIONS, getGoal } from '@/lib/goals';
 import { COUNTRIES } from '@/lib/shopping';
 
@@ -655,6 +656,8 @@ function ProfileTab() {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [lookAlikeImg, setLookAlikeImg] = useState<string | null>(null);
+  const [showLookAlike, setShowLookAlike] = useState(false);
   const [importMsg, setImportMsg] = useState('');
   const { level } = getLevelInfo(xp);
   const unlockedCount = achievements.filter((a) => a.unlockedAt).length;
@@ -725,8 +728,21 @@ function ProfileTab() {
     setSyncing(false);
   };
 
+  if (showLookAlike) {
+    return <LookAlikeScreen initialImage={lookAlikeImg} onClose={() => setShowLookAlike(false)} />;
+  }
+
   if (editing) {
-    return <ProfileEditScreen onClose={() => setEditing(false)} />;
+    return (
+      <ProfileEditScreen
+        onClose={() => setEditing(false)}
+        onCompare={(img) => {
+          setEditing(false);
+          setLookAlikeImg(img);
+          setShowLookAlike(true);
+        }}
+      />
+    );
   }
 
   return (
@@ -757,6 +773,32 @@ function ProfileTab() {
           </div>
         </div>
       </div>
+
+      {/* Referências — a quem a tua cara se aproxima */}
+      <button
+        onClick={() => {
+          setLookAlikeImg(null);
+          setShowLookAlike(true);
+          logEvent('lookalike_open');
+        }}
+        className='glass group relative flex items-center gap-4 overflow-hidden rounded-2xl p-4 text-left transition-colors'
+      >
+        <span
+          aria-hidden
+          className='pointer-events-none absolute inset-x-0 top-0 h-px'
+          style={{ background: 'linear-gradient(90deg, transparent, oklch(0.87 0.05 242 / 0.4), transparent)' }}
+        />
+        <span className='machined grid h-12 w-12 shrink-0 place-items-center rounded-xl'>
+          <Fingerprint className='h-5 w-5 text-primary' />
+        </span>
+        <span className='min-w-0 flex-1'>
+          <span className='block text-sm font-semibold text-foreground'>Referências de estilo</span>
+          <span className='mt-0.5 block text-[11px] leading-snug text-muted-foreground'>
+            A quem a tua cara se aproxima no banco — e o que fazer para subir de nível
+          </span>
+        </span>
+        <ArrowRight className='h-4 w-4 shrink-0 text-primary/70 transition-transform group-active:translate-x-0.5' />
+      </button>
 
       {/* Stats grid */}
       <div className='grid grid-cols-3 gap-2.5'>

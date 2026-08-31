@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,20 +7,34 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+/// Banco de referências de estilo — arquétipos originais AuraStyle.
+/// Cada look define traços faciais mensuráveis (base do matching) e o
+/// plano de upgrade que ele "ensina". Não são pessoas reais: são
+/// referências autoriais de estúdio, com traços canónicos.
+model ReferenceLook {
+  id String @id @default(cuid())
 
-model Post {
-  id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
+  slug    String @unique
+  name    String
+  tagline String
+  image   String // caminho público /references/*.jpg
+  order   Int    @default(0)
+
+  // ── Traços mensuráveis (valores canónicos do matching) ──
+  faceShape   String // oval | redondo | quadrado | retangular | coracao | losango | oblongo
+  jawline     String // suave | equilibrado | marcado
+  cheekbones  String // discretos | presentes | altos
+  eyeShape    String // amendoados | redondos | fundos | expressivos
+  browType    String // finos | naturais | marcados
+  hairTexture String // liso | ondulado | cacheado | crespo
+  facialHair  String // nenhum | cavanhaque-suave | barba-curta | barba-cheia
+
+  skinToneCenter Int // 1-14 — centro do tom de pele
+
+  // ── Conteúdo de estilo ──
+  styleVibe String // uma frase de identidade
+  signature String // JSON: string[] — assinaturas visuais do arquétipo
+  upgrades  String // JSON: Record<traitKey, { area, action, why }> — o que ensinar
+
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }

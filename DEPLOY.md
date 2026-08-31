@@ -42,6 +42,28 @@ git push origin main
 
 ---
 
+## Banco de dados — Referências de estilo
+
+A funcionalidade "Referências" (comparação facial com arquétipos) usa
+**Prisma + SQLite** como armazenamento primário. O conteúdo vive em
+`prisma/references-data.ts` (fonte única) — a API lê do banco e, se a
+tabela estiver vazia (ex.: deploy serverless sem SQLite persistente),
+usa automaticamente os dados estáticos. Funciona em qualquer ambiente,
+sem migração prévia.
+
+Para ativar o banco completo (recomendado local/dev):
+
+```bash
+bun run db:push    # cria a tabela ReferenceLook
+bun run db:seed    # semeia os 8 arquétipos
+```
+
+Na Vercel (serverless), a reserva estática garante a funcionalidade sem
+passos extras. Para persistência real em produção, aponta o Prisma para
+um Postgres gratuito (Neon/Supabase) em `DATABASE_URL`.
+
+---
+
 ## Passo 3 — App nativo com Capacitor
 
 O `capacitor.config.ts` já vem pronto (`appId: com.aurastyle.app`).

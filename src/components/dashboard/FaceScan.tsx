@@ -11,7 +11,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Camera, Check, RotateCcw } from 'lucide-react';
+import { Camera, Check, RotateCcw, Fingerprint } from 'lucide-react';
 import { useAura, type Profile } from '@/lib/aura-store';
 import { analyzeSelfie } from '@/lib/services';
 import type { VisionAnalysisResult } from '@/lib/services';
@@ -34,7 +34,7 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 type Phase = 'idle' | 'scanning' | 'done';
 
-export default function FaceScan() {
+export default function FaceScan({ onCompare }: { onCompare?: (img: string) => void }) {
   const { profile, update } = useAura();
   const fileRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<Phase>('idle');
@@ -297,6 +297,17 @@ export default function FaceScan() {
         reserva. Os valores detetados preenchem o teu perfil — ajusta abaixo se
         preferires.
       </p>
+
+      {/* Ação pós-leitura: comparar com o banco de referências */}
+      {phase === 'done' && result && onCompare && img && (
+        <button
+          onClick={() => onCompare(img)}
+          className='machined mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-[10px] font-bold uppercase tracking-[0.18em] text-primary'
+        >
+          <Fingerprint className='h-3.5 w-3.5' />
+          A quem a minha cara se aproxima?
+        </button>
+      )}
 
       <input
         ref={fileRef}

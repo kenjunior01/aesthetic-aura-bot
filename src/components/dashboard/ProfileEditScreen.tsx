@@ -29,8 +29,10 @@ const occasionOptions = ['Trabalho', 'Festa', 'Casual', 'Praia', 'Balada', 'Enco
 
 export default function ProfileEditScreen({
   onClose,
+  onCompare,
 }: {
   onClose: () => void;
+  onCompare?: (img: string) => void;
 }) {
   const { profile, update, authUid, syncToCloud } = useAura();
   const [saving, setSaving] = useState(false);
@@ -181,7 +183,7 @@ export default function ProfileEditScreen({
           {section === 'face' && (
             <>
               {/* Medição facial — instrumento de precisão */}
-              <FaceScan />
+              <FaceScan onCompare={onCompare} />
 
               <EditField label="Formato do rosto">
                 <div className="flex flex-wrap gap-2">

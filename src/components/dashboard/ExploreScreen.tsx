@@ -16,6 +16,7 @@ import {
 } from '@/lib/aura-data';
 import { ProductVisual } from '@/components/aura/ProductVisual';
 import { TiltCard } from '@/components/aura/TiltCard';
+import { AcervoGallery } from '@/components/dashboard/AcervoGallery';
 import { cn } from '@/lib/utils';
 import { useState, useMemo, useCallback } from 'react';
 
@@ -401,6 +402,9 @@ export default function ExploreScreen() {
             </p>
           </div>
         )}
+
+        {/* Acervo — galeria do Met (API gratuita, domínio público) */}
+        <AcervoGallery onToast={showToast} />
 
         {/* Product Recommendations */}
         <ProductRecommendations onToast={showToast} />

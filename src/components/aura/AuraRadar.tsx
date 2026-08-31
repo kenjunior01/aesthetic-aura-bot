@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useTransform } from 'framer-motion';
 import { useAura, getLevelInfo } from '@/lib/aura-store';
 import { getGoal } from '@/lib/goals';
+import { useTiltSource } from '@/hooks/useTiltSource';
 import type { Tab } from '@/components/dashboard/BottomNav';
 
 /**
@@ -12,6 +13,8 @@ import type { Tab } from '@/components/dashboard/BottomNav';
  * Um disco inclinado em perspectiva real (rotateX) com anéis concêntricos;
  * as metas ficam de pé sobre o plano como pinos de precisão. O núcleo é
  * uma coroa usinada com mostrador preto — relógio, não "IA brilhante".
+ * O instrumento inteiro responde à mão (ponteiro) e ao aparelho real
+ * (giroscópio via Capacitor) — como um objeto físico na mesa.
  */
 
 const GOAL_TAB: Record<string, Tab> = {
@@ -33,6 +36,11 @@ export default function AuraRadar({ onNavigate }: { onNavigate: (tab: Tab) => vo
   const { level, progress } = getLevelInfo(xp);
   const priorities = (profile.priorities || []).slice(0, 3);
 
+  // O instrumento reage à mão / ao aparelho — montagem inteira inclina
+  const stage = useTiltSource();
+  const asmRotX = useTransform(stage.y, [-0.5, 0.5], [5.5, -5.5]);
+  const asmRotY = useTransform(stage.x, [-0.5, 0.5], [-8, 8]);
+
   return (
     <div className='glass relative overflow-hidden rounded-3xl px-4 pb-6 pt-4'>
       {/* Cabeçalho */}
@@ -50,11 +58,16 @@ export default function AuraRadar({ onNavigate }: { onNavigate: (tab: Tab) => vo
         </span>
       </div>
 
-      {/* Palco 3D */}
+      {/* Palco 3D — responde ao ponteiro/giroscópio */}
       <div
-        className='relative mx-auto mt-3 aspect-square w-full max-w-[280px]'
-        style={{ perspective: '900px', perspectiveOrigin: '50% 38%' }}
+        className='relative mx-auto mt-3 aspect-square w-full max-w-[280px] touch-pan-y'
+        style={{ perspective: '900px', perspectiveOrigin: '50% 38%', ...stage.pointerHandlers }}
       >
+        {/* Montagem inclinável — plano + pinos movem-se como um só objeto */}
+        <motion.div
+          className='absolute inset-0'
+          style={{ rotateX: asmRotX, rotateY: asmRotY, transformStyle: 'preserve-3d' }}
+        >
         {/* Plano orbital inclinado */}
         <div
           className='absolute inset-[4%]'
@@ -137,8 +150,9 @@ export default function AuraRadar({ onNavigate }: { onNavigate: (tab: Tab) => vo
             );
           })}
         </div>
+        </motion.div>
 
-        {/* Núcleo — coroa usinada + mostrador (sempre de frente) */}
+        {/* Núcleo — coroa usinada + mostrador (fora da montagem: sempre de frente) */}
         <button
           onClick={() => onNavigate('profile')}
           className='absolute left-1/2 top-1/2 h-[34%] w-[34%] -translate-x-1/2 -translate-y-1/2'

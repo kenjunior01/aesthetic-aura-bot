@@ -997,9 +997,33 @@ function ProfileTab() {
   );
 }
 
+const TAB_ORDER: Tab[] = ['home', 'activities', 'market', 'closet', 'explore', 'profile'];
+
+/** Palco de transição — profundidade cinematográfica ao trocar de tab */
+function TabStage({ dir, children }: { dir: number; children: React.ReactNode }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: dir * 16, y: 8, filter: 'blur(5px)' }}
+      animate={{ opacity: 1, x: 0, y: 0, filter: 'blur(0px)' }}
+      transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 export default function DashboardScreen() {
   const { profile } = useAura();
   const [activeTab, setActiveTab] = useAuraTab('home');
+  const [dir, setDir] = useState(1);
+  const prevIndex = React.useRef(0);
+
+  const goTo = (t: Tab) => {
+    const ni = TAB_ORDER.indexOf(t);
+    setDir(Math.sign(ni - prevIndex.current) || 1);
+    prevIndex.current = ni;
+    setActiveTab(t);
+  };
 
   useAchievements();
 
@@ -1034,37 +1058,41 @@ export default function DashboardScreen() {
       )}
 
       {activeTab === 'home' && (
-        <div className='relative z-10 px-4 max-w-lg mx-auto'>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className='flex flex-col gap-6 pb-24'
-          >
-            <PriorityFocusCard onGoToMarket={() => setActiveTab('market')} />
-            <AuraRadar onNavigate={setActiveTab} />
-            <DailyRecs priorities={profile.priorities || []} onNavigate={setActiveTab} />
-            <AuraClima />
-            <TrendsSection />
-            <RoutineSection />
-            <NearbySalons />
-            <ShareSection />
-          </motion.div>
-        </div>
+        <TabStage dir={dir}>
+          <div className='relative z-10 px-4 max-w-lg mx-auto'>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className='flex flex-col gap-6 pb-24'
+            >
+              <PriorityFocusCard onGoToMarket={() => goTo('market')} />
+              <AuraRadar onNavigate={goTo} />
+              <DailyRecs priorities={profile.priorities || []} onNavigate={goTo} />
+              <AuraClima />
+              <TrendsSection />
+              <RoutineSection />
+              <NearbySalons />
+              <ShareSection />
+            </motion.div>
+          </div>
+        </TabStage>
       )}
 
-      {activeTab === 'activities' && <ActivitiesScreen />}
-      {activeTab === 'market' && <ShoppingScreen />}
-      {activeTab === 'closet' && <ClosetScreen />}
-      {activeTab === 'explore' && <ExploreScreen />}
+      {activeTab === 'activities' && <TabStage dir={dir}><ActivitiesScreen /></TabStage>}
+      {activeTab === 'market' && <TabStage dir={dir}><ShoppingScreen /></TabStage>}
+      {activeTab === 'closet' && <TabStage dir={dir}><ClosetScreen /></TabStage>}
+      {activeTab === 'explore' && <TabStage dir={dir}><ExploreScreen /></TabStage>}
       {activeTab === 'profile' && (
-        <div className='relative z-10 px-4 max-w-lg mx-auto'>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className='pb-24'>
-            <ProfileTab />
-          </motion.div>
-        </div>
+        <TabStage dir={dir}>
+          <div className='relative z-10 px-4 max-w-lg mx-auto'>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className='pb-24'>
+              <ProfileTab />
+            </motion.div>
+          </div>
+        </TabStage>
       )}
 
-      <BottomNav active={activeTab} onChange={setActiveTab} />
+      <BottomNav active={activeTab} onChange={goTo} />
       <AIChatButton />
     </div>
   );

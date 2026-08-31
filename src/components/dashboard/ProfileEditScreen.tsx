@@ -1,16 +1,15 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Mail, Phone, ChevronLeft, Save, Camera,
-  Scissors, Loader2, CheckCircle2, RotateCcw, Info, Gem,
+  Scissors, Loader2, CheckCircle2, Gem,
 } from 'lucide-react';
-import { useAura, type Profile } from '@/lib/aura-store';
+import { useAura } from '@/lib/aura-store';
 import { GlowButton } from '@/components/aura/ui';
-import { analyzeSelfie, syncFullProfileOnComplete, logEvent } from '@/lib/services';
-import { FEATURES, FIREBASE_FREE_TIER_LIMITS } from '@/lib/firebase-config';
-import type { VisionAnalysisResult } from '@/lib/services';
+import { logEvent, syncFullProfileOnComplete } from '@/lib/services';
+import FaceScan from '@/components/dashboard/FaceScan';
 
 const genderOptions = ['Feminino', 'Masculino', 'Não-binário', 'Prefiro não dizer'];
 const budgetOptions = ['Econômico (até R$50)', 'Moderado (R$50-150)', 'Premium (R$150-400)', 'Luxo (R$400+)'];
@@ -37,8 +36,6 @@ export default function ProfileEditScreen({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [section, setSection] = useState<'basic' | 'face' | 'hair' | 'body' | 'style' | 'lifestyle'>('basic');
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [analyzing, setAnalyzing] = useState(false);
 
   const sections = [
     { key: 'basic' as const, label: 'Básico', icon: User },
@@ -61,30 +58,6 @@ export default function ProfileEditScreen({
       setSaved(false);
       onClose();
     }, 1200);
-  };
-
-  const handleSelfieAnalysis = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64 = reader.result as string;
-      setAnalyzing(true);
-      try {
-        const result: VisionAnalysisResult = await analyzeSelfie(base64);
-        update({
-          skinTone: result.skinTone,
-          faceShape: result.faceShape,
-          selfie: base64,
-        });
-        logEvent('profile_edit_selfie', { confidence: result.confidence });
-      } catch (err) {
-        console.error('Analysis failed:', err);
-      } finally {
-        setAnalyzing(false);
-      }
-    };
-    reader.readAsDataURL(file);
   };
 
   return (
@@ -207,39 +180,8 @@ export default function ProfileEditScreen({
 
           {section === 'face' && (
             <>
-              {/* Selfie analysis */}
-              <div className="glass rounded-2xl p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Camera className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-semibold">Análise por IA</span>
-                  </div>
-                  {analyzing && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
-                </div>
-                <p className="text-[10px] text-muted-foreground mb-3">
-                  {FEATURES.visionAnalysis
-                    ? `Google Cloud Vision: ${FIREBASE_FREE_TIER_LIMITS.vision.calls} grátis/mês`
-                    : 'Modo demo — ative com API key do Google Cloud Vision'}
-                </p>
-                <label className="flex flex-col items-center justify-center gap-2 h-32 rounded-xl border-2 border-dashed border-border cursor-pointer hover:border-primary/40 transition-colors">
-                  <Camera className="h-8 w-8 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Tire uma selfie para análise automática</span>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/*"
-                    capture="user"
-                    onChange={handleSelfieAnalysis}
-                    className="hidden"
-                    disabled={analyzing}
-                  />
-                </label>
-                {profile.selfie && (
-                  <div className="relative mt-3 rounded-xl overflow-hidden h-32">
-                    <img src={profile.selfie} alt="Selfie" className="h-full w-full object-cover" />
-                  </div>
-                )}
-              </div>
+              {/* Medição facial — instrumento de precisão */}
+              <FaceScan />
 
               <EditField label="Formato do rosto">
                 <div className="flex flex-wrap gap-2">

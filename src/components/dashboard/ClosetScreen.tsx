@@ -248,9 +248,9 @@ function ClosetItemCard({ item, onDelete }: { item: ClosetItem; onDelete: () => 
             />
             <div
               className="absolute left-2.5 bottom-2.5 grid h-7 w-7 place-items-center rounded-lg"
-              style={{ background: 'oklch(0.1 0.005 75 / 55%)', backdropFilter: 'blur(4px)' }}
+              style={{ background: 'oklch(0.1 0.005 258 / 55%)', backdropFilter: 'blur(4px)' }}
             >
-              <Shirt className="h-3.5 w-3.5" style={{ color: 'oklch(0.95 0.01 85 / 88%)' }} />
+              <Shirt className="h-3.5 w-3.5" style={{ color: 'oklch(0.95 0.01 258 / 88%)' }} />
             </div>
           </div>
         )}

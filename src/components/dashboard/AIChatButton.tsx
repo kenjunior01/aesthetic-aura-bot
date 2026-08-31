@@ -184,8 +184,8 @@ export default function AIChatButton() {
         className='fixed bottom-24 right-4 z-50 grid h-14 w-14 place-items-center rounded-full'
         style={{
           background:
-            'conic-gradient(from 200deg, oklch(0.50 0.03 75), oklch(0.90 0.06 78) 22%, oklch(0.62 0.04 72) 45%, oklch(0.93 0.05 82) 62%, oklch(0.55 0.04 70) 85%, oklch(0.50 0.03 75))',
-          boxShadow: '0 18px 36px -14px oklch(0.01 0.004 70 / 90%)',
+            'conic-gradient(from 200deg, oklch(0.5 0.022 258), oklch(0.9 0.043 240) 22%, oklch(0.62 0.029 253) 45%, oklch(0.93 0.036 239) 62%, oklch(0.55 0.029 256) 85%, oklch(0.5 0.022 258))',
+          boxShadow: '0 18px 36px -14px oklch(0.01 0.004 258 / 90%)',
         }}
         aria-label='Abrir chat do Aura'
       >
@@ -221,7 +221,7 @@ export default function AIChatButton() {
                 <div className='machined grid h-10 w-10 place-items-center rounded-full'>
                   <span
                     className='font-display text-base font-semibold text-primary'
-                    style={{ textShadow: '0 1px 0 oklch(0.01 0.004 70 / 0.8)' }}
+                    style={{ textShadow: '0 1px 0 oklch(0.01 0.004 258 / 0.8)' }}
                   >
                     A
                   </span>

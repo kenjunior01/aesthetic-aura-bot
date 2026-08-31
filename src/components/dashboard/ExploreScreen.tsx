@@ -203,9 +203,9 @@ function ProductCard({ product }: { product: RegionalProduct }) {
           style={{
             minHeight: '5.5rem',
             background:
-              'linear-gradient(to bottom, oklch(0.30 0.01 78 / 50%), oklch(0.16 0.008 75 / 65%))',
+              'linear-gradient(to bottom, oklch(0.3 0.01 258 / 50%), oklch(0.16 0.008 258 / 65%))',
             boxShadow:
-              'inset 0 1px 0 oklch(0.98 0.01 85 / 9%), inset 0 -10px 18px -12px oklch(0 0 0 / 80%)',
+              'inset 0 1px 0 oklch(0.98 0.01 258 / 9%), inset 0 -10px 18px -12px oklch(0 0 0 / 80%)',
           }}
         >
           <ProductVisual category={product.category} seed={`${product.brand}-${product.name}`} />

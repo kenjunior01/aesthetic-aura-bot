@@ -22,7 +22,7 @@ export default function WelcomeScreen({ onStart, onSkip }: { onStart: () => void
   const rotY = useTransform(x, [-0.5, 0.5], [-11, 11]);
   const lightX = useTransform(x, (v) => 50 + v * 150);
   const lightY = useTransform(y, (v) => 40 + v * 150);
-  const studioLight = useMotionTemplate`radial-gradient(circle at ${lightX}% ${lightY}%, oklch(0.97 0.02 85 / 0.15), transparent 56%)`;
+  const studioLight = useMotionTemplate`radial-gradient(circle at ${lightX}% ${lightY}%, oklch(0.97 0.02 258 / 0.15), transparent 56%)`;
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center px-6 text-center">
@@ -63,8 +63,8 @@ export default function WelcomeScreen({ onStart, onSkip }: { onStart: () => void
               className="absolute left-1/2 top-0 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full"
               style={{
                 background:
-                  'radial-gradient(circle at 32% 28%, oklch(0.97 0.02 85), oklch(0.87 0.07 72) 45%, oklch(0.6 0.08 55) 100%)',
-                boxShadow: '0 0 9px 1px oklch(0.87 0.07 72 / 0.5)',
+                  'radial-gradient(circle at 32% 28%, oklch(0.97 0.02 258), oklch(0.87 0.05 242) 45%, oklch(0.6 0.058 254) 100%)',
+                boxShadow: '0 0 9px 1px oklch(0.87 0.05 242 / 0.5)',
               }}
             />
           </motion.div>
@@ -80,10 +80,10 @@ export default function WelcomeScreen({ onStart, onSkip }: { onStart: () => void
               className="absolute inset-0 rounded-full border border-primary/[0.22]"
               style={{
                 background:
-                  'conic-gradient(from 200deg, oklch(0.58 0.04 75), oklch(0.95 0.055 78) 20%, oklch(0.70 0.045 72) 42%, oklch(0.97 0.045 82) 58%, oklch(0.64 0.045 68) 78%, oklch(0.90 0.055 76) 92%, oklch(0.58 0.04 75))',
+                  'conic-gradient(from 200deg, oklch(0.58 0.029 255), oklch(0.95 0.04 238) 20%, oklch(0.7 0.032 249) 42%, oklch(0.97 0.032 238) 58%, oklch(0.64 0.032 252) 78%, oklch(0.9 0.04 240) 92%, oklch(0.58 0.029 255))',
                 WebkitMask: 'radial-gradient(circle, transparent 66.5%, black 67%)',
                 mask: 'radial-gradient(circle, transparent 66.5%, black 67%)',
-                filter: 'drop-shadow(0 22px 34px oklch(0.01 0.004 70 / 0.8))',
+                filter: 'drop-shadow(0 22px 34px oklch(0.01 0.004 258 / 0.8))',
               }}
             />
             {/* Marcas de minuto gravadas no aro */}
@@ -91,7 +91,7 @@ export default function WelcomeScreen({ onStart, onSkip }: { onStart: () => void
               className="absolute inset-0 rounded-full"
               style={{
                 background:
-                  'repeating-conic-gradient(from 0deg, oklch(0.16 0.01 70 / 0.85) 0deg 0.7deg, transparent 0.7deg 6deg)',
+                  'repeating-conic-gradient(from 0deg, oklch(0.16 0.01 258 / 0.85) 0deg 0.7deg, transparent 0.7deg 6deg)',
                 WebkitMask: 'radial-gradient(circle, transparent 63%, black 63.5%, black 71%, transparent 71.5%)',
                 mask: 'radial-gradient(circle, transparent 63%, black 63.5%, black 71%, transparent 71.5%)',
               }}
@@ -110,15 +110,15 @@ export default function WelcomeScreen({ onStart, onSkip }: { onStart: () => void
               className="absolute inset-0 rounded-full"
               style={{
                 background:
-                  'conic-gradient(from 160deg, oklch(0.55 0.04 75), oklch(0.92 0.06 78) 22%, oklch(0.68 0.05 72) 46%, oklch(0.95 0.05 82) 62%, oklch(0.60 0.045 68) 82%, oklch(0.55 0.04 75))',
-                boxShadow: '0 26px 46px -18px oklch(0.01 0.004 70 / 92%)',
+                  'conic-gradient(from 160deg, oklch(0.55 0.029 256), oklch(0.92 0.043 239) 22%, oklch(0.68 0.036 250) 46%, oklch(0.95 0.036 238) 62%, oklch(0.6 0.032 254) 82%, oklch(0.55 0.029 256))',
+                boxShadow: '0 26px 46px -18px oklch(0.01 0.004 258 / 92%)',
               }}
             />
             <div
               className="absolute inset-[6%] grid place-items-center rounded-full bg-[oklch(0.12_0.008_70)]"
               style={{
                 boxShadow:
-                  'inset 0 4px 12px oklch(0.01 0.004 70 / 0.92), inset 0 -1px 0 oklch(0.98 0.01 85 / 8%)',
+                  'inset 0 4px 12px oklch(0.01 0.004 258 / 0.92), inset 0 -1px 0 oklch(0.98 0.01 258 / 8%)',
               }}
             >
               <motion.span
@@ -126,7 +126,7 @@ export default function WelcomeScreen({ onStart, onSkip }: { onStart: () => void
                 animate={{ opacity: 1, filter: 'blur(0px)', letterSpacing: '0em' }}
                 transition={{ delay: 0.72, duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
                 className="font-display text-4xl font-light text-primary"
-                style={{ textShadow: '0 1px 0 oklch(0.01 0.004 70 / 0.9), 0 0 20px oklch(0.87 0.07 72 / 0.32)' }}
+                style={{ textShadow: '0 1px 0 oklch(0.01 0.004 258 / 0.9), 0 0 20px oklch(0.87 0.05 242 / 0.32)' }}
               >
                 A
               </motion.span>
@@ -150,7 +150,7 @@ export default function WelcomeScreen({ onStart, onSkip }: { onStart: () => void
               className="absolute inset-y-[-20%] w-[38%] -skew-x-12"
               style={{
                 background:
-                  'linear-gradient(90deg, transparent, oklch(0.97 0.02 85 / 0.2) 45%, oklch(0.97 0.02 85 / 0.26) 55%, transparent)',
+                  'linear-gradient(90deg, transparent, oklch(0.97 0.02 258 / 0.2) 45%, oklch(0.97 0.02 258 / 0.26) 55%, transparent)',
                 mixBlendMode: 'screen',
               }}
             />

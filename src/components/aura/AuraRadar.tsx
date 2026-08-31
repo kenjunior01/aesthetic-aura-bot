@@ -88,8 +88,8 @@ export default function AuraRadar({ onNavigate }: { onNavigate: (tab: Tab) => vo
               className='absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full'
               style={{
                 background:
-                  'radial-gradient(circle at 32% 28%, oklch(0.97 0.02 85), oklch(0.87 0.07 72) 45%, oklch(0.62 0.08 55) 100%)',
-                boxShadow: '0 0 8px 1px oklch(0.87 0.07 72 / 0.45)',
+                  'radial-gradient(circle at 32% 28%, oklch(0.97 0.02 258), oklch(0.87 0.05 242) 45%, oklch(0.62 0.058 253) 100%)',
+                boxShadow: '0 0 8px 1px oklch(0.87 0.05 242 / 0.45)',
               }}
             />
           </motion.div>
@@ -163,18 +163,18 @@ export default function AuraRadar({ onNavigate }: { onNavigate: (tab: Tab) => vo
             className='absolute inset-0 rounded-full'
             style={{
               background:
-                'conic-gradient(from 210deg, oklch(0.55 0.04 75), oklch(0.92 0.06 78) 18%, oklch(0.70 0.05 72) 38%, oklch(0.95 0.05 82) 55%, oklch(0.62 0.05 68) 74%, oklch(0.88 0.06 76) 92%, oklch(0.55 0.04 75))',
-              boxShadow: '0 14px 30px -12px oklch(0.01 0.004 70 / 85%)',
+                'conic-gradient(from 210deg, oklch(0.55 0.029 256), oklch(0.92 0.043 239) 18%, oklch(0.7 0.036 249) 38%, oklch(0.95 0.036 238) 55%, oklch(0.62 0.036 253) 74%, oklch(0.88 0.043 241) 92%, oklch(0.55 0.029 256))',
+              boxShadow: '0 14px 30px -12px oklch(0.01 0.004 258 / 85%)',
             }}
           />
           {/* Mostrador preto afundado */}
           <div className='absolute inset-[7%] rounded-full bg-[oklch(0.12_0.008_70)] shadow-[inset_0_3px_10px_oklch(0.01_0.004_70/0.9),inset_0_-1px_0_oklch(0.98_0.01_85/0.06)]' />
           {/* Arco de progresso */}
           <svg viewBox='0 0 100 100' className='absolute inset-[7%] h-[86%] w-[86%] -rotate-90'>
-            <circle cx='50' cy='50' r='44' fill='none' stroke='oklch(0.95 0.02 80 / 8%)' strokeWidth='4' />
+            <circle cx='50' cy='50' r='44' fill='none' stroke='oklch(0.95 0.02 258 / 8%)' strokeWidth='4' />
             <motion.circle
               cx='50' cy='50' r='44' fill='none'
-              stroke='oklch(0.87 0.07 72)' strokeWidth='4' strokeLinecap='round'
+              stroke='oklch(0.87 0.05 242)' strokeWidth='4' strokeLinecap='round'
               strokeDasharray={2 * Math.PI * 44}
               initial={{ strokeDashoffset: 2 * Math.PI * 44 }}
               animate={{ strokeDashoffset: 2 * Math.PI * 44 * (1 - Math.min(progress, 1)) }}
@@ -185,7 +185,7 @@ export default function AuraRadar({ onNavigate }: { onNavigate: (tab: Tab) => vo
           <div className='absolute inset-0 grid place-items-center'>
             <span
               className='font-display text-[1.35rem] font-semibold text-primary'
-              style={{ textShadow: '0 1px 0 oklch(0.01 0.004 70 / 0.8), 0 0 14px oklch(0.87 0.07 72 / 0.25)' }}
+              style={{ textShadow: '0 1px 0 oklch(0.01 0.004 258 / 0.8), 0 0 14px oklch(0.87 0.05 242 / 0.25)' }}
             >
               {level}
             </span>

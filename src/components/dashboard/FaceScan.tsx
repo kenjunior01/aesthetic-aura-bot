@@ -132,7 +132,7 @@ export default function FaceScan() {
           className='pointer-events-none absolute inset-0'
           style={{
             background:
-              'radial-gradient(ellipse 120% 90% at 50% 40%, transparent 55%, oklch(0.06 0.004 70 / 0.55) 100%)',
+              'radial-gradient(ellipse 120% 90% at 50% 40%, transparent 55%, oklch(0.06 0.004 258 / 0.55) 100%)',
           }}
         />
 
@@ -184,7 +184,7 @@ export default function FaceScan() {
               className='pointer-events-none absolute inset-x-3 h-16'
               style={{
                 background:
-                  'linear-gradient(180deg, transparent, oklch(0.87 0.07 72 / 0.28) 45%, oklch(0.97 0.02 85 / 0.5) 50%, oklch(0.87 0.07 72 / 0.28) 55%, transparent)',
+                  'linear-gradient(180deg, transparent, oklch(0.87 0.05 242 / 0.28) 45%, oklch(0.97 0.02 258 / 0.5) 50%, oklch(0.87 0.05 242 / 0.28) 55%, transparent)',
                 filter: 'blur(0.5px)',
                 mixBlendMode: 'screen',
               }}
@@ -201,7 +201,7 @@ export default function FaceScan() {
               className='absolute inset-x-0 bottom-0 flex items-center justify-between px-3 pb-2.5 pt-6'
               style={{
                 background:
-                  'linear-gradient(0deg, oklch(0.06 0.004 70 / 0.92) 0%, transparent 100%)',
+                  'linear-gradient(0deg, oklch(0.06 0.004 258 / 0.92) 0%, transparent 100%)',
               }}
             >
               <motion.span
@@ -237,10 +237,10 @@ export default function FaceScan() {
                 {/* Anel de confiança */}
                 <div className='relative h-11 w-11 shrink-0'>
                   <svg viewBox='0 0 100 100' className='absolute inset-0 h-full w-full -rotate-90'>
-                    <circle cx='50' cy='50' r='42' fill='none' stroke='oklch(0.95 0.02 80 / 10%)' strokeWidth='9' />
+                    <circle cx='50' cy='50' r='42' fill='none' stroke='oklch(0.95 0.02 258 / 10%)' strokeWidth='9' />
                     <motion.circle
                       cx='50' cy='50' r='42' fill='none'
-                      stroke='oklch(0.87 0.07 72)' strokeWidth='9' strokeLinecap='round'
+                      stroke='oklch(0.87 0.05 242)' strokeWidth='9' strokeLinecap='round'
                       strokeDasharray={2 * Math.PI * 42}
                       initial={{ strokeDashoffset: 2 * Math.PI * 42 }}
                       animate={{ strokeDashoffset: 2 * Math.PI * 42 * (1 - Math.min(result.confidence, 1)) }}
@@ -274,7 +274,7 @@ export default function FaceScan() {
                         background: `oklch(${0.25 + (t - 1) * 0.06} 0.05 ${t % 2 === 0 ? 30 : 60})`,
                         boxShadow:
                           t === detected
-                            ? '0 0 0 1.5px oklch(0.10 0.007 70), 0 0 0 3px oklch(0.87 0.07 72)'
+                            ? '0 0 0 1.5px oklch(0.1 0.007 258), 0 0 0 3px oklch(0.87 0.05 242)'
                             : undefined,
                       }}
                     />

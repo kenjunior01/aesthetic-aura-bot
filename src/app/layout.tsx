@@ -40,7 +40,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover", // Capacitor / iOS notch safe areas
-  themeColor: "#0b0b0d", // Champagne Noir — fundo oklch(0.115 0.008 70)
+  themeColor: "#04060a", // Glacial Noir — fundo oklch(0.105 0.006 258)
 };
 
 export default function RootLayout({

@@ -279,7 +279,7 @@ function StreakAndLevelBar() {
         className='grid h-10 w-10 shrink-0 place-items-center rounded-full'
         style={{
           background:
-            'conic-gradient(from 210deg, oklch(0.55 0.04 75), oklch(0.92 0.06 78) 18%, oklch(0.70 0.05 72) 38%, oklch(0.95 0.05 82) 55%, oklch(0.62 0.05 68) 74%, oklch(0.88 0.06 76) 92%, oklch(0.55 0.04 75))',
+            'conic-gradient(from 210deg, oklch(0.55 0.029 256), oklch(0.92 0.043 239) 18%, oklch(0.7 0.036 249) 38%, oklch(0.95 0.036 238) 55%, oklch(0.62 0.036 253) 74%, oklch(0.88 0.043 241) 92%, oklch(0.55 0.029 256))',
         }}
       >
         <div className='grid h-[82%] w-[82%] place-items-center rounded-full bg-[oklch(0.13_0.008_70)] shadow-[inset_0_2px_5px_oklch(0.01_0.004_70/0.85)]'>

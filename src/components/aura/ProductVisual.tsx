@@ -33,9 +33,9 @@ type Finish = {
 
 const FINISHES: Finish[] = [
   { body: 'oklch(0.46 0.075 72)', liquid: 'oklch(0.58 0.10 78)', glass: true, label: 'light' },
-  { body: 'oklch(0.30 0.015 75)', liquid: 'oklch(0.38 0.03 80)', glass: true, label: 'light' },
-  { body: 'oklch(0.90 0.012 88)', liquid: null, glass: false, label: 'dark' },
-  { body: 'oklch(0.17 0.006 75)', liquid: null, glass: false, label: 'light' },
+  { body: 'oklch(0.3 0.015 258)', liquid: 'oklch(0.38 0.03 80)', glass: true, label: 'light' },
+  { body: 'oklch(0.9 0.012 258)', liquid: null, glass: false, label: 'dark' },
+  { body: 'oklch(0.17 0.006 258)', liquid: null, glass: false, label: 'light' },
   { body: 'oklch(0.55 0.06 30)', liquid: 'oklch(0.66 0.09 35)', glass: true, label: 'light' },
 ];
 
@@ -108,8 +108,8 @@ function LabelBand({
         width,
         height,
         background: light
-          ? 'linear-gradient(90deg, oklch(0.96 0.01 85 / 92%), oklch(0.88 0.015 85 / 88%))'
-          : 'oklch(0.24 0.01 75 / 85%)',
+          ? 'linear-gradient(90deg, oklch(0.96 0.01 258 / 92%), oklch(0.88 0.015 258 / 88%))'
+          : 'oklch(0.24 0.01 258 / 85%)',
         border: `1px solid oklch(${light ? '0.5 0.02 80 / 25%' : '0.9 0.02 80 / 18%'})`,
       }}
     >
@@ -156,7 +156,7 @@ function Flacon({ finish }: { finish: Finish }) {
       {/* colarinho escuro */}
       <div
         className="absolute"
-        style={{ left: '40%', top: '17%', width: '20%', height: '4.5%', background: 'linear-gradient(90deg, oklch(0.14 0.005 75), oklch(0.3 0.01 75) 40%, oklch(0.12 0.005 75))' }}
+        style={{ left: '40%', top: '17%', width: '20%', height: '4.5%', background: 'linear-gradient(90deg, oklch(0.14 0.005 258), oklch(0.3 0.01 258) 40%, oklch(0.12 0.005 258))' }}
       />
       {/* corpo de vidro */}
       <div
@@ -165,7 +165,7 @@ function Flacon({ finish }: { finish: Finish }) {
           left: '15%', top: '21.5%', width: '70%', height: '69%',
           borderRadius: '10px 10px 7px 7px',
           background: finish.glass
-            ? `linear-gradient(to bottom, oklch(0.85 0.01 80 / 10%), oklch(0.7 0.01 80 / 6%))`
+            ? `linear-gradient(to bottom, oklch(0.85 0.01 258 / 10%), oklch(0.7 0.01 258 / 6%))`
             : finish.body,
           border: '1px solid oklch(0.95 0.02 80 / 14%)',
           boxShadow: 'inset 0 1px 0 oklch(1 0 0 / 18%)',
@@ -205,16 +205,16 @@ function PumpBottle({ finish }: { finish: Finish }) {
       {/* bico dosador */}
       <div
         className="absolute"
-        style={{ left: '46%', top: '5%', width: '20%', height: '6.5%', background: 'linear-gradient(90deg, oklch(0.15 0.005 75), oklch(0.28 0.008 75) 45%, oklch(0.12 0.005 75))', borderRadius: '2px 2px 0 0' }}
+        style={{ left: '46%', top: '5%', width: '20%', height: '6.5%', background: 'linear-gradient(90deg, oklch(0.15 0.005 258), oklch(0.28 0.008 258) 45%, oklch(0.12 0.005 258))', borderRadius: '2px 2px 0 0' }}
       />
       <div
         className="absolute"
-        style={{ left: '62%', top: '6.5%', width: '15%', height: '3.4%', background: 'linear-gradient(to bottom, oklch(0.3 0.008 75), oklch(0.14 0.005 75))', borderRadius: '2px' }}
+        style={{ left: '62%', top: '6.5%', width: '15%', height: '3.4%', background: 'linear-gradient(to bottom, oklch(0.3 0.008 258), oklch(0.14 0.005 258))', borderRadius: '2px' }}
       />
       {/* haste */}
       <div
         className="absolute"
-        style={{ left: '48%', top: '11.5%', width: '13%', height: '6%', background: 'linear-gradient(90deg, oklch(0.18 0.005 75), oklch(0.32 0.01 75) 45%, oklch(0.15 0.005 75))' }}
+        style={{ left: '48%', top: '11.5%', width: '13%', height: '6%', background: 'linear-gradient(90deg, oklch(0.18 0.005 258), oklch(0.32 0.01 258) 45%, oklch(0.15 0.005 258))' }}
       />
       {/* colarinho champanhe */}
       <div
@@ -230,7 +230,7 @@ function PumpBottle({ finish }: { finish: Finish }) {
         style={{
           left: '19%', top: '24%', width: '62%', height: '67%',
           borderRadius: '9px 9px 6px 6px',
-          background: `linear-gradient(to bottom, ${finish.body}, oklch(0.2 0.01 70 / 92%))`,
+          background: `linear-gradient(to bottom, ${finish.body}, oklch(0.2 0.01 258 / 92%))`,
           border: '1px solid oklch(0.95 0.02 80 / 10%)',
         }}
       >
@@ -262,7 +262,7 @@ function TallBottle({ finish }: { finish: Finish }) {
         style={{
           left: '21%', top: '12.5%', width: '58%', height: '78.5%',
           borderRadius: '13px 13px 8px 8px',
-          background: `linear-gradient(to bottom, ${finish.body}, oklch(0.18 0.012 70 / 94%))`,
+          background: `linear-gradient(to bottom, ${finish.body}, oklch(0.18 0.012 258 / 94%))`,
           border: '1px solid oklch(0.95 0.02 80 / 11%)',
           boxShadow: 'inset 0 1px 0 oklch(1 0 0 / 14%)',
         }}
@@ -291,7 +291,7 @@ function Lipstick({ finish }: { finish: Finish }) {
       {/* tubo interno */}
       <div
         className="absolute"
-        style={{ left: '38%', top: '22%', width: '24%', height: '9%', background: 'linear-gradient(90deg, oklch(0.13 0.005 75), oklch(0.3 0.01 75) 40%, oklch(0.1 0.005 75))' }}
+        style={{ left: '38%', top: '22%', width: '24%', height: '9%', background: 'linear-gradient(90deg, oklch(0.13 0.005 258), oklch(0.3 0.01 258) 40%, oklch(0.1 0.005 258))' }}
       />
       {/* base metálica usinada */}
       <div
@@ -329,13 +329,13 @@ function Compact({ finish }: { finish: Finish }) {
         className="absolute rounded-full overflow-hidden"
         style={{
           left: '21%', top: '34.5%', width: '58%', height: '35%',
-          background: `radial-gradient(circle at 34% 28%, oklch(0.97 0.012 88), ${finish.body} 58%, oklch(0.6 0.02 80))`,
+          background: `radial-gradient(circle at 34% 28%, oklch(0.97 0.012 258), ${finish.body} 58%, oklch(0.6 0.02 80))`,
         }}
       />
       {/* fecho */}
       <div
         className="absolute"
-        style={{ left: '46%', top: '27.5%', width: '8%', height: '5%', background: 'oklch(0.2 0.01 75)', borderRadius: '2px' }}
+        style={{ left: '46%', top: '27.5%', width: '8%', height: '5%', background: 'oklch(0.2 0.01 258)', borderRadius: '2px' }}
       />
     </>
   );
@@ -368,7 +368,7 @@ function AccessoryCase() {
         />
         <div
           className="absolute rounded-[2px]"
-          style={{ left: '42%', top: '34%', width: '16%', height: '32%', background: 'oklch(0.22 0.01 75 / 85%)', borderRadius: '3px' }}
+          style={{ left: '42%', top: '34%', width: '16%', height: '32%', background: 'oklch(0.22 0.01 258 / 85%)', borderRadius: '3px' }}
         />
       </div>
     </>

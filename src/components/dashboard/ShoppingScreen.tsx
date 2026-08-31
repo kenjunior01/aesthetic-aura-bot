@@ -110,8 +110,8 @@ function PlanResults({ plan, budget, country }: { plan: PlanResult; budget: numb
             className="relative w-11 shrink-0 self-stretch rounded-lg border border-border/60 overflow-hidden"
             style={{
               background:
-                'linear-gradient(to bottom, oklch(0.30 0.01 78 / 45%), oklch(0.16 0.008 75 / 60%))',
-              boxShadow: 'inset 0 1px 0 oklch(0.98 0.01 85 / 8%)',
+                'linear-gradient(to bottom, oklch(0.3 0.01 258 / 45%), oklch(0.16 0.008 258 / 60%))',
+              boxShadow: 'inset 0 1px 0 oklch(0.98 0.01 258 / 8%)',
             }}
           >
             <ProductVisual

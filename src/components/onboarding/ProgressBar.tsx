@@ -24,7 +24,7 @@ export default function ProgressBar({ current, total = 7 }: { current: number; t
       {/* Trilho do calibrador */}
       <div
         className='relative h-2 w-full overflow-visible rounded-full bg-[oklch(0.08_0.005_70)]'
-        style={{ boxShadow: 'inset 0 1.5px 4px oklch(0.01 0.004 70 / 0.9), inset 0 -0.5px 0 oklch(0.98 0.01 85 / 6%)' }}
+        style={{ boxShadow: 'inset 0 1.5px 4px oklch(0.01 0.004 258 / 0.9), inset 0 -0.5px 0 oklch(0.98 0.01 258 / 6%)' }}
       >
         <motion.div
           className='relative h-full rounded-full'
@@ -33,8 +33,8 @@ export default function ProgressBar({ current, total = 7 }: { current: number; t
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           style={{
             background:
-              'linear-gradient(180deg, oklch(0.93 0.055 78) 0%, oklch(0.87 0.07 72) 45%, oklch(0.72 0.06 62) 100%)',
-            boxShadow: 'inset 0 1px 0 oklch(0.99 0.01 85 / 0.45)',
+              'linear-gradient(180deg, oklch(0.93 0.04 239) 0%, oklch(0.87 0.05 242) 45%, oklch(0.72 0.043 248) 100%)',
+            boxShadow: 'inset 0 1px 0 oklch(0.99 0.01 258 / 0.45)',
           }}
         >
           {/* Índice luminoso no bico da escala */}
@@ -42,8 +42,8 @@ export default function ProgressBar({ current, total = 7 }: { current: number; t
             className='absolute -right-1 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full'
             style={{
               background:
-                'radial-gradient(circle at 32% 28%, oklch(0.99 0.01 85), oklch(0.87 0.07 72) 55%, oklch(0.62 0.08 55))',
-              boxShadow: '0 0 10px 2px oklch(0.87 0.07 72 / 0.55)',
+                'radial-gradient(circle at 32% 28%, oklch(0.99 0.01 258), oklch(0.87 0.05 242) 55%, oklch(0.62 0.058 253))',
+              boxShadow: '0 0 10px 2px oklch(0.87 0.05 242 / 0.55)',
             }}
           />
         </motion.div>

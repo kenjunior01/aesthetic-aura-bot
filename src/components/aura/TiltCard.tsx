@@ -45,7 +45,7 @@ export function TiltCard({ children, className, max = 7, glare = true, ...rest }
 
   const glareX = useTransform(px, (v) => v * 100);
   const glareY = useTransform(py, (v) => v * 100);
-  const glareBg = useMotionTemplate`radial-gradient(circle at ${glareX}% ${glareY}%, oklch(0.97 0.02 85 / 0.13), transparent 52%)`;
+  const glareBg = useMotionTemplate`radial-gradient(circle at ${glareX}% ${glareY}%, oklch(0.97 0.02 258 / 0.13), transparent 52%)`;
   const glareOpacity = useSpring(active, { stiffness: 200, damping: 30 });
 
   const handleMove = (e: React.PointerEvent<HTMLDivElement>) => {

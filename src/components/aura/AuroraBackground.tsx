@@ -15,7 +15,7 @@ export function AuroraBackground({ dense = false }: { dense?: boolean }) {
         className="absolute inset-0"
         style={{
           background:
-            'linear-gradient(180deg, oklch(0.19 0.010 80 / 85%) 0%, oklch(0.13 0.007 75 / 40%) 26%, oklch(0.105 0.006 70) 58%, oklch(0.085 0.005 70) 100%)',
+            'linear-gradient(180deg, oklch(0.19 0.01 258 / 85%) 0%, oklch(0.13 0.007 258 / 40%) 26%, oklch(0.105 0.006 258) 58%, oklch(0.085 0.005 258) 100%)',
         }}
       />
 
@@ -24,7 +24,7 @@ export function AuroraBackground({ dense = false }: { dense?: boolean }) {
         className="absolute inset-x-0 -top-[30vh] h-[80vh]"
         style={{
           background:
-            'radial-gradient(ellipse 90% 62% at 50% 0%, oklch(0.87 0.07 72 / 13%) 0%, oklch(0.87 0.07 72 / 5%) 42%, transparent 72%)',
+            'radial-gradient(ellipse 90% 62% at 50% 0%, oklch(0.87 0.05 242 / 13%) 0%, oklch(0.87 0.05 242 / 5%) 42%, transparent 72%)',
         }}
       />
 
@@ -33,7 +33,7 @@ export function AuroraBackground({ dense = false }: { dense?: boolean }) {
         className="absolute -right-[20vw] top-[30vh] h-[50vh] w-[60vw]"
         style={{
           background:
-            'radial-gradient(ellipse at center, oklch(0.75 0.02 90 / 5%) 0%, transparent 65%)',
+            'radial-gradient(ellipse at center, oklch(0.75 0.02 258 / 5%) 0%, transparent 65%)',
         }}
       />
 
@@ -47,7 +47,7 @@ export function AuroraBackground({ dense = false }: { dense?: boolean }) {
       <div
         className="absolute inset-x-0 bottom-0 h-[30vh]"
         style={{
-          background: 'linear-gradient(0deg, oklch(0.06 0.004 70 / 75%) 0%, transparent 100%)',
+          background: 'linear-gradient(0deg, oklch(0.06 0.004 258 / 75%) 0%, transparent 100%)',
         }}
       />
     </div>

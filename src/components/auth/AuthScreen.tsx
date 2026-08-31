@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mail, Lock, User, Eye, EyeOff, ArrowRight,
-  Sparkles, ChevronLeft, Loader2, CheckCircle2, Info,
+  ChevronLeft, Loader2, CheckCircle2, Info,
 } from 'lucide-react';
 import { signUpWithEmail, signInWithEmail, signInWithGoogle, generateReferralCode, resetPassword, logEvent } from '@/lib/services';
 import { useAura } from '@/lib/aura-store';
@@ -106,7 +106,7 @@ export default function AuthScreen({
             >
               <div className="flex items-center gap-4">
                 <div className="h-12 w-12 rounded-xl bg-aura flex items-center justify-center shrink-0">
-                  <Sparkles className="h-6 w-6 text-primary-foreground" />
+                  <Mail className="h-6 w-6 text-primary-foreground" />
                 </div>
                 <div className="flex-1">
                   <span className="text-base font-bold block">Criar conta com email</span>

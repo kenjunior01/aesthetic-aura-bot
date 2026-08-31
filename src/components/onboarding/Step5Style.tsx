@@ -28,7 +28,6 @@ export default function Step5Style({ onNext, onBack }: { onNext: () => void; onB
               selected={profile.styles.includes(s.id)}
               onClick={() => toggleIn('styles', s.id, 3)}
             >
-              <span>{s.emoji}</span>
               <span>{s.label}</span>
             </Chip>
           ))}

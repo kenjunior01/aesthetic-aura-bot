@@ -6,11 +6,11 @@ import { climates, climateByRegion, professions } from '@/lib/aura-data';
 import { Chip, SectionTitle, GlowButton, FloatingInput } from '@/components/aura/ui';
 
 const activityLevels = [
-  { value: 1, label: 'Sedentário', emoji: '🛋️' },
-  { value: 2, label: 'Leve', emoji: '🚶' },
-  { value: 3, label: 'Moderado', emoji: '🏃' },
-  { value: 4, label: 'Ativo', emoji: '🏋️' },
-  { value: 5, label: 'Intenso', emoji: '🔥' },
+  { value: 1, label: 'Sedentário' },
+  { value: 2, label: 'Leve' },
+  { value: 3, label: 'Moderado' },
+  { value: 4, label: 'Ativo' },
+  { value: 5, label: 'Intenso' },
 ];
 
 export default function Step6Lifestyle({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
@@ -49,8 +49,7 @@ export default function Step6Lifestyle({ onNext, onBack }: { onNext: () => void;
                   profile.activity >= a.value ? 'opacity-100' : 'opacity-40'
                 }`}
               >
-                <span className="text-xl block">{a.emoji}</span>
-                <span className="text-[10px] text-muted-foreground">{a.label}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider block">{a.label}</span>
               </span>
             ))}
           </div>

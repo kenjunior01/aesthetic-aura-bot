@@ -5,7 +5,7 @@
  * os desafios diários e o Consultor de Compras.
  */
 import {
-  Sparkles, Droplets, ShoppingBag, Shirt, CalendarCheck, Heart,
+  Scissors, Droplets, ShoppingBag, Shirt, CalendarCheck, Heart,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -23,7 +23,7 @@ export const GOAL_OPTIONS: GoalOption[] = [
     id: 'cabelo',
     label: 'Cabelo saudável',
     desc: 'Tratamentos e rotina capilar',
-    icon: Sparkles,
+    icon: Scissors,
     focusLine: 'Hoje o foco é o teu cabelo: 5 minutos de tratamento valem mais que 1 hora no sábado.',
   },
   {

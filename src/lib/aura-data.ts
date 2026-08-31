@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Droplets, Scissors, Shirt, Leaf, Target, Sparkles, SprayCan, Flower2, Glasses, Layers, Gem, Footprints, Ruler, Repeat2, CircleCheck } from 'lucide-react';
+import { Droplets, Scissors, Shirt, Leaf, Target, SprayCan, Flower2, Glasses, Layers, Gem, Footprints, Ruler, Repeat2, CircleCheck, Palette } from 'lucide-react';
 
 export const genders = [
   { id: 'feminino', label: 'Feminino' },
@@ -84,7 +84,7 @@ export const skinTypes = [
   { id: 'seca', label: 'Seca', icon: 'Wind' },
   { id: 'mista', label: 'Mista', icon: 'Blend' },
   { id: 'sensivel', label: 'Sensível', icon: 'HeartPulse' },
-  { id: 'normal', label: 'Normal', icon: 'Sparkles' },
+  { id: 'normal', label: 'Normal', icon: 'CircleCheck' },
 ] as const;
 
 export const hairTypes = [
@@ -293,8 +293,8 @@ export const achievementDefs: AchievementDef[] = [
   { id: 'explorador', title: 'Explorador', description: 'Visite todas as abas do app em um dia', icon: '🔍', xp: 50 },
   { id: 'meta-semanal', title: 'Focado', description: 'Complete uma meta semanal', icon: '🎯', xp: 100 },
   { id: 'todas-metas', title: 'Semana Produtiva', description: 'Complete todas as metas semanais', icon: '🏆', xp: 300 },
-  { id: 'level-5', title: 'Estilista Júnior', description: 'Alcance o nível 5', icon: '🧑‍🥺', xp: 100 },
-  { id: 'level-10', title: 'Estilista Sênior', description: 'Alcance o nível 10', icon: '👨‍🎨', xp: 250 },
+  { id: 'level-5', title: 'Estilista Júnior', description: 'Alcance o nível 5', icon: '🏅', xp: 100 },
+  { id: 'level-10', title: 'Estilista Sênior', description: 'Alcance o nível 10', icon: '🎨', xp: 250 },
   { id: 'level-25', title: 'Guru da Beleza', description: 'Alcance o nível 25', icon: '🌹', xp: 500 },
   { id: 'orçamento-sabio', title: 'Orçamento Sábio', description: 'Explore 5 recomendações de produtos', icon: '💰', xp: 75 },
   { id: 'rotina-completa', title: 'Rotina Impecável', description: 'Complete toda a rotina de cuidados 3 dias seguidos', icon: '✨', xp: 150 },
@@ -466,7 +466,7 @@ export const activityCategoryConfig: Record<string, { label: string; icon: Lucid
 export const productCategoryConfig: Record<string, { label: string; icon: LucideIcon; tint: string }> = {
   'pele': { label: 'Pele', icon: SprayCan, tint: 'text-sky-300' },
   'cabelo': { label: 'Cabelo', icon: Scissors, tint: 'text-gold' },
-  'maquiagem': { label: 'Maquiagem', icon: Sparkles, tint: 'text-accent' },
+  'maquiagem': { label: 'Maquiagem', icon: Palette, tint: 'text-accent' },
   'fragrância': { label: 'Fragrância', icon: Flower2, tint: 'text-rose-300' },
   'acessório': { label: 'Acessório', icon: Glasses, tint: 'text-primary' },
 };

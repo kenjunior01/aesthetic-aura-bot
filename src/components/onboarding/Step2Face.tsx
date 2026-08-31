@@ -6,14 +6,14 @@ import { useAura } from '@/lib/aura-store';
 import { faceShapes, skinTones, undertones, eyeColors, skinTypes } from '@/lib/aura-data';
 import { FaceShape } from '@/components/aura/Illustrations';
 import { SelectCard, Chip, SectionTitle, GlowButton } from '@/components/aura/ui';
-import { Droplets, Wind, Blend, HeartPulse, Sparkles, Camera, X } from 'lucide-react';
+import { Droplets, Wind, Blend, HeartPulse, CircleCheck, Camera, X } from 'lucide-react';
 
 const skinTypeIcons: Record<string, typeof Droplets> = {
   Droplets,
   Wind,
   Blend,
   HeartPulse,
-  Sparkles,
+  CircleCheck,
 };
 
 export default function Step2Face({

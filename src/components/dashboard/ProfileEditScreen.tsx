@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Mail, Phone, ChevronLeft, Save, Camera,
-  Sparkles, Loader2, CheckCircle2, RotateCcw, Info,
+  Scissors, Loader2, CheckCircle2, RotateCcw, Info, Gem,
 } from 'lucide-react';
 import { useAura, type Profile } from '@/lib/aura-store';
 import { GlowButton } from '@/components/aura/ui';
@@ -43,9 +43,9 @@ export default function ProfileEditScreen({
   const sections = [
     { key: 'basic' as const, label: 'Básico', icon: User },
     { key: 'face' as const, label: 'Rosto', icon: Camera },
-    { key: 'hair' as const, label: 'Cabelo', icon: Sparkles },
+    { key: 'hair' as const, label: 'Cabelo', icon: Scissors },
     { key: 'body' as const, label: 'Corpo', icon: User },
-    { key: 'style' as const, label: 'Estilo', icon: Sparkles },
+    { key: 'style' as const, label: 'Estilo', icon: Gem },
     { key: 'lifestyle' as const, label: 'Vida', icon: User },
   ];
 

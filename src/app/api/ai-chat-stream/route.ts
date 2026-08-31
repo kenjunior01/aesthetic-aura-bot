@@ -113,5 +113,5 @@ function generateLocalResponse(message: string, profile: Record<string, any> | u
     return `Olá${p.name ? `, ${p.name.split(' ')[0]}` : ''}! Sou o Aura. Pergunta sobre cabelo, pele, estilo ou compras — respondo com base no teu perfil.`;
   }
 
-  return 'Sou o Aura, teu concierge de estilo ✨ Pergunta sobre cabelo, pele, looks, produtos ou compras — adapto tudo ao teu perfil e à tua região.';
+  return 'Sou o Aura, teu concierge de estilo. Pergunta sobre cabelo, pele, looks, produtos ou compras — adapto tudo ao teu perfil e à tua região.';
 }

@@ -3,8 +3,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Sparkles, Scissors, TrendingUp,
-  Droplets, Sun, Moon, Palette, ArrowRight,
+  Scissors, TrendingUp,
+  Droplets, Sun, Moon, Palette, ArrowRight, Shirt, Target,
   Flame, Zap, Share2, Star, Cloud, CloudOff,
   Bell, BellOff, Settings, LogOut, Download, Upload, ShoppingBag,
 } from 'lucide-react';
@@ -86,7 +86,7 @@ function buildRecPool(profile: Profile): DailyRec[] {
       desc: style
         ? `Combinações que valorizam teu estilo ${styleLabel.toLowerCase()} — escolhidas para hoje`
         : 'Peças versáteis para começar teu armário perfeito',
-      icon: Sparkles,
+      icon: Shirt,
       domain: 'estilo',
       gradient: 'from-primary/15 to-gold/10',
       tab: 'closet' as Tab,
@@ -190,7 +190,7 @@ function PriorityFocusCard({ onGoToMarket }: { onGoToMarket?: () => void }) {
   const { profile } = useAura();
   const top = profile.priorities?.[0];
   const goal = top ? getGoal(top) : undefined;
-  const Icon = goal?.icon || Sparkles;
+  const Icon = goal?.icon || Target;
   const isShopping = top === 'compras';
 
   return (

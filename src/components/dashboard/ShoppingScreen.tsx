@@ -3,11 +3,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ShoppingBag, Wallet, Tag, Camera, Plus, Trash2, Sparkles, Loader2,
+  ShoppingBag, Wallet, Tag, Camera, Plus, Trash2, Gauge, Loader2,
   Check, Clock, ArrowRight, ImageIcon, MapPin, Zap, ScanLine,
   Barcode, Hand, CircleAlert, BadgeCheck,
 } from 'lucide-react';
 import { useAura } from '@/lib/aura-store';
+import { ProductVisual, resolveCategory } from '@/components/aura/ProductVisual';
 import { cn } from '@/lib/utils';
 import {
   consultShoppingAdvisor, logEvent,
@@ -46,7 +47,7 @@ const SOURCE_LABEL: Record<string, string> = {
 function SourceBadge({ source }: { source: 'groq' | 'zai' | 'local' }) {
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 text-[9px] font-medium uppercase tracking-wider text-primary">
-      <Sparkles className="h-2.5 w-2.5" />
+      <Gauge className="h-2.5 w-2.5" />
       {SOURCE_LABEL[source] || 'Análise local'}
     </span>
   );
@@ -103,6 +104,21 @@ function PlanResults({ plan, budget, country }: { plan: PlanResult; budget: numb
             )}
           >
             {item.priority}
+          </div>
+          {/* miniatura de estúdio */}
+          <div
+            className="relative w-11 shrink-0 self-stretch rounded-lg border border-border/60 overflow-hidden"
+            style={{
+              background:
+                'linear-gradient(to bottom, oklch(0.30 0.01 78 / 45%), oklch(0.16 0.008 75 / 60%))',
+              boxShadow: 'inset 0 1px 0 oklch(0.98 0.01 85 / 8%)',
+            }}
+          >
+            <ProductVisual
+              category={resolveCategory(item.name, item.domain === 'cabelo' ? 'cabelo' : 'pele')}
+              seed={`${item.brand ?? ''}-${item.name}`}
+              reflection={false}
+            />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
@@ -318,7 +334,7 @@ function BudgetMode({ country, initialRows }: { country: CountryInfo; initialRow
           (!canRun || loading) && 'cursor-not-allowed opacity-50',
         )}
       >
-        {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
+        {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Gauge className="h-5 w-5" />}
         {loading ? 'Aura está a pensar...' : 'Priorizar com o meu dinheiro'}
       </motion.button>
 
@@ -401,7 +417,7 @@ function BrandsMode({ country }: { country: CountryInfo }) {
           disabled={loading}
           className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-aura px-5 py-2.5 text-sm font-semibold text-primary-foreground glow disabled:opacity-50"
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gauge className="h-4 w-4" />}
           {brands ? 'Atualizar' : 'Ver marcas do meu país'}
         </button>
       </div>

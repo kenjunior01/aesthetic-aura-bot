@@ -5,9 +5,41 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Flame, Zap, Trophy, Target, ChevronRight, Star,
   Check, Lock, TrendingUp, Gauge,
+  Footprints, Crown, BookOpen, ShoppingBag, Shirt, Layers,
+  Compass, CalendarCheck, Award, Gem, Wallet, Share2, type LucideIcon,
 } from 'lucide-react';
 import { useAura, getLevelInfo, nextStreakMilestone, STREAK_MILESTONES } from '@/lib/aura-store';
 import type { DailyActivity } from '@/lib/aura-store';
+
+/** Medalhas gravadas — sem emojis: ícone de linha em chip usinado */
+const ACHIEVEMENT_ICONS: Record<string, LucideIcon> = {
+  'primeira-atividade': Footprints,
+  'streak-3': Flame,
+  'streak-7': Zap,
+  'streak-30': Crown,
+  '10-atividades': Target,
+  '50-atividades': BookOpen,
+  '100-atividades': Trophy,
+  'primeiro-look': ShoppingBag,
+  'armario-10': Shirt,
+  'armario-30': Layers,
+  'todos-dias': Star,
+  'explorador': Compass,
+  'meta-semanal': CalendarCheck,
+  'todas-metas': Award,
+  'level-5': Gauge,
+  'level-10': Award,
+  'level-25': Gem,
+  'orçamento-sabio': Wallet,
+  'rotina-completa': CalendarCheck,
+  'share-look': Share2,
+};
+
+function AchievementMedal({ id, title }: { id: string; title: string }) {
+  const Icon = ACHIEVEMENT_ICONS[id];
+  if (Icon) return <Icon className="h-6 w-6 mx-auto text-primary" strokeWidth={1.7} />;
+  return <span className="text-lg font-display font-light text-primary">{title.charAt(0)}</span>;
+}
 import {
   dailyChallenges,
   weeklyGoalTemplates,
@@ -546,7 +578,9 @@ function AchievementsSection() {
                 isUnlocked ? 'border-primary/30' : 'opacity-50',
               )}
             >
-              <span className="text-2xl block mb-1">{isUnlocked ? achievement.icon : <Lock className="h-6 w-6 mx-auto text-muted-foreground" />}</span>
+              <span className="mb-1.5 mx-auto grid h-9 w-9 place-items-center rounded-full machined">
+                {isUnlocked ? <AchievementMedal id={achievement.id} title={achievement.title} /> : <Lock className="h-4 w-4 mx-auto text-muted-foreground" />}
+              </span>
               <span className="text-[10px] font-semibold block leading-tight">
                 {achievement.title}
               </span>

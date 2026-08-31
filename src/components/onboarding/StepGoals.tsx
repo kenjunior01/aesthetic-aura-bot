@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Sparkles, MapPin, Check, Loader2,
+  Target, MapPin, Check, Loader2,
 } from 'lucide-react';
 import { useAura } from '@/lib/aura-store';
 import { GlowButton, SectionTitle } from '@/components/aura/ui';
@@ -59,7 +59,7 @@ export default function StepGoals({ onNext }: { onNext: () => void }) {
         <div className="flex flex-col gap-5 py-2">
           <div className="text-center pt-4">
             <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-aura glow">
-              <Sparkles className="h-7 w-7 text-primary-foreground" />
+              <Target className="h-7 w-7 text-primary-foreground" />
             </div>
             <h2 className="text-xl font-bold">O que você quer alcançar primeiro?</h2>
             <p className="mx-auto mt-2 max-w-[300px] text-sm text-muted-foreground">

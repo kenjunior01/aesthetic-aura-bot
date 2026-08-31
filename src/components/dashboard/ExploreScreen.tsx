@@ -3,10 +3,10 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   TrendingUp, Heart, Share2,
-  Flame, Star, Sparkles, ShoppingCart,
+  Flame, Star, Droplets, ShoppingCart,
   MapPin, ExternalLink, Check,
   Target, Layers, Gem, Footprints, Ruler, Repeat2,
-  Shirt, Glasses, Briefcase, CheckCircle2, type LucideIcon,
+  Shirt, Glasses, Briefcase, type LucideIcon,
 } from 'lucide-react';
 import { useAura } from '@/lib/aura-store';
 import {
@@ -14,6 +14,8 @@ import {
   productCategoryConfig,
   type RegionalProduct,
 } from '@/lib/aura-data';
+import { ProductVisual } from '@/components/aura/ProductVisual';
+import { TiltCard } from '@/components/aura/TiltCard';
 import { cn } from '@/lib/utils';
 import { useState, useMemo, useCallback } from 'react';
 
@@ -44,7 +46,7 @@ const trendingTopics = [
     desc: 'Rotinas específicas para cada tipo de cabelo ganham força. Conheça seu tipo e crie um protocolo exclusivo que funcione para suas necessidades reais.',
     tag: 'Cuidados',
     tagColor: 'text-accent',
-    icon: Sparkles,
+    icon: Droplets,
     gradient: 'from-accent/10 to-primary-glow/10',
   },
   {
@@ -129,7 +131,7 @@ function TrendCard({ topic, index, onToast }: { topic: typeof trendingTopics[0];
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const text = `${topic.title} - Descobri no AuraStyle 🔥`;
+    const text = `${topic.title} - Descobri no AuraStyle`;
     if (navigator.share) {
       try { await navigator.share({ title: topic.title, text }); } catch { /* cancelled */ }
     } else {
@@ -171,8 +173,8 @@ function TrendCard({ topic, index, onToast }: { topic: typeof trendingTopics[0];
 function SeasonalCard({ item }: { item: typeof seasonalPicks[0] }) {
   const Icon: LucideIcon = item.icon;
   return (
-    <motion.div
-      whileTap={{ scale: 0.96 }}
+    <TiltCard
+      max={6}
       className="glass rounded-2xl p-4 min-w-[150px] flex-shrink-0 cursor-pointer"
     >
       <div className="machined mb-2.5 grid h-9 w-9 place-items-center rounded-lg">
@@ -180,7 +182,7 @@ function SeasonalCard({ item }: { item: typeof seasonalPicks[0] }) {
       </div>
       <span className="text-sm font-semibold block">{item.title}</span>
       <span className="text-[10px] text-muted-foreground block mt-0.5">{item.reason}</span>
-    </motion.div>
+    </TiltCard>
   );
 }
 
@@ -189,58 +191,65 @@ function SeasonalCard({ item }: { item: typeof seasonalPicks[0] }) {
 // ============================================================
 
 function ProductCard({ product }: { product: RegionalProduct }) {
-  const catConfig = productCategoryConfig[product.category] || { label: product.category, icon: CheckCircle2 as LucideIcon, tint: 'text-primary' };
-  const CatIcon: LucideIcon = catConfig.icon;
   const stars = Math.floor(product.rating);
   const hasHalf = product.rating - stars >= 0.3;
 
   return (
-    <motion.div
-      whileTap={{ scale: 0.98 }}
-      className="glass rounded-2xl p-4 flex gap-3 items-start cursor-pointer hover:border-primary/30 transition-colors"
-    >
-      <div className="machined flex h-12 w-12 shrink-0 items-center justify-center rounded-xl">
-        <CatIcon className={cn('h-5 w-5', catConfig.tint)} strokeWidth={1.8} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <span className="text-sm font-semibold block leading-tight">{product.name}</span>
-            <span className="text-[10px] text-muted-foreground block mt-0.5">{product.brand}</span>
+    <TiltCard max={5} className="glass rounded-2xl p-4 cursor-pointer hover:border-primary/30 transition-colors">
+      <div className="flex gap-3.5 items-stretch">
+        {/* vitrine de produto — render de estúdio */}
+        <div
+          className="relative w-[4.25rem] shrink-0 rounded-xl border border-border/70 overflow-hidden"
+          style={{
+            minHeight: '5.5rem',
+            background:
+              'linear-gradient(to bottom, oklch(0.30 0.01 78 / 50%), oklch(0.16 0.008 75 / 65%))',
+            boxShadow:
+              'inset 0 1px 0 oklch(0.98 0.01 85 / 9%), inset 0 -10px 18px -12px oklch(0 0 0 / 80%)',
+          }}
+        >
+          <ProductVisual category={product.category} seed={`${product.brand}-${product.name}`} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <span className="text-sm font-semibold block leading-tight">{product.name}</span>
+              <span className="text-[10px] text-muted-foreground block mt-0.5">{product.brand}</span>
+            </div>
+            <div className="text-right shrink-0">
+              <span className="text-sm font-bold text-primary block">
+                {product.currency} {product.price.toLocaleString('pt-BR', { minimumFractionDigits: product.price < 100 ? 2 : 0 })}
+              </span>
+              <div className="flex items-center gap-0.5 justify-end mt-0.5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    className={cn(
+                      'h-2.5 w-2.5',
+                      i < stars ? 'text-gold fill-gold' : i === stars && hasHalf ? 'text-gold' : 'text-muted-foreground/30',
+                    )}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="text-right shrink-0">
-            <span className="text-sm font-bold text-primary block">
-              {product.currency} {product.price.toLocaleString('pt-BR', { minimumFractionDigits: product.price < 100 ? 2 : 0 })}
-            </span>
-            <div className="flex items-center gap-0.5 justify-end mt-0.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star
-                  key={i}
-                  className={cn(
-                    'h-2.5 w-2.5',
-                    i < stars ? 'text-gold fill-gold' : i === stars && hasHalf ? 'text-gold' : 'text-muted-foreground/30',
-                  )}
-                />
-              ))}
+          <p className="text-xs text-muted-foreground leading-relaxed mt-1.5 line-clamp-2">{product.description}</p>
+          <div className="flex items-center justify-between mt-3 pt-2 border-t border-border">
+            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <MapPin className="h-3 w-3" /> {product.store}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-surface-strong text-muted-foreground capitalize">
+                {product.category}
+              </span>
+              <button className="flex items-center gap-1 text-[10px] text-primary font-medium">
+                Ver <ExternalLink className="h-2.5 w-2.5" />
+              </button>
             </div>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground leading-relaxed mt-1.5 line-clamp-2">{product.description}</p>
-        <div className="flex items-center justify-between mt-3 pt-2 border-t border-border">
-          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-            <MapPin className="h-3 w-3" /> {product.store}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-surface-strong text-muted-foreground capitalize">
-              {catConfig.label}
-            </span>
-            <button className="flex items-center gap-1 text-[10px] text-primary font-medium">
-              Ver <ExternalLink className="h-2.5 w-2.5" />
-            </button>
-          </div>
-        </div>
       </div>
-    </motion.div>
+    </TiltCard>
   );
 }
 
@@ -382,7 +391,7 @@ export default function ExploreScreen() {
         {profile.styles.length > 0 && (
           <div className="glass rounded-2xl p-4 mb-6 bg-gradient-to-r from-primary/10 to-primary-glow/10">
             <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="h-4 w-4 text-gold" />
+              <Gem className="h-4 w-4 text-gold" />
               <span className="text-xs font-semibold uppercase tracking-wider text-gold">
                 Para seu estilo {profile.styles[0]}
               </span>

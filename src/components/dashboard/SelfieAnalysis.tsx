@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, Sparkles, Loader2, CheckCircle2, RotateCcw, Info } from 'lucide-react';
+import { Camera, ScanFace, Loader2, CheckCircle2, RotateCcw, Info } from 'lucide-react';
 import { useAura } from '@/lib/aura-store';
 import { analyzeSelfie, logEvent } from '@/lib/services';
 import { GlowButton } from '@/components/aura/ui';
@@ -68,9 +68,9 @@ export default function SelfieAnalysis({
   return (
     <div className='flex flex-col gap-6'>
       <div>
-        <h2 className='text-lg font-bold mb-1'>Análise por IA</h2>
+        <h2 className='text-lg font-bold mb-1'>Análise de precisão</h2>
         <p className='text-xs text-muted-foreground'>
-          Tire uma selfie para a IA detectar seu tom de pele, formato do rosto e cor do cabelo.
+          Tire uma selfie para detectarmos seu tom de pele, formato do rosto e cor do cabelo com precisão.
           {FEATURES.visionAnalysis
             ? ' Powered by Google Cloud Vision (gratuito).'
             : ' Modo demo — ative com Google Cloud Vision API key.'}
@@ -114,8 +114,8 @@ export default function SelfieAnalysis({
             </>
           ) : (
             <>
-              <Sparkles className='h-5 w-5 mr-2' />
-              Analisar com IA
+              <ScanFace className='h-5 w-5 mr-2' />
+              Analisar agora
             </>
           )}
         </GlowButton>

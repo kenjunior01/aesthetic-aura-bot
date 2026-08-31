@@ -9,6 +9,7 @@ import {
 import { useAura, type ClosetItem } from '@/lib/aura-store';
 import { closetCategories } from '@/lib/aura-data';
 import { GlowButton } from '@/components/aura/ui';
+import { TiltCard } from '@/components/aura/TiltCard';
 import { cn } from '@/lib/utils';
 
 const colorPresets = [
@@ -212,35 +213,58 @@ function AddItemModal({
 
 function ClosetItemCard({ item, onDelete }: { item: ClosetItem; onDelete: () => void }) {
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      className="glass rounded-2xl overflow-hidden group relative"
-    >
- {item.photo ? (
-        <div className="h-36 bg-surface-strong">
-          <img src={item.photo} alt={item.name} className="h-full w-full object-cover" />
-        </div>
-      ) : (
-        <div
-          className="h-36 flex items-center justify-center"
-          style={{ backgroundColor: `${item.color}20` }}
-        >
-          <Shirt className="h-10 w-10" style={{ color: item.color }} />
-        </div>
-      )}
-      <div className="p-3">
-        <span className="text-sm font-medium block truncate">{item.name}</span>
-        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{item.category}</span>
-      </div>
-      <button
-        onClick={onDelete}
-        className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+    <motion.div layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="[perspective:900px]">
+      <TiltCard
+        max={4.5}
+        className="glass rounded-2xl overflow-hidden group relative"
       >
-        <Trash2 className="h-3.5 w-3.5" />
-      </button>
+        {item.photo ? (
+          <div className="h-36 bg-surface-strong">
+            <img src={item.photo} alt={item.name} className="h-full w-full object-cover" />
+          </div>
+        ) : (
+          /* amostra de tecido — trama, luz e bainha costurada */
+          <div className="relative h-36 overflow-hidden" style={{ backgroundColor: item.color }}>
+            <div
+              aria-hidden
+              className="absolute inset-0 opacity-[0.22]"
+              style={{
+                backgroundImage:
+                  'repeating-linear-gradient(45deg, oklch(0 0 0 / 65%) 0 1px, transparent 1px 4px), repeating-linear-gradient(-45deg, oklch(1 0 0 / 50%) 0 1px, transparent 1px 4px)',
+              }}
+            />
+            <div
+              aria-hidden
+              className="absolute inset-0"
+              style={{
+                background:
+                  'linear-gradient(to bottom, oklch(1 0 0 / 16%), transparent 32%, oklch(0 0 0 / 42%))',
+              }}
+            />
+            <div
+              aria-hidden
+              className="absolute inset-2.5 rounded-lg border border-dashed"
+              style={{ borderColor: 'oklch(1 0 0 / 25%)' }}
+            />
+            <div
+              className="absolute left-2.5 bottom-2.5 grid h-7 w-7 place-items-center rounded-lg"
+              style={{ background: 'oklch(0.1 0.005 75 / 55%)', backdropFilter: 'blur(4px)' }}
+            >
+              <Shirt className="h-3.5 w-3.5" style={{ color: 'oklch(0.95 0.01 85 / 88%)' }} />
+            </div>
+          </div>
+        )}
+        <div className="p-3">
+          <span className="text-sm font-medium block truncate">{item.name}</span>
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{item.category}</span>
+        </div>
+        <button
+          onClick={onDelete}
+          className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </TiltCard>
     </motion.div>
   );
 }

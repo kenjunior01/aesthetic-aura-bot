@@ -74,5 +74,5 @@ function generateServerResponse(message: string, profile: Record<string, any> | 
     return 'Visite a aba Atividades: desafios diários personalizados com XP e níveis. Consistência é o segredo da transformação!';
   }
 
-  return 'Sou o Aura, seu concierge de estilo ✨ Posso ajudar com cabelo, pele, looks, produtos e rotinas — com base no seu perfil. O que você quer saber hoje?';
+  return 'Sou o Aura, seu concierge de estilo. Posso ajudar com cabelo, pele, looks, produtos e rotinas — com base no seu perfil. O que você quer saber hoje?';
 }

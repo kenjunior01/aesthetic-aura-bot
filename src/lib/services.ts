@@ -575,7 +575,7 @@ export async function scheduleRoutineReminder(time: string, label: string): Prom
     setTimeout(() => {
       new Notification('AuraStyle - Lembrete', {
         body: `Hora do seu cuidado: ${label}`,
-        icon: '✨',
+        icon: '/icon-192.png',
         tag: `routine-${time}`,
       });
     }, delay);

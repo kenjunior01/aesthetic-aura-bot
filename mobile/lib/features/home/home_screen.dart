@@ -18,6 +18,7 @@ import '../../core/widgets/stagger_in.dart';
 import '../chat/chat_screen.dart';
 import '../references/references_screen.dart';
 import '../scan/scan_screen.dart';
+import 'home_cards.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -178,9 +179,17 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
+              // ── Ritual de hoje ────────────────────────────────────────
+              StaggerIn(index: 1, child: const RitualCard()),
+              const SizedBox(height: 16),
+
+              // ── Clima ao vivo ─────────────────────────────────────────
+              StaggerIn(index: 2, child: const ClimaCard()),
+              const SizedBox(height: 16),
+
               // ── Radar de prioridades ──────────────────────────────────────
               StaggerIn(
-                index: 1,
+                index: 3,
                 child: GlassCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -203,14 +212,14 @@ class HomeScreen extends StatelessWidget {
 
               // ── Atalhos ───────────────────────────────────────────────────
               StaggerIn(
-                index: 2,
+                index: 4,
                 child: const SectionHeader(
-                  eyebrow: 'Ritual diário',
-                  title: 'O que fazer agora',
+                  eyebrow: 'Agora',
+                  title: 'O que fazer já',
                 ),
               ),
               StaggerIn(
-                index: 3,
+                index: 5,
                 child: _QuickActions(onScan: () => _openScan(context, store)),
               ),
               const SizedBox(height: 110), // respiro acima da barra

@@ -216,12 +216,27 @@ class ProfileStore extends ChangeNotifier {
 
   static const _prefsKey = 'aurastyle-profile'; // MESMA chave do web
   static const _stateKey = 'aurastyle-profile-state';
+  static const _ritualKey = 'aurastyle-ritual-v1';
+  static const _onboardedKey = 'aurastyle-onboarded-v1';
+
+  /// Passos do ritual diário — idênticos ao espírito do web (5 passos,
+  /// 25 XP ao completar).
+  static const List<String> kRitualSteps = [
+    'Beber água logo cedo',
+    'Limpeza de rosto',
+    'Hidratante com proteção solar',
+    'Cuidado capilar',
+    'Registo noturno no diário',
+  ];
 
   Profile _profile = const Profile();
   int _xp = 0;
   int _streak = 0;
   List<String> _events = const [];
   bool _loaded = false;
+  String _ritualDate = '';
+  List<int> _ritualDone = const [];
+  bool _onboarded = false;
 
   Profile get profile => _profile;
   int get xp => _xp;
@@ -230,6 +245,23 @@ class ProfileStore extends ChangeNotifier {
   double get levelProgress => computeLevelProgress(_xp);
   List<String> get events => List.unmodifiable(_events);
   bool get loaded => _loaded;
+  bool get onboarded => _onboarded;
+
+  /// Ritual de hoje: passos concluídos (recalcula se virou o dia).
+  List<int> get ritualDone {
+    if (_ritualDate != _todayKey()) return const [];
+    return List.unmodifiable(_ritualDone);
+  }
+
+  bool get ritualComplete => ritualDone.length >= kRitualSteps.length;
+
+  static String _todayKey() {
+    final now = DateTime.now();
+    return '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}';
+  }
+
   ({int days, int xp, String label})? get nextMilestone =>
       nextStreakMilestone(_streak);
 
@@ -252,6 +284,11 @@ class ProfileStore extends ChangeNotifier {
       }
     }
     _events = prefs.getStringList('aurastyle-events') ?? const [];
+    _ritualDate = prefs.getString('$_ritualKey-date') ?? '';
+    _ritualDone =
+        prefs.getStringList('$_ritualKey-done')?.map(int.parse).toList() ??
+        const [];
+    _onboarded = prefs.getBool(_onboardedKey) ?? false;
     _loaded = true;
     notifyListeners();
   }
@@ -282,6 +319,40 @@ class ProfileStore extends ChangeNotifier {
   void bumpStreak() {
     _streak += 1;
     addXp(25); // ROUTINE_COMPLETE_XP
+  }
+
+  /// Liga/desliga um passo do ritual de hoje.
+  /// Cada passo +5 XP; ao completar os 5, +25 XP de bónus e streak +1.
+  void toggleRitual(int index) {
+    if (index < 0 || index >= kRitualSteps.length) return;
+    if (_ritualDate != _todayKey()) {
+      _ritualDate = _todayKey();
+      _ritualDone = const [];
+    }
+    final wasComplete = ritualComplete;
+    _ritualDone = _ritualDone.contains(index)
+        ? _ritualDone.where((i) => i != index).toList()
+        : [..._ritualDone, index];
+    _xp = (_xp + (_ritualDone.contains(index) ? 5 : -5)).clamp(0, 1 << 31);
+    if (!wasComplete && ritualComplete) {
+      addXp(25);
+      _streak += 1;
+    }
+    SharedPreferences.getInstance().then((p) async {
+      await p.setString('$_ritualKey-date', _ritualDate);
+      await p.setStringList(
+        '$_ritualKey-done',
+        _ritualDone.map((i) => '$i').toList(),
+      );
+    });
+    notifyListeners();
+  }
+
+  /// Marca o onboarding como concluído (não volta a mostrar).
+  void completeOnboarding() {
+    _onboarded = true;
+    SharedPreferences.getInstance().then((p) => p.setBool(_onboardedKey, true));
+    notifyListeners();
   }
 
   /// Telemetria local (espelha logEvent do services.ts) — últimos 100.

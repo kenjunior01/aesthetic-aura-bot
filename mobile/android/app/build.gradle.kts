@@ -6,8 +6,9 @@ plugins {
 
 android {
     namespace = "com.aurastyle.aurastyle_mobile"
+    // NDK não é necessário: app puro Dart/Kotlin (sem C++). Removido
+    // flutter.ndkVersion para não forçar o download de ~3GB.
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

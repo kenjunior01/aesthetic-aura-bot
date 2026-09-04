@@ -1,5 +1,6 @@
 /// app.dart — AuraStyle Mobile: MultiProvider + MaterialApp com a identidade
-/// Platina Glacial. O perfil carrega antes do primeiro frame (splash mínimo).
+/// Platina Glacial. O splash espera o perfil carregar e decide: onboarding de
+/// primeira utilização ou a concha principal.
 library;
 
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'core/store/profile_store.dart';
 import 'core/theme/aura_colors.dart';
 import 'core/theme/aura_decorations.dart';
 import 'core/theme/aura_theme.dart';
+import 'features/onboarding/onboarding_screen.dart';
 import 'features/shell/nav_shell.dart';
 
 class AuraApp extends StatelessWidget {
@@ -40,30 +42,41 @@ class AuraSplash extends StatefulWidget {
 }
 
 class _AuraSplashState extends State<AuraSplash> {
-  @override
-  void initState() {
-    super.initState();
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            transitionDuration: const Duration(milliseconds: 460),
-            pageBuilder: (_, _, _) => const NavShell(),
-            transitionsBuilder: (_, anim, _, child) => FadeTransition(
-              opacity: CurvedAnimation(
-                parent: anim,
-                curve: Curves.easeOutCubic,
-              ),
-              child: child,
-            ),
+  bool _navigated = false;
+
+  void _maybeNavigate() {
+    if (_navigated || !mounted) return;
+    final store = context.read<ProfileStore>();
+    if (!store.loaded) return;
+    // Dá um respiro para a marca acender antes de entregar a concha.
+    Future.delayed(const Duration(milliseconds: 550), () {
+      if (!mounted || _navigated) return;
+      _navigated = true;
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 460),
+          pageBuilder: (_, _, _) =>
+              store.onboarded ? const NavShell() : const OnboardingScreen(),
+          transitionsBuilder: (_, anim, _, child) => FadeTransition(
+            opacity: CurvedAnimation(parent: anim, curve: Curves.easeOutCubic),
+            child: child,
           ),
-        );
-      }
+        ),
+      );
     });
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeNavigate());
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Se o load demorar mais que o respiro, a store notifica e decide.
+    context.watch<ProfileStore>();
+    _maybeNavigate();
     return Scaffold(
       backgroundColor: AuraColors.backgroundDeep,
       body: Center(

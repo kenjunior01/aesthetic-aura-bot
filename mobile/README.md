@@ -78,7 +78,27 @@ flutter analyze             # 0 issues
 flutter test                # smoke test de arranque
 ```
 
-Gerar APK de lançamento: `flutter build apk --release`.
+## Instalar no celular (APK)
+
+O build de lançamento gera `build/app/outputs/flutter-apk/app-release.apk`:
+
+```bash
+flutter build apk --release --target-platform android-arm64
+```
+
+O APK desta versão vive em `download/AuraStyle-v1.0.0-arm64.apk` (arm64-v8a —
+cobre praticamente todos os Android modernos, minSdk 24 / Android 7+).
+
+Para instalar:
+1. Copia o APK para o telefone (USB, Drive, WhatsApp…).
+2. Abre o ficheiro e aceita "Instalar app desconhecido" quando pedido.
+3. Em Perfil → Ligação, aponta a base URL para onde o backend web corre
+   (produção ou IP da tua máquina na mesma rede) — a IA, o Acervo e as
+   Referências ligam-se ao MESMO banco de dados do web.
+
+Nota: o APK atual é assinado com a chave de debug (instalável, ideal para
+testar). Para publicar na Play Store, cria uma keystore própria e define
+`signingConfig` de release em `android/app/build.gradle.kts`.
 
 ## Notas de design
 

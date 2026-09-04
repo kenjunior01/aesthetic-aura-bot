@@ -71,6 +71,71 @@ class GroqAi {
     }
   }
 
+  /// Conversa com FOTO: o histórico segue em texto e a última mensagem do
+  /// utilizador leva a imagem (modelo de visão). Devolve null se o Groq
+  /// não responder.
+  Future<String?> chatVision({
+    required String system,
+    required List<Map<String, String>> turns,
+    required String imageBase64,
+    String mimeType = 'image/jpeg',
+    double temperature = 0.7,
+    int maxTokens = 700,
+  }) async {
+    if (!disponivel) return null;
+    try {
+      final mensagens = <Map<String, dynamic>>[
+        {'role': 'system', 'content': system},
+        // Histórico em texto (sem a última entrada, que leva a imagem).
+        ...turns.take(turns.length - 1).map((t) => {
+              'role': t['role'],
+              'content': t['content'],
+            }),
+        {
+          'role': 'user',
+          'content': [
+            {
+              'type': 'text',
+              'text':
+                  '${turns.isEmpty ? '' : turns.last['content'] ?? ''}\n'
+                      '(A imagem segue anexada a esta mensagem.)'
+                      .trim(),
+            },
+            {
+              'type': 'image_url',
+              'image_url': {'url': 'data:$mimeType;base64,$imageBase64'},
+            },
+          ],
+        },
+      ];
+      final body = <String, dynamic>{
+        'model': _modeloVisao,
+        'messages': mensagens,
+        'temperature': temperature,
+        'max_tokens': maxTokens,
+      };
+      final res = await _http
+          .post(
+            Uri.parse(_base),
+            headers: {
+              'Authorization': 'Bearer ${AuraSecrets.groqKey}',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 45));
+      if (res.statusCode != 200) return null;
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      final escolha = ((data['choices'] as List?)?.firstOrNull
+          as Map<String, dynamic>?);
+      final conteudo =
+          '${(escolha?['message'] as Map<String, dynamic>?)?['content'] ?? ''}';
+      return conteudo.trim().isEmpty ? null : conteudo.trim();
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Visão: foto (base64) + pergunta → texto (ou JSON se json=true).
   Future<String?> vision({
     required String prompt,

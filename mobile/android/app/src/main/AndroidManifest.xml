@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- O release NÃO herda a permissão INTERNET do debug — sem isto nenhuma
+         API (Groq, Pexels, Unsplash, Met, clima) responde no APK instalado. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="AuraStyle"
         android:name="${applicationName}"

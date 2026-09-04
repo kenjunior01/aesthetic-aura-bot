@@ -454,6 +454,22 @@ class _CeuVivoPainter extends CustomPainter {
   // ═══════════════════════════ ALVOR — Céu Glacial ═════════════════════════
 
   void _pintarAlvor(Canvas canvas, double w, double h, double t, double secs) {
+    // Céu de verdade: gradiente de amanhecer — gelo azul no topo, uma banda
+    // quente de sol nascente e a base fria. O light mode deixa de ser um
+    // cinza plano e ganha horizonte.
+    final ceu = Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(w * 0.18, 0),
+        Offset(w * 0.62, h),
+        [
+          const Color(0xFFE7EFF9),
+          const Color(0xFFF7EBDC),
+          const Color(0xFFEFF3FA),
+        ],
+        const [0.0, 0.38, 1.0],
+      );
+    canvas.drawRect(Offset.zero & Size(w, h), ceu);
+
     // Bruma solar — um sol de inverno alto à direita, respirando devagar.
     final respira = quiet ? 1.0 : 0.82 + 0.18 * math.sin(t * 1.3);
     _orbe(
@@ -463,7 +479,7 @@ class _CeuVivoPainter extends CustomPainter {
         h * 0.10 + _deriva(t, 0.7, 2.4, h * 0.015),
       ),
       w * 0.55,
-      const Color(0x8CFFD9A0).withValues(alpha: 0.6 * respira),
+      const Color(0x8CFFD9A0).withValues(alpha: 0.72 * respira),
     );
     // Halos frios largos — a "frescura" do gelo.
     _orbe(canvas, Offset(w * 0.1, h * 0.05), w * 0.8, const Color(0x66A9CCE0));
@@ -507,6 +523,9 @@ class _CeuVivoPainter extends CustomPainter {
     final centro = Offset(w * 0.5, h * 1.06);
     final raio = w * 0.95;
     final rect = Rect.fromCircle(center: centro, radius: raio);
+    // O sweep-gradient EXIGE endAngle > startAngle (assert do dart:ui).
+    // Os dois ângulos derivam do mesmo início — a respiração vem do desvio.
+    final inicio = 3.35 - (quiet ? 0.0 : math.sin(t * 0.6) * 0.35);
     final arco = Paint()
       ..shader = ui.Gradient.sweep(
         centro,
@@ -519,8 +538,8 @@ class _CeuVivoPainter extends CustomPainter {
         ],
         [0.0, 0.22, 0.45, 0.68, 1.0],
         ui.TileMode.clamp,
-        3.5,
-        2.6 - (quiet ? 0.35 : math.sin(t * 0.6) * 0.35),
+        inicio,
+        inicio + 0.85,
       )
       ..style = PaintingStyle.stroke
       ..strokeWidth = 6

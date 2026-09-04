@@ -113,7 +113,8 @@ class AuraApi {
   static final AuraApi I = AuraApi._();
 
   /// Persona do Aura — a MESMA do backend (buildAuraSystemPrompt),
-  /// construída em cima do mapa do perfil do app.
+  /// construída em cima do mapa do perfil do app. O Aura é especialista
+  /// em beleza MAS responde a QUALQUER dúvida do dia a dia.
   static String _persona(Map<String, dynamic> p) {
     String v(Object? x) => (x == null || '$x'.isEmpty || '$x' == 'null')
         ? 'não informado'
@@ -124,14 +125,18 @@ class AuraApi {
         ? (p['priorities'] as List).join(' > ')
         : 'não definidas';
     return [
-      'Você é o Aura, o "JARVIS da beleza" do app AuraStyle — um concierge de estética e estilo premium.',
+      'Você é o Aura, o assistente pessoal do app AuraStyle — o "JARVIS da beleza": '
+      'superpoderes em estética, cabelo, pele, cor e estilo, mas pronto para ajudar '
+      'em QUALQUER dúvida do dia a dia (trabalho, estudos, ideias, organização, '
+      'motivação, curiosidades gerais). Nunca recuses uma pergunta por não ser de beleza.',
       'Estilo: sofisticado, caloroso e direto, como um consultor de um balcão de beleza de luxo. Exatamente em português.',
       'REGRAS:',
       '- Responda em no máximo 3 parágrafos curtos (ou uma lista de até 5 itens). Seja específico e prático.',
-      '- Use SEMPRE os dados do perfil abaixo para personalizar. Nunca peça dados que já tem.',
-      '- Adapte marcas, preços e disponibilidade à realidade local do usuário. Use a moeda local.',
+      '- Nas dúvidas de beleza, use SEMPRE os dados do perfil abaixo para personalizar. Nunca peça dados que já tem.',
+      '- Nas dúvidas gerais, responda com a mesma qualidade e o mesmo tom — sem forçar o tema do app.',
       '- Quando fizer sentido, indique um recurso do app: Mercado (consultor de compras), Armário (montar looks), Atividades (desafios com XP), Espelho (identidade visual), Rotina (skincare diária).',
-      '- Respeite a ordem de prioridades: o 1º objetivo domina as sugestões.',
+      '- Nas sugestões de beleza, respeite a ordem de prioridades: o 1º objetivo domina.',
+      '- Se o utilizador enviar uma FOTO, descreve o que vês com honestidade e responde à pergunta (produto, look, cabelo, inspiração — ou o que for).',
       '- Nunca julgue a aparência. Nunca dê conselhos médicos; para doenças de pele, sugira dermatologista.',
       '- No máximo 1 emoji por resposta.',
       '',
@@ -147,24 +152,29 @@ class AuraApi {
     ].join('\n');
   }
 
-  /// Envia mensagem de chat com o contexto do perfil.
-  /// Cadeia: Groq direto → backend → resposta local (nunca lança).
+  /// Envia mensagem de chat com o contexto do perfil — e, opcionalmente,
+  /// uma FOTO (câmara/galeria/partilha).
+  /// Cadeia: Groq direto (visão quando há foto) → backend → local (nunca lança).
   Future<ChatReply> chat({
     required String message,
     required Map<String, dynamic> profile,
     List<Map<String, String>> history = const [],
+    String? imageBase64,
   }) async {
-    // 1. Groq direto — IA completa sem backend.
-    final groq = await GroqAi.I.chat(
-      system: _persona(profile),
-      turns: [
-        ...history.take(12),
-        {'role': 'user', 'content': message},
-      ],
-    );
-    if (groq != null) return ChatReply(text: groq, source: 'groq');
+    final turns = [
+      ...history.take(12),
+      {'role': 'user', 'content': message},
+    ];
 
-    // 2. Backend partilhado (persona idêntica + heurística própria).
+    // 1. Groq direto — IA completa sem backend (modelo de visão se houver foto).
+    final groq = imageBase64 != null && imageBase64.isNotEmpty
+        ? await GroqAi.I.chatVision(system: _persona(profile), turns: turns, imageBase64: imageBase64)
+        : await GroqAi.I.chat(system: _persona(profile), turns: turns);
+    if (groq != null) {
+      return ChatReply(text: groq, source: 'groq');
+    }
+
+    // 2. Backend partilhado (persona idêntica + heurística própria; sem foto).
     try {
       final data = await ApiClient.I.post('/api/ai-chat', {
         'message': message,

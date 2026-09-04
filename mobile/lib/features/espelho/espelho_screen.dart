@@ -138,11 +138,17 @@ class _EspelhoScreenState extends State<EspelhoScreen> {
         ),
       ),
     );
-    Navigator.of(context).pop();
+    // Em aba da concha não há rota para fechar — só sai quando houver.
+    if (Navigator.of(context).canPop()) Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Quando o Espelho vive numa aba da concha, o menu de vidro flutuante
+    // (66px + margens) e a coroa do Scan ocupam a base do ecrã — a barra de
+    // guardar tem de subir ACIMA deles ou fica inacessível (bug do APK).
+    final navInset = MediaQuery.of(context).padding.bottom + 66 + 14 + 12;
+    final barraBaixo = widget.emTab ? navInset : 18.0;
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Stack(
@@ -150,7 +156,12 @@ class _EspelhoScreenState extends State<EspelhoScreen> {
           SafeArea(
             bottom: false,
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(18, 8, 18, 130),
+              padding: EdgeInsets.fromLTRB(
+                18,
+                8,
+                18,
+                widget.emTab ? navInset + 84 : 130,
+              ),
               children: [
                 _cabecalho(),
                 const SizedBox(height: 22),
@@ -178,11 +189,11 @@ class _EspelhoScreenState extends State<EspelhoScreen> {
               ],
             ),
           ),
-          // Barra de guardado flutuante.
+          // Barra de guardado flutuante — acima do menu quando em aba.
           Positioned(
             left: 18,
             right: 18,
-            bottom: 18,
+            bottom: barraBaixo,
             child: GlassCard(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(

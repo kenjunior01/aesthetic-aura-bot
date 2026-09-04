@@ -1,7 +1,7 @@
 name: aurastyle_mobile
 description: "AuraStyle Mobile — a tua aura, esculpida em platina. App Flutter do assistente de estética com IA."
 publish_to: 'none'
-version: 1.2.0+3
+version: 1.3.0+4
 
 environment:
   sdk: ^3.13.2

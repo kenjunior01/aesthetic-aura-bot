@@ -1,10 +1,18 @@
-/// acervo_api.dart — galeria Acervo (The Met) via rota /api/acervo partilhada.
+/// acervo_api.dart — galeria Acervo (The Met) DIRETO do telemóvel + rota
+/// /api/acervo partilhada como 2ª camada.
 ///
-/// Resiliência em 2 camadas no cliente (o servidor já tem 3):
-///  1. chamada viva à rota Next.js (que por sua vez fala com o Met);
-///  2. reserva embutida (kMetReserva) — a galeria nunca amanhece vazia.
+/// Resiliência em 3 camadas no cliente:
+///  1. chamada VIVA ao Met collectionAPI (grátis, sem chave, UA de navegador);
+///  2. rota Next.js /api/acervo (o MESMO backend do web);
+///  3. reserva embutida (kMetReserva) — a galeria nunca amanhece vazia.
 library;
 
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+
+import '../config.dart';
 import '../data/met_reserva.dart';
 import 'api_client.dart';
 
@@ -54,6 +62,9 @@ class AcervoApi {
   AcervoApi._();
   static final AcervoApi I = AcervoApi._();
 
+  final http.Client _http = http.Client();
+  final Map<String, AcervoResult> _cacheVivo = {};
+
   static const List<String> themes = [
     'vestidos',
     'padroes',
@@ -72,8 +83,31 @@ class AcervoApi {
     'fotografias': 'Fotografia',
   };
 
+  /// Termos EN de busca no Met + departamento (mesma curadoria do web).
+  static const Map<String, String> _temaTermo = {
+    'vestidos': 'dress',
+    'padroes': 'textile',
+    'joalharia': 'jewelry',
+    'armaduras': 'armor',
+    'retratos': 'portrait',
+    'fotografias': 'photograph',
+  };
+  static const Map<String, int> _temaDepto = {
+    'vestidos': 8,
+    'padroes': 8,
+    'joalharia': 8,
+    'armaduras': 4,
+    'retratos': 11,
+    'fotografias': 19,
+  };
+
   /// Busca obras de um tema. count limitado a 6-24 pela rota.
   Future<AcervoResult> fetchTheme(String theme, {int count = 12}) async {
+    // 1. DIRETO do telemóvel — Met collectionAPI (grátis, sem chave).
+    final direto = await _metDireto(theme, count);
+    if (direto != null && direto.items.isNotEmpty) return direto;
+
+    // 2. Backend partilhado (cache 6h no servidor).
     try {
       final data = await ApiClient.I.get(
         '/api/acervo',
@@ -86,15 +120,95 @@ class AcervoApi {
           .map(MetItem.fromJson)
           .where((m) => m.image.isNotEmpty)
           .toList();
-      if (items.isEmpty) throw ApiException('resposta vazia');
-      final src = data is Map ? '${data['source'] ?? 'met'}' : 'met';
-      return AcervoResult(items: items, source: src);
+      if (items.isNotEmpty) {
+        final src = data is Map ? '${data['source'] ?? 'met'}' : 'met';
+        return AcervoResult(items: items, source: src);
+      }
     } catch (_) {
-      // Camada 2: reserva embutida — mesma filosofia do web.
-      return AcervoResult(
-        items: kMetReserva[theme] ?? const [],
-        source: 'reserva',
+      // cai para a reserva
+    }
+
+    // 3. Reserva embutida — mesma filosofia do web.
+    return AcervoResult(
+      items: kMetReserva[theme] ?? const [],
+      source: 'reserva',
+    );
+  }
+
+  // ── Camada 1: Met direto ────────────────────────────────────────────────────
+  static const _metBase = 'https://collectionapi.metmuseum.org/public/collection/v1';
+
+  Future<AcervoResult?> _metDireto(String theme, int count) async {
+    final hit = _cacheVivo['$theme::$count'];
+    if (hit != null && hit.items.isNotEmpty) return hit;
+    try {
+      final termo = _temaTermo[theme] ?? 'fashion';
+      final depto = _temaDepto[theme];
+      final searchUri = Uri.parse('$_metBase/search').replace(queryParameters: {
+        'q': termo,
+        'hasImages': 'true',
+        if (depto != null) 'departmentId': '$depto',
+      });
+      final searchRes = await _http
+          .get(searchUri, headers: {'User-Agent': AuraConfig.browserUA})
+          .timeout(const Duration(seconds: 9));
+      if (searchRes.statusCode != 200) return null;
+      final ids = ((jsonDecode(searchRes.body)['objectIDs'] as List?) ?? const [])
+          .whereType<num>()
+          .map((e) => e.toInt())
+          .take(30)
+          .toList();
+      if (ids.isEmpty) return null;
+
+      // objectIDs → objetos com imagem de domínio público (concorrência 5).
+      final items = <MetItem>[];
+      for (var i = 0; i < ids.length && items.length < count; i += 5) {
+        final lote = ids.skip(i).take(5).toList();
+        final objetos = await Future.wait(
+          lote.map((id) => _objetoMet(id)),
+        );
+        for (final o in objetos) {
+          if (o != null && items.length < count) items.add(o);
+        }
+      }
+      if (items.isEmpty) return null;
+      final result = AcervoResult(items: items, source: 'met');
+      _cacheVivo['$theme::$count'] = result;
+      return result;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<MetItem?> _objetoMet(int id) async {
+    try {
+      final res = await _http
+          .get(
+            Uri.parse('$_metBase/objects/$id'),
+            headers: {'User-Agent': AuraConfig.browserUA},
+          )
+          .timeout(const Duration(seconds: 9));
+      if (res.statusCode != 200) return null;
+      final j = jsonDecode(res.body);
+      if (j is! Map) return null;
+      final imagem = '${j['primaryImage'] ?? ''}';
+      final dominio = j['isPublicDomain'] == true;
+      if (imagem.isEmpty || !dominio) return null;
+      return MetItem(
+        objectID: id,
+        title: (j['title'] as String?) ?? 'Sem título',
+        artist: (j['artistDisplayName'] as String?)?.isEmpty == false
+            ? j['artistDisplayName'] as String
+            : 'Anónimo',
+        date: (j['objectDate'] as String?) ?? '',
+        culture: (j['culture'] as String?) ?? '',
+        medium: (j['medium'] as String?) ?? '',
+        department: (j['department'] as String?) ?? '',
+        image: imagem,
+        objectURL: (j['objectURL'] as String?) ?? '',
       );
+    } catch (_) {
+      return null;
     }
   }
 }

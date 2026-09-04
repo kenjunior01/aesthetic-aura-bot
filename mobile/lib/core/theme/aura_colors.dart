@@ -46,28 +46,31 @@ class AuraColors {
   static const Color _halo3N = Color(0x16141C2A);
 
   // ── Alvor Glacial (dia) — o mesmo azul-gelo visto à luz do dia ────────────
-  static const Color _backgroundA = Color(0xFFEDF2F8);
-  static const Color _backgroundDeepA = Color(0xFFE2EAF3);
+  static const Color _backgroundA = Color(0xFFEFF3FA);
+  static const Color _backgroundDeepA = Color(0xFFDFE9F4);
   static const Color _cardA = Color(0xFFFFFFFF);
-  static const Color _cardFillA = Color(0xE6FFFFFF);
+  static const Color _cardFillA = Color(0xF2FFFFFF);
   static const Color _secondaryA = Color(0xFFF6F9FC);
   static const Color _mutedA = Color(0xFFEEF3F9);
-  static const Color _foregroundA = Color(0xFF0D131C);
-  static const Color _mutedForegroundA = Color(0xFF59657A);
+  static const Color _foregroundA = Color(0xFF0B1119);
+  static const Color _mutedForegroundA = Color(0xFF48546E);
   static const Color _primaryA = Color(0xFF2E5F8A);
-  static const Color _onPrimaryA = Color(0xFFF4F9FD);
-  static const Color _glowA = Color(0xFF6FA3CC);
+  // ON-primary ESCURO no Alvor: o metal platina continua claro nos DOIS
+  // modos — texto/icones brancos em cima dele eram ilegiveis (bug do light
+  // mode). Marinho escuro devolve o contraste a todos os CTAs de metal.
+  static const Color _onPrimaryA = Color(0xFF12283C);
+  static const Color _glowA = Color(0xFF5E97C4);
   static const Color _accentA = Color(0xFF4E86B4);
   static const Color _onAccentA = Color(0xFFF4F9FD);
-  static const Color _platinaLuminosaA = Color(0xFF4A87BC);
-  static const Color _borderA = Color(0x1A0D131C);
-  static const Color _surfaceA = Color(0x0A0D131C);
-  static const Color _surfaceStrongA = Color(0x1F0D131C);
-  static const Color _specularA = Color(0xB3FFFFFF);
-  static const Color _chartWarmA = Color(0xFFB96A5B);
-  static const Color _chartIceA = Color(0xFF7FA6C6);
-  static const Color _shadowColdA = Color(0x330D131C);
-  static const Color _glowShadowA = Color(0x402E5F8A);
+  static const Color _platinaLuminosaA = Color(0xFF3D7CB3);
+  static const Color _borderA = Color(0x240F1B2B);
+  static const Color _surfaceA = Color(0x0A0F1B2B);
+  static const Color _surfaceStrongA = Color(0x240F1B2B);
+  static const Color _specularA = Color(0xD9FFFFFF);
+  static const Color _chartWarmA = Color(0xFFB0574A);
+  static const Color _chartIceA = Color(0xFF6E9BC0);
+  static const Color _shadowColdA = Color(0x33182738);
+  static const Color _glowShadowA = Color(0x3D2E5F8A);
   static const Color _halo1A = Color(0x59A9CCE0);
   static const Color _halo2A = Color(0x478FBED8);
   static const Color _halo3A = Color(0x2EC9DEF0);

@@ -115,3 +115,20 @@ O WebView abre o app offline-first e as chamadas IA vão ao backend da Vercel vi
 - **IA:** cadeia Groq (Llama 3.3 70B texto · Llama 4 Scout visão) → z-ai → regras locais. Sem chave/config extra funciona igualmente (modo offline determinístico).
 - **Dados mundiais:** Open Beauty Facts (códigos de barras), Open-Meteo (clima), ipwho.is/geojs (região) — 100% open data, sem marcas fixas no código.
 - **Chaves:** nunca commitar `.env` (já protegido pelo `.gitignore`); usa as variáveis de ambiente da Vercel.
+
+## Chaves de ambiente (Vercel → Settings → Environment Variables)
+
+| Variável | Para que serve | Onde obter |
+|---|---|---|
+| `GROQ_API_KEY` | IA do chat, visão da selfie e do Mercado | console.groq.com/keys |
+| `PEXELS_API_KEY` | Banco de imagens Pexels no `/api/galeria-visual` | pexels.com/api |
+| `UNSPLASH_ACCESS_KEY` | Banco de imagens Unsplash (intercalado com o Pexels) | unsplash.com/developers |
+
+- Sem as chaves, o servidor devolve a **reserva embutida** e o web continua bonito.
+- O **app Flutter** lê as chaves de `mobile/lib/core/secrets.dart` — no repo
+  elas vão vazias (GitHub Push Protection bloqueia chaves em commits
+  públicos). Cola as tuas chaves nesse ficheiro antes de compilar e o app
+  fala diretamente com Pexels + Unsplash + Groq do telemóvel, sem backend.
+  Se alguma chave for exposta, roda-a no painel do serviço e atualiza o ficheiro.
+- O Groq bloqueia alguns datacenters (ex.: saída por Hong Kong) — na Vercel,
+  escolhe a região `iad1`/`gru1` para que o Groq responda como primário.

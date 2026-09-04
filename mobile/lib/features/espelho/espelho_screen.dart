@@ -15,6 +15,7 @@ import 'package:provider/provider.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/api/visual_api.dart';
+import '../../core/secrets.dart';
 import '../../core/store/profile_store.dart';
 import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
@@ -245,6 +246,32 @@ class _EspelhoScreenState extends State<EspelhoScreen> {
             ],
           ),
         ),
+        if (AuraSecrets.temBancosImagem)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999),
+              color: AuraColors.cardFill,
+              border: Border.all(color: AuraColors.border),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.photo_library_outlined,
+                  size: 13,
+                  color: AuraColors.primary,
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  'Pexels + Unsplash',
+                  style: AuraType.chip.copyWith(
+                    color: AuraColors.mutedForeground,
+                  ),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }

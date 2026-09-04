@@ -1,0 +1,319 @@
+/// profile_store.dart — o MESMO perfil do web, persistido localmente.
+///
+/// Espelha `src/lib/aura-store.ts` (chave `aurastyle-profile`, mesma forma de
+/// Profile, mesma fórmula de nível floor(sqrt(xp/50))+1). Quando o sync cloud
+/// do web estiver ativo, os dois clientes leem/escrevem o mesmo utilizador.
+library;
+
+import 'dart:convert';
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class Profile {
+  const Profile({
+    this.name = '',
+    this.email = '',
+    this.gender = '',
+    this.age = 0,
+    this.region = '',
+    this.country = '',
+    this.city = '',
+    this.priorities = const [],
+    this.selfie,
+    this.faceShape = '',
+    this.skinTone = 0,
+    this.undertone = '',
+    this.eyeColor = '',
+    this.hairType = '',
+    this.hairColor = '',
+    this.hairLength = '',
+    this.bodyType = '',
+    this.height = 0,
+    this.weight = 0,
+    this.styles = const [],
+    this.colors = const [],
+    this.budget = '',
+    this.profession = '',
+    this.climate = '',
+    this.notes = '',
+  });
+
+  final String name;
+  final String email;
+  final String gender;
+  final int age;
+  final String region;
+  final String country;
+  final String city;
+  final List<String> priorities;
+  final String? selfie; // base64 (sem prefixo data:)
+  final String faceShape;
+  final int skinTone; // 1-10
+  final String undertone;
+  final String eyeColor;
+  final String hairType;
+  final String hairColor;
+  final String hairLength;
+  final String bodyType;
+  final int height;
+  final int weight;
+  final List<String> styles;
+  final List<String> colors;
+  final String budget;
+  final String profession;
+  final String climate;
+  final String notes;
+
+  bool get hasScan => faceShape.isNotEmpty || skinTone > 0;
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'email': email,
+    'gender': gender,
+    'age': age,
+    'region': region,
+    'country': country,
+    'city': city,
+    'priorities': priorities,
+    'selfie': selfie,
+    'faceShape': faceShape,
+    'skinTone': skinTone,
+    'undertone': undertone,
+    'eyeColor': eyeColor,
+    'hairType': hairType,
+    'hairColor': hairColor,
+    'hairLength': hairLength,
+    'bodyType': bodyType,
+    'height': height,
+    'weight': weight,
+    'styles': styles,
+    'colors': colors,
+    'budget': budget,
+    'profession': profession,
+    'climate': climate,
+    'notes': notes,
+  };
+
+  static Profile fromJson(Map<String, dynamic> j) => Profile(
+    name: '${j['name'] ?? ''}',
+    email: '${j['email'] ?? ''}',
+    gender: '${j['gender'] ?? ''}',
+    age: (j['age'] as num?)?.toInt() ?? 0,
+    region: '${j['region'] ?? ''}',
+    country: '${j['country'] ?? ''}',
+    city: '${j['city'] ?? ''}',
+    priorities:
+        (j['priorities'] as List?)?.map((e) => '$e').toList() ?? const [],
+    selfie: j['selfie'] as String?,
+    faceShape: '${j['faceShape'] ?? ''}',
+    skinTone: (j['skinTone'] as num?)?.toInt() ?? 0,
+    undertone: '${j['undertone'] ?? ''}',
+    eyeColor: '${j['eyeColor'] ?? ''}',
+    hairType: '${j['hairType'] ?? ''}',
+    hairColor: '${j['hairColor'] ?? ''}',
+    hairLength: '${j['hairLength'] ?? ''}',
+    bodyType: '${j['bodyType'] ?? ''}',
+    height: (j['height'] as num?)?.toInt() ?? 0,
+    weight: (j['weight'] as num?)?.toInt() ?? 0,
+    styles: (j['styles'] as List?)?.map((e) => '$e').toList() ?? const [],
+    colors: (j['colors'] as List?)?.map((e) => '$e').toList() ?? const [],
+    budget: '${j['budget'] ?? ''}',
+    profession: '${j['profession'] ?? ''}',
+    climate: '${j['climate'] ?? ''}',
+    notes: '${j['notes'] ?? ''}',
+  );
+
+  Profile copyWith({
+    String? name,
+    String? email,
+    String? gender,
+    int? age,
+    String? region,
+    String? country,
+    String? city,
+    List<String>? priorities,
+    String? selfie,
+    String? faceShape,
+    int? skinTone,
+    String? undertone,
+    String? eyeColor,
+    String? hairType,
+    String? hairColor,
+    String? hairLength,
+    String? bodyType,
+    int? height,
+    int? weight,
+    List<String>? styles,
+    List<String>? colors,
+    String? budget,
+    String? profession,
+    String? climate,
+    String? notes,
+  }) => Profile(
+    name: name ?? this.name,
+    email: email ?? this.email,
+    gender: gender ?? this.gender,
+    age: age ?? this.age,
+    region: region ?? this.region,
+    country: country ?? this.country,
+    city: city ?? this.city,
+    priorities: priorities ?? this.priorities,
+    selfie: selfie ?? this.selfie,
+    faceShape: faceShape ?? this.faceShape,
+    skinTone: skinTone ?? this.skinTone,
+    undertone: undertone ?? this.undertone,
+    eyeColor: eyeColor ?? this.eyeColor,
+    hairType: hairType ?? this.hairType,
+    hairColor: hairColor ?? this.hairColor,
+    hairLength: hairLength ?? this.hairLength,
+    bodyType: bodyType ?? this.bodyType,
+    height: height ?? this.height,
+    weight: weight ?? this.weight,
+    styles: styles ?? this.styles,
+    colors: colors ?? this.colors,
+    budget: budget ?? this.budget,
+    profession: profession ?? this.profession,
+    climate: climate ?? this.climate,
+    notes: notes ?? this.notes,
+  );
+}
+
+/// Marcos de streak — idênticos ao web (aura-store.ts).
+const List<({int days, int xp, String label})> kStreakMilestones = [
+  (days: 3, xp: 30, label: 'Aquecimento'),
+  (days: 7, xp: 50, label: 'Semana perfeita'),
+  (days: 14, xp: 75, label: 'Duas semanas'),
+  (days: 30, xp: 150, label: 'Mês de ouro'),
+  (days: 60, xp: 300, label: 'Lenda'),
+  (days: 100, xp: 600, label: 'Ícone'),
+];
+
+int calculateLevel(int xp) {
+  if (xp <= 0) return 1;
+  return math.sqrt(xp / 50).floor() + 1;
+}
+
+/// Progresso dentro do nível atual (0..1) — mesma curva do web.
+double computeLevelProgress(int xp) {
+  final level = calculateLevel(xp);
+  final cur = 50.0 * (level - 1) * (level - 1);
+  final next = 50.0 * level * level;
+  if (next <= cur) return 0;
+  return ((xp - cur) / (next - cur)).clamp(0.0, 1.0);
+}
+
+({int days, int xp, String label})? nextStreakMilestone(int streak) {
+  for (final m in kStreakMilestones) {
+    if (m.days > streak) return m;
+  }
+  return null;
+}
+
+class ProfileStore extends ChangeNotifier {
+  ProfileStore();
+
+  static const _prefsKey = 'aurastyle-profile'; // MESMA chave do web
+  static const _stateKey = 'aurastyle-profile-state';
+
+  Profile _profile = const Profile();
+  int _xp = 0;
+  int _streak = 0;
+  List<String> _events = const [];
+  bool _loaded = false;
+
+  Profile get profile => _profile;
+  int get xp => _xp;
+  int get streak => _streak;
+  int get level => calculateLevel(_xp);
+  double get levelProgress => computeLevelProgress(_xp);
+  List<String> get events => List.unmodifiable(_events);
+  bool get loaded => _loaded;
+  ({int days, int xp, String label})? get nextMilestone =>
+      nextStreakMilestone(_streak);
+
+  Future<void> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_stateKey) ?? prefs.getString(_prefsKey);
+    if (raw != null) {
+      try {
+        final map = jsonDecode(raw);
+        if (map is Map) {
+          final state = map['state'] is Map ? map['state'] as Map : map;
+          _profile = Profile.fromJson(
+            (state['profile'] as Map?)?.cast<String, dynamic>() ?? const {},
+          );
+          _xp = (state['xp'] as num?)?.toInt() ?? 0;
+          _streak = (state['streak'] as num?)?.toInt() ?? 0;
+        }
+      } catch (_) {
+        // perfil corrompido → recomeça limpo, nunca bloqueia o app
+      }
+    }
+    _events = prefs.getStringList('aurastyle-events') ?? const [];
+    _loaded = true;
+    notifyListeners();
+  }
+
+  Future<void> save() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _stateKey,
+      jsonEncode({
+        'state': {'profile': _profile.toJson(), 'xp': _xp, 'streak': _streak},
+        'version': 0,
+      }),
+    );
+  }
+
+  void updateProfile(Profile Function(Profile) updater) {
+    _profile = updater(_profile);
+    save();
+    notifyListeners();
+  }
+
+  void addXp(int amount) {
+    _xp = (_xp + amount).clamp(0, 1 << 31);
+    save();
+    notifyListeners();
+  }
+
+  void bumpStreak() {
+    _streak += 1;
+    addXp(25); // ROUTINE_COMPLETE_XP
+  }
+
+  /// Telemetria local (espelha logEvent do services.ts) — últimos 100.
+  void logEvent(String name, [Map<String, dynamic>? props]) {
+    final entry =
+        '${DateTime.now().toIso8601String()} $name'
+        '${props == null ? '' : ' ${jsonEncode(props)}'}';
+    _events = [..._events.take(99), entry];
+    SharedPreferences.getInstance().then(
+      (p) => p.setStringList('aurastyle-events', _events),
+    );
+    notifyListeners();
+  }
+
+  /// Contexto resumido para as rotas de IA (mesmo contrato do web).
+  Map<String, dynamic> aiContext() => {
+    'name': _profile.name,
+    'gender': _profile.gender,
+    'age': _profile.age,
+    'city': _profile.city,
+    'country': _profile.country,
+    'faceShape': _profile.faceShape,
+    'skinTone': _profile.skinTone,
+    'undertone': _profile.undertone,
+    'hairType': _profile.hairType,
+    'hairColor': _profile.hairColor,
+    'hairLength': _profile.hairLength,
+    'styles': _profile.styles,
+    'colors': _profile.colors,
+    'priorities': _profile.priorities,
+    'budget': _profile.budget,
+    'level': level,
+    'xp': _xp,
+  };
+}

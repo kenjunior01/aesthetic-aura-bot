@@ -1,0 +1,143 @@
+// met_reserva.dart — reserva embutida do Acervo (The Metropolitan Museum of Art).
+// GERADO a partir de src/lib/met-fallback.ts via scripts/gen-met-reserva.mjs —
+// mesmas obras verificadas (isPublicDomain + imagem ativa) do app web, para que
+// a galeria nunca amanheça vazia, mesmo sem rede.
+
+import '../api/acervo_api.dart';
+
+const Map<String, List<MetItem>> kMetReserva = {
+  'vestidos': [
+    MetItem(
+      objectID: 12127,
+      title: 'Madame X (Virginie Amélie Avegno Gautreau)',
+      artist: 'John Singer Sargent',
+      date: '1883–84',
+      culture: 'American',
+      medium: 'Oil on canvas',
+      department: 'The American Wing',
+      image: 'https://images.metmuseum.org/CRDImages/ad/web-large/DP-29006-001.jpg',
+      objectURL: 'https://www.metmuseum.org/art/collection/search/12127',
+    ),
+    MetItem(
+      objectID: 436141,
+      title: 'The Dancing Class',
+      artist: 'Edgar Degas',
+      date: 'ca. 1870',
+      culture: '',
+      medium: 'Oil on wood',
+      department: 'European Paintings',
+      image: 'https://images.metmuseum.org/CRDImages/ep/web-large/DP-25445-001.jpg',
+      objectURL: 'https://www.metmuseum.org/art/collection/search/436141',
+    ),
+  ],
+  'texteis': [
+    MetItem(
+      objectID: 450541,
+      title: 'Tile Fragment',
+      artist: 'Desconhecido',
+      date: '1334–1434',
+      culture: '',
+      medium: 'Stonepaste; glazed',
+      department: 'Islamic Art',
+      image:
+          'https://images.metmuseum.org/CRDImages/is/web-large/sf45-103-1.jpg',
+      objectURL: 'https://www.metmuseum.org/art/collection/search/450541',
+    ),
+    MetItem(
+      objectID: 449537,
+      title: 'Mihrab (Prayer Niche)',
+      artist: 'Desconhecido',
+      date: 'dated 755 AH/1354–55 CE',
+      culture: '',
+      medium: 'Mosaic of polychrome-glazed cut tiles on stonepaste body; set into mortar',
+      department: 'Islamic Art',
+      image: 'https://images.metmuseum.org/CRDImages/is/web-large/DP235035.jpg',
+      objectURL: 'https://www.metmuseum.org/art/collection/search/449537',
+    ),
+  ],
+  'joalharia': [
+    MetItem(
+      objectID: 450084,
+      title: 'Jewelry',
+      artist: 'Desconhecido',
+      date: 'probably 8th–12th century',
+      culture: '',
+      medium: 'Stone or bone',
+      department: 'Islamic Art',
+      image: 'https://images.metmuseum.org/CRDImages/is/web-large/sf40-170-409a.jpg',
+      objectURL: 'https://www.metmuseum.org/art/collection/search/450084',
+    ),
+    MetItem(
+      objectID: 256975,
+      title: 'Ganymede jewelry',
+      artist: 'Greek',
+      date: 'ca. 330–300 BCE',
+      culture: 'Greek',
+      medium: 'Gold, rock crystal, emerald',
+      department: 'Greek and Roman Art',
+      image: 'https://images.metmuseum.org/CRDImages/gr/web-large/DT283.jpg',
+      objectURL: 'https://www.metmuseum.org/art/collection/search/256975',
+    ),
+  ],
+  'armaduras': [
+    MetItem(
+      objectID: 22895,
+      title: 'Parade Shield Depicting the Conversion of Saint Paul',
+      artist: 'Italian, Milan',
+      date: 'ca. 1570',
+      culture: 'Italian, Milan',
+      medium: 'Steel, gold, silver',
+      department: 'Arms and Armor',
+      image: 'https://images.metmuseum.org/CRDImages/aa/web-large/DT293353.jpg',
+      objectURL: 'https://www.metmuseum.org/art/collection/search/22895',
+    ),
+    MetItem(
+      objectID: 21974,
+      title: 'Helmet all\'Antica',
+      artist: 'Filippo Negroli',
+      date: 'ca. 1532–35',
+      culture: 'Italian, Milan',
+      medium: 'Steel',
+      department: 'Arms and Armor',
+      image: 'https://images.metmuseum.org/CRDImages/aa/web-large/DT277024.jpg',
+      objectURL: 'https://www.metmuseum.org/art/collection/search/21974',
+    ),
+  ],
+  'retratos': [
+    MetItem(
+      objectID: 437875,
+      title: 'Portrait of a Man',
+      artist: 'Velázquez',
+      date: 'ca. 1650',
+      culture: '',
+      medium: 'Oil on canvas',
+      department: 'European Paintings',
+      image: 'https://images.metmuseum.org/CRDImages/ep/web-large/DP276131.jpg',
+      objectURL: 'https://www.metmuseum.org/art/collection/search/437875',
+    ),
+    MetItem(
+      objectID: 436152,
+      title: 'Portrait of a Woman in Gray',
+      artist: 'Edgar Degas',
+      date: 'ca. 1865',
+      culture: '',
+      medium: 'Oil on canvas',
+      department: 'European Paintings',
+      image: 'https://images.metmuseum.org/CRDImages/ep/web-large/DT1912.jpg',
+      objectURL: 'https://www.metmuseum.org/art/collection/search/436152',
+    ),
+  ],
+  'fotografias': [
+    MetItem(
+      objectID: 267988,
+      title: '[Landscape with Distant View of Earthwork Fortifications]',
+      artist: 'Unknown',
+      date: '1861–65',
+      culture: '',
+      medium: 'Albumen silver print from glass negative',
+      department: 'Photographs',
+      image: 'https://images.metmuseum.org/CRDImages/ph/web-large/DP70778.jpg',
+      objectURL: 'https://www.metmuseum.org/art/collection/search/267988',
+    ),
+  ],
+};

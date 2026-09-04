@@ -1,0 +1,56 @@
+name: aurastyle_mobile
+description: "AuraStyle Mobile — a tua aura, esculpida em platina. App Flutter do assistente de estética com IA."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  provider: ^6.1.2              # estado do perfil (ChangeNotifier)
+  shared_preferences: ^2.3.2    # persistência local (aurastyle-profile)
+  http: ^1.2.2                  # cliente para as rotas /api do Next.js
+  cached_network_image: ^3.4.1  # galeria Acervo com fade + placeholder
+  url_launcher: ^6.3.0          # abrir fichas no metmuseum.org
+  image_picker: ^1.1.2          # foto do rosto para o Scan / Referências
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/fonts/
+
+  fonts:
+    - family: Outfit
+      fonts:
+        - asset: assets/fonts/Outfit-400.ttf
+          weight: 400
+        - asset: assets/fonts/Outfit-500.ttf
+          weight: 500
+        - asset: assets/fonts/Outfit-600.ttf
+          weight: 600
+        - asset: assets/fonts/Outfit-700.ttf
+          weight: 700
+        - asset: assets/fonts/Outfit-800.ttf
+          weight: 800
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/Manrope-400.ttf
+          weight: 400
+        - asset: assets/fonts/Manrope-500.ttf
+          weight: 500
+        - asset: assets/fonts/Manrope-600.ttf
+          weight: 600
+        - asset: assets/fonts/Manrope-700.ttf
+          weight: 700
+        - asset: assets/fonts/Manrope-800.ttf
+          weight: 800

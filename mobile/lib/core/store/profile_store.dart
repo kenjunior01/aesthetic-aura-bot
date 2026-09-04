@@ -11,6 +11,8 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../theme/aura_colors.dart';
+
 class Profile {
   const Profile({
     this.name = '',
@@ -38,6 +40,7 @@ class Profile {
     this.profession = '',
     this.climate = '',
     this.notes = '',
+    this.espelho = const [],
   });
 
   final String name;
@@ -65,6 +68,10 @@ class Profile {
   final String profession;
   final String climate;
   final String notes;
+
+  /// Referências visuais do Espelho — imagens reais que definem a pessoa
+  /// (ids/urls do banco de imagens + uploads locais).
+  final List<String> espelho;
 
   bool get hasScan => faceShape.isNotEmpty || skinTone > 0;
 
@@ -94,6 +101,7 @@ class Profile {
     'profession': profession,
     'climate': climate,
     'notes': notes,
+    'espelho': espelho,
   };
 
   static Profile fromJson(Map<String, dynamic> j) => Profile(
@@ -123,6 +131,8 @@ class Profile {
     profession: '${j['profession'] ?? ''}',
     climate: '${j['climate'] ?? ''}',
     notes: '${j['notes'] ?? ''}',
+    espelho:
+        (j['espelho'] as List?)?.map((e) => '$e').toList() ?? const [],
   );
 
   Profile copyWith({
@@ -151,6 +161,7 @@ class Profile {
     String? profession,
     String? climate,
     String? notes,
+    List<String>? espelho,
   }) => Profile(
     name: name ?? this.name,
     email: email ?? this.email,
@@ -177,6 +188,7 @@ class Profile {
     profession: profession ?? this.profession,
     climate: climate ?? this.climate,
     notes: notes ?? this.notes,
+    espelho: espelho ?? this.espelho,
   );
 }
 
@@ -218,6 +230,7 @@ class ProfileStore extends ChangeNotifier {
   static const _stateKey = 'aurastyle-profile-state';
   static const _ritualKey = 'aurastyle-ritual-v1';
   static const _onboardedKey = 'aurastyle-onboarded-v1';
+  static const _modoClaroKey = 'aurastyle-modo-claro';
 
   /// Passos do ritual diário — idênticos ao espírito do web (5 passos,
   /// 25 XP ao completar).
@@ -237,6 +250,7 @@ class ProfileStore extends ChangeNotifier {
   String _ritualDate = '';
   List<int> _ritualDone = const [];
   bool _onboarded = false;
+  bool _modoClaro = false;
 
   Profile get profile => _profile;
   int get xp => _xp;
@@ -246,6 +260,7 @@ class ProfileStore extends ChangeNotifier {
   List<String> get events => List.unmodifiable(_events);
   bool get loaded => _loaded;
   bool get onboarded => _onboarded;
+  bool get modoClaro => _modoClaro;
 
   /// Ritual de hoje: passos concluídos (recalcula se virou o dia).
   List<int> get ritualDone {
@@ -289,6 +304,8 @@ class ProfileStore extends ChangeNotifier {
         prefs.getStringList('$_ritualKey-done')?.map(int.parse).toList() ??
         const [];
     _onboarded = prefs.getBool(_onboardedKey) ?? false;
+    _modoClaro = prefs.getBool(_modoClaroKey) ?? false;
+    AuraColors.modo = _modoClaro ? ModoCromatico.alvor : ModoCromatico.noite;
     _loaded = true;
     notifyListeners();
   }
@@ -352,6 +369,18 @@ class ProfileStore extends ChangeNotifier {
   void completeOnboarding() {
     _onboarded = true;
     SharedPreferences.getInstance().then((p) => p.setBool(_onboardedKey, true));
+    notifyListeners();
+  }
+
+  /// Alterna Noite ↔ Alvor. Persistido e aplicado aos tokens vivos;
+  /// o app raiz observa e reconstrói a árvore com uma nova key.
+  void setModoClaro(bool claro) {
+    if (_modoClaro == claro) return;
+    _modoClaro = claro;
+    AuraColors.modo = claro ? ModoCromatico.alvor : ModoCromatico.noite;
+    SharedPreferences.getInstance().then(
+      (p) => p.setBool(_modoClaroKey, claro),
+    );
     notifyListeners();
   }
 

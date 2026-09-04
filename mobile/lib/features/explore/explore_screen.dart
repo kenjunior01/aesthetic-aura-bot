@@ -49,9 +49,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('EXPLORAR', style: AuraType.eyebrow),
+                 Text('EXPLORAR', style: AuraType.eyebrow),
                 const SizedBox(height: 6),
-                const Text(
+                 Text(
                   'Acervo — galeria do Met',
                   style: AuraType.sectionTitle,
                 ),
@@ -173,7 +173,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       placeholder: (_, _) => const ShimmerBox(radius: 0),
                       errorWidget: (_, _, _) => Container(
                         color: AuraColors.muted,
-                        child: const Icon(
+                        child:  Icon(
                           Icons.image_outlined,
                           color: AuraColors.mutedForeground,
                         ),

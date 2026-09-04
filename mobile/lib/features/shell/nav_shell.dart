@@ -9,9 +9,9 @@ import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
 import '../../core/theme/aura_typography.dart';
 import '../../core/widgets/aurora_background.dart';
-import '../closet/closet_screen.dart';
-import '../explore/explore_screen.dart';
+import '../espelho/espelho_screen.dart';
 import '../home/home_screen.dart';
+import '../mercado/mercado_screen.dart';
 import '../profile/profile_screen.dart';
 import '../scan/scan_screen.dart';
 
@@ -32,14 +32,14 @@ class _NavShellState extends State<NavShell> {
       label: 'Início',
     ),
     _Dest(
-      icon: Icons.account_balance_outlined,
-      activeIcon: Icons.account_balance,
-      label: 'Explorar',
+      icon: Icons.face_retouching_natural_outlined,
+      activeIcon: Icons.face_retouching_natural,
+      label: 'Espelho',
     ),
     _Dest(
-      icon: Icons.checkroom_outlined,
-      activeIcon: Icons.checkroom,
-      label: 'Armário',
+      icon: Icons.storefront_outlined,
+      activeIcon: Icons.storefront,
+      label: 'Mercado',
     ),
     _Dest(
       icon: Icons.person_outline,
@@ -52,8 +52,8 @@ class _NavShellState extends State<NavShell> {
   Widget build(BuildContext context) {
     final screens = [
       const HomeScreen(),
-      const ExploreScreen(),
-      const ClosetScreen(),
+      EspelhoScreen(emTab: true),
+      MercadoScreen(emTab: true),
       const ProfileScreen(),
     ];
 
@@ -149,7 +149,7 @@ class _ScanCrown extends StatelessWidget {
         ),
         padding: const EdgeInsets.all(2.4),
         child: Container(
-          decoration: const BoxDecoration(
+          decoration:  BoxDecoration(
             shape: BoxShape.circle,
             color: AuraColors.backgroundDeep,
           ),

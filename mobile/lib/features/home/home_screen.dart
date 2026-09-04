@@ -16,6 +16,8 @@ import '../../core/widgets/radar_chart.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/stagger_in.dart';
 import '../chat/chat_screen.dart';
+import '../closet/closet_screen.dart';
+import '../explore/explore_screen.dart';
 import '../references/references_screen.dart';
 import '../scan/scan_screen.dart';
 import 'home_cards.dart';
@@ -77,7 +79,7 @@ class HomeScreen extends StatelessWidget {
                       border: Border.all(color: AuraColors.border),
                       boxShadow: AuraDecor.glowShadow(alpha: 0.16),
                     ),
-                    child: const Icon(
+                    child:  Icon(
                       Icons.chat_bubble_outline,
                       size: 20,
                       color: AuraColors.primary,
@@ -152,7 +154,7 @@ class HomeScreen extends StatelessWidget {
                         const SizedBox(height: 14),
                         Row(
                           children: [
-                            const Icon(
+                             Icon(
                               Icons.local_fire_department,
                               size: 17,
                               color: AuraColors.primary,
@@ -264,26 +266,56 @@ class _QuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _ActionCard(
-            icon: Icons.center_focus_strong,
-            title: 'Ler a aura',
-            subtitle: 'Scan de rosto',
-            onTap: onScan,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _ActionCard(
+                icon: Icons.center_focus_strong,
+                title: 'Ler a aura',
+                subtitle: 'Scan de rosto',
+                onTap: onScan,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _ActionCard(
+                icon: Icons.face_retouching_natural,
+                title: 'Referências',
+                subtitle: 'A quem te aproximas',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ReferencesScreen()),
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _ActionCard(
-            icon: Icons.face_retouching_natural,
-            title: 'Referências',
-            subtitle: 'A quem te aproximas',
-            onTap: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const ReferencesScreen())),
-          ),
+        const SizedBox(width: 0, height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _ActionCard(
+                icon: Icons.account_balance_outlined,
+                title: 'Acervo',
+                subtitle: 'Galeria do Met',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ExploreScreen()),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _ActionCard(
+                icon: Icons.checkroom_outlined,
+                title: 'Armário',
+                subtitle: 'Tons e paletas',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ClosetScreen()),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

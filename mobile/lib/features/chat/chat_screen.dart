@@ -134,11 +134,11 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                     padding: const EdgeInsets.all(2),
                     child: Container(
-                      decoration: const BoxDecoration(
+                      decoration:  BoxDecoration(
                         shape: BoxShape.circle,
                         color: AuraColors.backgroundDeep,
                       ),
-                      child: const Icon(
+                      child:  Icon(
                         Icons.auto_awesome,
                         size: 18,
                         color: AuraColors.primary,
@@ -248,7 +248,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         gradient: AuraDecor.auraMetal,
                         boxShadow: AuraDecor.glowShadow(alpha: 0.3),
                       ),
-                      child: const Icon(
+                      child:  Icon(
                         Icons.arrow_upward,
                         size: 20,
                         color: AuraColors.onPrimary,
@@ -278,11 +278,11 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           padding: const EdgeInsets.all(3),
           child: Container(
-            decoration: const BoxDecoration(
+            decoration:  BoxDecoration(
               shape: BoxShape.circle,
               color: AuraColors.backgroundDeep,
             ),
-            child: const Icon(
+            child:  Icon(
               Icons.auto_awesome,
               size: 30,
               color: AuraColors.primary,
@@ -394,7 +394,7 @@ class _TypingDotsState extends State<_TypingDots>
                   child: Container(
                     width: 6,
                     height: 6,
-                    decoration: const BoxDecoration(
+                    decoration:  BoxDecoration(
                       shape: BoxShape.circle,
                       color: AuraColors.primary,
                     ),

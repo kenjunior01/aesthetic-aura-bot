@@ -151,7 +151,7 @@ class _ReferencesScreenState extends State<ReferencesScreen> {
                                       fit: BoxFit.cover,
                                     ),
                                   )
-                                : const Icon(
+                                :  Icon(
                                     Icons.add_a_photo_outlined,
                                     size: 22,
                                     color: AuraColors.primary,
@@ -278,7 +278,7 @@ class _ReferencesScreenState extends State<ReferencesScreen> {
               placeholder: (_, _) => const ShimmerBox(radius: 0),
               errorWidget: (_, _, _) => Container(
                 color: AuraColors.muted,
-                child: const Icon(
+                child:  Icon(
                   Icons.person_outline,
                   color: AuraColors.mutedForeground,
                 ),

@@ -22,12 +22,26 @@ class AuraApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => ProfileStore()..load()),
       ],
-      child: MaterialApp(
-        title: 'AuraStyle',
-        debugShowCheckedModeBanner: false,
-        theme: buildAuraTheme(),
-        home: const AuraSplash(),
-      ),
+      child: const _AuraRoot(),
+    );
+  }
+}
+
+/// Raiz viva — observa o modo cromático e reconstrói o universo do app
+/// com uma nova key quando Noite ↔ Alvor.
+class _AuraRoot extends StatelessWidget {
+  const _AuraRoot();
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.watch<ProfileStore>();
+    AuraColors.modo = store.modoClaro ? ModoCromatico.alvor : ModoCromatico.noite;
+    return MaterialApp(
+      key: ValueKey('aura-modo-${store.modoClaro}'),
+      title: 'AuraStyle',
+      debugShowCheckedModeBanner: false,
+      theme: buildAuraTheme(),
+      home: const AuraSplash(),
     );
   }
 }
@@ -93,11 +107,11 @@ class _AuraSplashState extends State<AuraSplash> {
               ),
               padding: const EdgeInsets.all(3),
               child: Container(
-                decoration: const BoxDecoration(
+                decoration:  BoxDecoration(
                   shape: BoxShape.circle,
                   color: AuraColors.backgroundDeep,
                 ),
-                child: const Icon(
+                child:  Icon(
                   Icons.auto_awesome,
                   size: 34,
                   color: AuraColors.primary,
@@ -105,7 +119,7 @@ class _AuraSplashState extends State<AuraSplash> {
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
+             Text(
               'AURA STYLE',
               style: TextStyle(
                 fontFamily: 'Outfit',
@@ -116,7 +130,7 @@ class _AuraSplashState extends State<AuraSplash> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+             Text(
               'a tua aura, esculpida em platina',
               style: TextStyle(
                 fontFamily: 'Manrope',

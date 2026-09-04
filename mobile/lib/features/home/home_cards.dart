@@ -31,7 +31,7 @@ class RitualCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Text('RITUAL DE HOJE', style: AuraType.eyebrow),
+               Text('RITUAL DE HOJE', style: AuraType.eyebrow),
               const Spacer(),
               MachinedChipXP(
                 store.ritualComplete
@@ -70,7 +70,7 @@ class RitualCard extends StatelessWidget {
               padding: const EdgeInsets.only(top: 10),
               child: Row(
                 children: [
-                  const Icon(
+                   Icon(
                     Icons.local_fire_department,
                     size: 15,
                     color: AuraColors.primary,
@@ -124,7 +124,7 @@ class _RitualRow extends StatelessWidget {
                 boxShadow: done ? AuraDecor.glowShadow(alpha: 0.3) : null,
               ),
               child: done
-                  ? const Icon(
+                  ?  Icon(
                       Icons.check,
                       size: 13,
                       color: AuraColors.onPrimary,
@@ -222,7 +222,7 @@ class _ClimaCardState extends State<ClimaCard> {
         children: [
           Row(
             children: [
-              const Text('CLIMA AO VIVO', style: AuraType.eyebrow),
+               Text('CLIMA AO VIVO', style: AuraType.eyebrow),
               const Spacer(),
               Text(
                 '${c.city}${c.country.isEmpty ? '' : ' · ${c.country}'}',
@@ -262,7 +262,7 @@ class _ClimaCardState extends State<ClimaCard> {
                       width: 4,
                       height: 4,
                       margin: const EdgeInsets.only(top: 7, right: 9),
-                      decoration: const BoxDecoration(
+                      decoration:  BoxDecoration(
                         shape: BoxShape.circle,
                         color: AuraColors.primary,
                       ),

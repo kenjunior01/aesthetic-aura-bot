@@ -1,5 +1,5 @@
-/// aura_theme.dart — ThemeData escuro da identidade Platina Glacial.
-/// Tudo o que é Material (sheets, inputs, navegação) herda a observidana fria.
+/// aura_theme.dart — ThemeData da identidade Platina Glacial, nos dois modos.
+/// Tudo o que é Material (sheets, inputs, navegação) herda os tokens vivos.
 library;
 
 import 'package:flutter/material.dart';
@@ -10,12 +10,14 @@ import 'aura_decorations.dart';
 import 'aura_typography.dart';
 
 ThemeData buildAuraTheme() {
+  final claro = AuraColors.claro;
   final base = ThemeData(
     useMaterial3: true,
-    brightness: Brightness.dark,
+    brightness: claro ? Brightness.light : Brightness.dark,
     fontFamily: AuraType.sans,
     scaffoldBackgroundColor: Colors.transparent,
-    colorScheme: const ColorScheme.dark(
+    colorScheme: ColorScheme(
+      brightness: claro ? Brightness.light : Brightness.dark,
       primary: AuraColors.primary,
       onPrimary: AuraColors.onPrimary,
       secondary: AuraColors.accent,
@@ -23,7 +25,10 @@ ThemeData buildAuraTheme() {
       surface: AuraColors.card,
       onSurface: AuraColors.foreground,
       error: AuraColors.chartWarm,
+      onError: Colors.white,
       outline: AuraColors.border,
+      surfaceContainerHighest: AuraColors.secondary,
+      onSurfaceVariant: AuraColors.mutedForeground,
     ),
   );
 
@@ -36,21 +41,21 @@ ThemeData buildAuraTheme() {
       titleMedium: AuraType.cardTitle,
       labelSmall: AuraType.eyebrow,
     ),
-    dividerTheme: const DividerThemeData(
+    dividerTheme: DividerThemeData(
       color: AuraColors.border,
       thickness: 1,
       space: 1,
     ),
     splashColor: AuraColors.primary.withValues(alpha: 0.08),
     highlightColor: AuraColors.primary.withValues(alpha: 0.05),
-    appBarTheme: const AppBarTheme(
+    appBarTheme: AppBarTheme(
       backgroundColor: Colors.transparent,
       elevation: 0,
       centerTitle: false,
       systemOverlayStyle: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
+        statusBarIconBrightness: claro ? Brightness.dark : Brightness.light,
+        statusBarBrightness: claro ? Brightness.light : Brightness.dark,
       ),
       titleTextStyle: AuraType.cardTitle,
       iconTheme: IconThemeData(color: AuraColors.foreground),
@@ -66,7 +71,7 @@ ThemeData buildAuraTheme() {
       backgroundColor: AuraColors.card,
       shape: RoundedRectangleBorder(
         borderRadius: AuraDecor.roundedLarge,
-        side: const BorderSide(color: AuraColors.border),
+        side: BorderSide(color: AuraColors.border),
       ),
       titleTextStyle: AuraType.cardTitle,
     ),
@@ -77,15 +82,15 @@ ThemeData buildAuraTheme() {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: AuraDecor.roundedSmall,
-        borderSide: const BorderSide(color: AuraColors.border),
+        borderSide: BorderSide(color: AuraColors.border),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: AuraDecor.roundedSmall,
-        borderSide: const BorderSide(color: AuraColors.border),
+        borderSide: BorderSide(color: AuraColors.border),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: AuraDecor.roundedSmall,
-        borderSide: const BorderSide(color: AuraColors.primary, width: 1.2),
+        borderSide: BorderSide(color: AuraColors.primary, width: 1.2),
       ),
     ),
     textButtonTheme: TextButtonThemeData(

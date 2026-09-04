@@ -158,7 +158,7 @@ class PlatinaButton extends StatelessWidget {
             ],
             Text(
               label.toUpperCase(),
-              style: const TextStyle(
+              style:  TextStyle(
                 fontFamily: 'Manrope',
                 fontSize: 12,
                 fontWeight: FontWeight.w800,

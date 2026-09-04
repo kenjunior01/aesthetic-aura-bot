@@ -79,7 +79,7 @@ class AcervoDetailSheet extends StatelessWidget {
                         placeholder: (_, _) => const ShimmerBox(radius: 0),
                         errorWidget: (_, _, _) => Container(
                           color: AuraColors.muted,
-                          child: const Icon(
+                          child:  Icon(
                             Icons.image_outlined,
                             color: AuraColors.mutedForeground,
                           ),
@@ -117,7 +117,7 @@ class AcervoDetailSheet extends StatelessWidget {
                                 Uri.parse(item.objectURL),
                                 mode: launcher.LaunchMode.externalApplication,
                               ),
-                              child: const Center(
+                              child:  Center(
                                 child: Text(
                                   'VER NO MET',
                                   style: TextStyle(

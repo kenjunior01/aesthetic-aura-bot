@@ -72,7 +72,7 @@ class _ShimmerPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment(-1 + 2 * t, 0),
         end: Alignment(0 + 2 * t, 0),
-        colors: const [
+        colors:  [
           AuraColors.surface,
           AuraColors.surfaceStrong,
           AuraColors.surface,

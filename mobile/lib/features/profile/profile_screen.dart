@@ -4,11 +4,13 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/config.dart';
 import '../../core/store/profile_store.dart';
 import '../../core/theme/aura_colors.dart';
+import '../../core/theme/aura_decorations.dart';
 import '../../core/theme/aura_typography.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/section_header.dart';
@@ -32,7 +34,7 @@ class ProfileScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('PERFIL', style: AuraType.eyebrow),
+                 Text('PERFIL', style: AuraType.eyebrow),
                 const SizedBox(height: 6),
                 Text(
                   p.name.isEmpty ? 'Sem nome ainda' : p.name,
@@ -57,6 +59,47 @@ class ProfileScreen extends StatelessWidget {
                       _stat('XP', '${store.xp}'),
                       _divider(),
                       _stat('STREAK', '${store.streak}d'),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Aparencia - Noite <-> Alvor
+              StaggerIn(
+                index: 1,
+                child: GlassCard(
+                  child: Row(
+                    children: [
+                      Icon(
+                        store.modoClaro
+                            ? Icons.light_mode_outlined
+                            : Icons.dark_mode_outlined,
+                        color: AuraColors.primary,
+                        size: 22,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              store.modoClaro
+                                  ? 'Alvor glacial'
+                                  : 'Noite de observidana',
+                              style: AuraType.cardTitle,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              store.modoClaro
+                                  ? 'Gelo claro, luz de inverno'
+                                  : 'Ceu interstellar, metal frio',
+                              style: AuraType.caption,
+                            ),
+                          ],
+                        ),
+                      ),
+                      _ModoInterruptor(claro: store.modoClaro),
                     ],
                   ),
                 ),
@@ -127,7 +170,7 @@ class ProfileScreen extends StatelessWidget {
                             color: AuraColors.primary.withValues(alpha: 0.3),
                           ),
                         ),
-                        child: const Icon(
+                        child:  Icon(
                           Icons.face_retouching_natural,
                           size: 21,
                           color: AuraColors.primary,
@@ -149,7 +192,7 @@ class ProfileScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const Icon(
+                       Icon(
                         Icons.chevron_right,
                         color: AuraColors.mutedForeground,
                       ),
@@ -246,6 +289,59 @@ class _BackendCardState extends State<BackendCard> {
             style: AuraType.caption.copyWith(fontSize: 10.5, height: 1.45),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Interruptor cerimonial Noite/Alvor — disco usinado que desliza.
+class _ModoInterruptor extends StatelessWidget {
+  const _ModoInterruptor({required this.claro});
+
+  final bool claro;
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.read<ProfileStore>();
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        store.setModoClaro(!claro);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+        width: 62,
+        height: 34,
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          color: AuraColors.surface,
+          border: Border.all(color: AuraColors.border),
+        ),
+        child: Stack(
+          children: [
+            AnimatedAlign(
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeOutCubic,
+              alignment: claro ? Alignment.centerRight : Alignment.centerLeft,
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: AuraDecor.auraMetal,
+                  boxShadow: AuraDecor.glowShadow(alpha: 0.4),
+                ),
+                child: Icon(
+                  claro ? Icons.light_mode : Icons.dark_mode,
+                  size: 15,
+                  color: AuraColors.onPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

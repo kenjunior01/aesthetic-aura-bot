@@ -81,7 +81,7 @@ class ClosetScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('ARMÁRIO', style: AuraType.eyebrow),
+                 Text('ARMÁRIO', style: AuraType.eyebrow),
                 const SizedBox(height: 6),
                 Text(
                   'Cores que favorecem o teu subtom'

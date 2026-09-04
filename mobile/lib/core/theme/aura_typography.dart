@@ -1,5 +1,6 @@
 /// aura_typography.dart — as mesmas duas famílias do web:
 /// Outfit para display (títulos, números usinados) e Manrope para texto.
+/// Estilos são getters: herdam os tokens vivos do modo cromático.
 library;
 
 import 'package:flutter/material.dart';
@@ -13,7 +14,7 @@ class AuraType {
   static const String sans = 'Manrope';
 
   /// Eyebrow — o "carimbo usinado" que abre cada secção.
-  static const TextStyle eyebrow = TextStyle(
+  static TextStyle get eyebrow => TextStyle(
     fontFamily: sans,
     fontSize: 10,
     fontWeight: FontWeight.w800,
@@ -22,7 +23,7 @@ class AuraType {
     color: AuraColors.primary,
   );
 
-  static const TextStyle sectionTitle = TextStyle(
+  static TextStyle get sectionTitle => TextStyle(
     fontFamily: display,
     fontSize: 20,
     fontWeight: FontWeight.w700,
@@ -31,7 +32,7 @@ class AuraType {
     color: AuraColors.foreground,
   );
 
-  static const TextStyle cardTitle = TextStyle(
+  static TextStyle get cardTitle => TextStyle(
     fontFamily: display,
     fontSize: 16,
     fontWeight: FontWeight.w600,
@@ -40,7 +41,7 @@ class AuraType {
     color: AuraColors.foreground,
   );
 
-  static const TextStyle body = TextStyle(
+  static TextStyle get body => TextStyle(
     fontFamily: sans,
     fontSize: 14,
     fontWeight: FontWeight.w500,
@@ -48,7 +49,7 @@ class AuraType {
     color: AuraColors.foreground,
   );
 
-  static const TextStyle caption = TextStyle(
+  static TextStyle get caption => TextStyle(
     fontFamily: sans,
     fontSize: 12,
     fontWeight: FontWeight.w500,
@@ -57,7 +58,7 @@ class AuraType {
   );
 
   /// Números de instrumento — o mostrador do gauge, contadores de streak.
-  static const TextStyle machinedNumber = TextStyle(
+  static TextStyle get machinedNumber => TextStyle(
     fontFamily: display,
     fontSize: 34,
     fontWeight: FontWeight.w800,
@@ -66,7 +67,7 @@ class AuraType {
     color: AuraColors.foreground,
   );
 
-  static const TextStyle chip = TextStyle(
+  static TextStyle get chip => TextStyle(
     fontFamily: sans,
     fontSize: 11,
     fontWeight: FontWeight.w700,

@@ -147,11 +147,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           padding: const EdgeInsets.all(3.5),
           child: Container(
-            decoration: const BoxDecoration(
+            decoration:  BoxDecoration(
               shape: BoxShape.circle,
               color: AuraColors.backgroundDeep,
             ),
-            child: const Icon(
+            child:  Icon(
               Icons.auto_awesome,
               size: 44,
               color: AuraColors.primary,
@@ -160,7 +160,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ),
       ),
       const SizedBox(height: 34),
-      const Text('AURA STYLE', style: AuraType.eyebrow),
+       Text('AURA STYLE', style: AuraType.eyebrow),
       const SizedBox(height: 10),
       Text(
         'A tua aura,\nesculpida em platina.',
@@ -188,7 +188,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       const SizedBox(height: 40),
-      const Text('COMO TE CHAMAS?', style: AuraType.eyebrow),
+       Text('COMO TE CHAMAS?', style: AuraType.eyebrow),
       const SizedBox(height: 10),
       Text(
         'É assim que a tua Aura vai tratar-te.',
@@ -224,7 +224,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       const SizedBox(height: 40),
-      const Text('O QUE MAIS IMPORTA?', style: AuraType.eyebrow),
+       Text('O QUE MAIS IMPORTA?', style: AuraType.eyebrow),
       const SizedBox(height: 10),
       Text(
         'Escolhe até 3 — o teu radar vai orbitar isto.',

@@ -1,10 +1,13 @@
-/// aurora_background.dart — campo Interstellar: a obsidiana respira com
-/// nebulosas à deriva, poeira estelar em três profundidades, constelação
-/// da Aura, fitas de aurora boreal e estrelas cadentes ocasionais.
+/// aurora_background.dart — o céu vivo do AuraStyle em DOIS modos:
 ///
-/// Tudo num único CustomPainter animado por um AnimationController (repaint),
-/// sem reconstruir a árvore de conteúdo. Zero dependências externas.
-/// Com "reduzir animações" activo nas definições, o campo pinta parado.
+/// NOITE — campo Interstellar: nebulosas à deriva, poeira estelar em três
+/// profundidades, constelação da Aura, fitas boreais e estrelas cadentes.
+/// ALVOR — céu glacial: bandas de nuvem leitosas, pólen de luz a subir,
+/// bruma solar que respira e um arco-íris de gelo muito discreto.
+///
+/// Um único CustomPainter animado por AnimationController (repaint), sem
+/// reconstruir a árvore de conteúdo. Zero dependências externas. Com
+/// "reduzir animações" activo, o céu pinta parado num momento bonito.
 library;
 
 import 'dart:math' as math;
@@ -37,7 +40,6 @@ class _AuroraBackgroundState extends State<AuroraBackground>
       duration: const Duration(seconds: 60),
     );
     _clock = Stopwatch()..start();
-    // Ciclo longo e contínuo — a deriva nunca salta.
     _controller.repeat();
   }
 
@@ -67,10 +69,10 @@ class _AuroraBackgroundState extends State<AuroraBackground>
     return Stack(
       fit: StackFit.expand,
       children: [
-        const ColoredBox(color: AuraColors.background),
+        ColoredBox(color: AuraColors.background),
         RepaintBoundary(
           child: CustomPaint(
-            painter: _InterstellarPainter(
+            painter: _CeuVivoPainter(
               drift: _controller,
               clock: _clock,
               quiet: _reduzAnim,
@@ -98,8 +100,20 @@ class _Estrela {
   final double periodo;
 }
 
-class _InterstellarPainter extends CustomPainter {
-  _InterstellarPainter({
+/// Pólén de luz do Alvor — sobe lentamente e cintila.
+class _Polen {
+  _Polen(this.dx, this.baseDy, this.r, this.alpha, this.fase, this.subida);
+
+  final double dx;
+  final double baseDy;
+  final double r;
+  final double alpha;
+  final double fase;
+  final double subida; // velocidade vertical relativa
+}
+
+class _CeuVivoPainter extends CustomPainter {
+  _CeuVivoPainter({
     required Animation<double> drift,
     required Stopwatch clock,
     required this.quiet,
@@ -112,14 +126,12 @@ class _InterstellarPainter extends CustomPainter {
   final Stopwatch _clock;
   final bool quiet;
 
-  // Poeira estelar determinística — a mesma semente desenha sempre o
-  // mesmo céu (sem cintilar ao redimensionar).
   static final List<_Estrela> _campo = _gerarCampo();
+  static final List<_Polen> _polen = _gerarPolen();
 
   static List<_Estrela> _gerarCampo() {
     final rng = math.Random(20260904);
     final estrelas = <_Estrela>[];
-    // Camada distante — 52 pontos de poeira fina.
     for (var i = 0; i < 52; i++) {
       estrelas.add(
         _Estrela(
@@ -132,7 +144,6 @@ class _InterstellarPainter extends CustomPainter {
         ),
       );
     }
-    // Camada média — 28 estrelas.
     for (var i = 0; i < 28; i++) {
       estrelas.add(
         _Estrela(
@@ -145,7 +156,6 @@ class _InterstellarPainter extends CustomPainter {
         ),
       );
     }
-    // Camada próxima — 12 estrelas-guia.
     for (var i = 0; i < 12; i++) {
       estrelas.add(
         _Estrela(
@@ -161,10 +171,23 @@ class _InterstellarPainter extends CustomPainter {
     return estrelas;
   }
 
+  static List<_Polen> _gerarPolen() {
+    final rng = math.Random(770412);
+    return List.generate(26, (i) {
+      return _Polen(
+        rng.nextDouble(),
+        rng.nextDouble(),
+        0.7 + rng.nextDouble() * 1.3,
+        0.25 + rng.nextDouble() * 0.4,
+        rng.nextDouble() * 2 * math.pi,
+        0.008 + rng.nextDouble() * 0.02,
+      );
+    });
+  }
+
   static double _deriva(double t, double speed, double fase, double amp) =>
       math.sin(t * speed + fase) * amp;
 
-  /// Jitter determinístico em [0,1) a partir de um inteiro.
   static double _jitter(int i) {
     final x = math.sin(i * 127.1 + 311.7) * 43758.5453;
     return x - x.floorToDouble();
@@ -174,28 +197,19 @@ class _InterstellarPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    // t ambiente: uma volta por ciclo de 60s; quiet congela num momento bonito.
     final t = quiet ? 1.7 : _driftAnim.value * 2 * math.pi;
     final secs = quiet ? 9.0 : _clock.elapsedMilliseconds / 1000.0;
 
-    _pintarNebulosas(canvas, w, h, t);
-    _pintarHalos(canvas, w, h, t);
-    _pintarCampoEstelar(canvas, w, h, t, secs);
-    _pintarConstelacao(canvas, w, h, t);
-    _pintarFitasAurora(canvas, w, h, t);
-    _pintarEstrelaCadente(canvas, w, h, secs);
-    _pintarVeu(canvas, w, h, t);
+    if (AuraColors.claro) {
+      _pintarAlvor(canvas, w, h, t, secs);
+    } else {
+      _pintarNoite(canvas, w, h, t, secs);
+    }
   }
 
-  void _orbe(Canvas canvas, Offset c, double r, Color cor) {
-    final paint = Paint()
-      ..shader = RadialGradient(colors: [cor, cor.withValues(alpha: 0)])
-          .createShader(Rect.fromCircle(center: c, radius: r));
-    canvas.drawCircle(c, r, paint);
-  }
+  // ═══════════════════════════ NOITE — Interstellar ════════════════════════
 
-  void _pintarNebulosas(Canvas canvas, double w, double h, double t) {
-    // Poeira cósmica — massas ultra-suaves em órbitas de Lissajous lentas.
+  void _pintarNoite(Canvas canvas, double w, double h, double t, double secs) {
     _orbe(
       canvas,
       Offset(
@@ -214,50 +228,41 @@ class _InterstellarPainter extends CustomPainter {
       w * 0.55,
       const Color(0x0CB8D9F3),
     );
-  }
-
-  void _pintarHalos(Canvas canvas, double w, double h, double t) {
-    _orbe(
-      canvas,
-      Offset(
-        w * 0.18 + _deriva(t, 1.0, 0, w * 0.045),
-        h * 0.08 + _deriva(t, 1.3, 1.2, h * 0.028),
-      ),
-      w * 0.9,
-      AuraColors.auroraHalo1,
-    );
-    _orbe(
-      canvas,
-      Offset(
-        w * 0.95 + _deriva(t, 0.8, 2.1, w * 0.055),
-        h * 0.42 + _deriva(t, 1.1, 0.4, h * 0.038),
-      ),
-      w * 0.75,
-      AuraColors.auroraHalo2,
-    );
+    _orbe(canvas, Offset(w * 0.18, h * 0.08), w * 0.9, AuraColors.auroraHalo1);
+    _orbe(canvas, Offset(w * 0.95, h * 0.42), w * 0.75, AuraColors.auroraHalo2);
     _orbe(
       canvas,
       Offset(w * 0.4 + _deriva(t, 0.7, 4.0, w * 0.07), h * 1.02),
       w * 0.85,
       AuraColors.auroraHalo3,
     );
+    _pintarEstrelas(canvas, w, h, t, secs);
+    _pintarConstelacao(canvas, w, h, t);
+    _pintarFitasAurora(canvas, w, h, t);
+    _pintarCadentes(canvas, w, h, secs);
+    _pintarVeuNoite(canvas, w, h, t);
   }
 
-  void _pintarCampoEstelar(
+  void _orbe(Canvas canvas, Offset c, double r, Color cor) {
+    final paint = Paint()
+      ..shader = RadialGradient(colors: [cor, cor.withValues(alpha: 0)])
+          .createShader(Rect.fromCircle(center: c, radius: r));
+    canvas.drawCircle(c, r, paint);
+  }
+
+  void _pintarEstrelas(
     Canvas canvas,
     double w,
     double h,
     double t,
     double secs,
   ) {
-    // Cada camada deriva a velocidade própria — paralaxe ambiente.
     for (var i = 0; i < _campo.length; i++) {
       final e = _campo[i];
       final camada = i < 52 ? 0 : (i < 80 ? 1 : 2);
       final amp = w * (0.006 + camada * 0.008);
       final dx = _deriva(t, 1.1 + camada * 0.5, e.fase, amp);
       final dy = _deriva(t, 0.8 + camada * 0.4, e.fase * 1.7, amp * 0.7);
-      // Cintilação — cada estrela respira no seu ritmo.
       final pulsos = quiet
           ? 1.0
           : 0.55 + 0.45 * math.sin(secs * 2 * math.pi / e.periodo + e.fase);
@@ -272,7 +277,6 @@ class _InterstellarPainter extends CustomPainter {
           ..color = cor.withValues(alpha: a)
           ..isAntiAlias = false,
       );
-      // As quatro mais brilhantes da camada próxima ganham brilho de lente.
       if (camada == 2 && i % 3 == 0) {
         final brilho = (a * 0.55).clamp(0.0, 1.0);
         final glint = Paint()
@@ -294,7 +298,6 @@ class _InterstellarPainter extends CustomPainter {
   }
 
   void _pintarConstelacao(Canvas canvas, double w, double h, double t) {
-    // Mapa da Aura — sete estrelas da camada distante unidas por fios de luz.
     const indices = [3, 9, 14, 21, 27, 33, 40];
     final pontos = <Offset>[];
     for (final i in indices) {
@@ -317,14 +320,12 @@ class _InterstellarPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.6,
     );
-    // Nós da constelação — pontos um pouco mais presentes.
     for (final p in pontos) {
       canvas.drawCircle(p, 1.3, Paint()..color = const Color(0x2EB8D9F3));
     }
   }
 
   void _pintarFitasAurora(Canvas canvas, double w, double h, double t) {
-    // Fitas boreais — seda de luz platina que ondula e respira.
     void fita(double yBase, double fase, double alpha, double espessura) {
       final path = Path();
       var primeiro = true;
@@ -368,33 +369,53 @@ class _InterstellarPainter extends CustomPainter {
     fita(h * 0.24, 2.4, 0.22 * respira, 15);
   }
 
-  void _pintarEstrelaCadente(Canvas canvas, double w, double h, double secs) {
-    // Agenda determinística: um desejo a cada ~11s, vida de 0.7s.
-    const intervalo = 11.3;
-    const vida = 0.7;
+  void _pintarCadentes(Canvas canvas, double w, double h, double secs) {
+    // Duas agendas: meteoros frequentes + um cometa lento e largo.
+    _meteoro(canvas, w, h, secs, intervalo: 11.3, vida: 0.7, alcance: 0.34);
+    _meteoro(
+      canvas,
+      w,
+      h,
+      secs * 0.61 + 40.0,
+      intervalo: 17.9,
+      vida: 1.15,
+      alcance: 0.52,
+      cometa: true,
+      semente: 5,
+    );
+  }
+
+  void _meteoro(
+    Canvas canvas,
+    double w,
+    double h,
+    double secs, {
+    required double intervalo,
+    required double vida,
+    required double alcance,
+    bool cometa = false,
+    int semente = 0,
+  }) {
     final ciclo = secs % intervalo;
-    // O primeiro segundo de cada ciclo está reservado à estrela.
     if (ciclo > vida) return;
-    final slot = (secs ~/ intervalo).toInt();
+    final slot = (secs ~/ intervalo).toInt() + semente;
     final progresso = ciclo / vida;
     final ease = Curves.easeOutCubic.transform(progresso);
 
-    // Trajectória: nasce no terço superior, desce na diagonal.
     final startX = w * (0.18 + _jitter(slot) * 0.55);
     final startY = h * (0.06 + _jitter(slot + 7) * 0.16);
-    final dist = w * 0.34;
+    final dist = w * alcance;
     final dx = dist * 0.92;
     final dy = dist * 0.39;
-    final caudaX = startX + dx * (ease - 0.28);
-    final caudaY = startY + dy * (ease - 0.28);
-    final cabecaX = startX + dx * ease;
-    final cabecaY = startY + dy * ease;
+    final cauda = Offset(startX + dx * (ease - 0.28), startY + dy * (ease - 0.28));
+    final cabeca = Offset(startX + dx * ease, startY + dy * ease);
 
     final fade = math.sin(progresso * math.pi);
+    final largura = cometa ? 2.6 : 1.6;
     final trilho = Paint()
       ..shader = ui.Gradient.linear(
-        Offset(caudaX, caudaY),
-        Offset(cabecaX, cabecaY),
+        cauda,
+        cabeca,
         [
           const Color(0xFFF4FAFF).withValues(alpha: 0),
           const Color(0xFFB8D9F3).withValues(alpha: 0.55 * fade),
@@ -402,27 +423,24 @@ class _InterstellarPainter extends CustomPainter {
         ],
         [0.0, 0.7, 1.0],
       )
-      ..strokeWidth = 1.6
+      ..strokeWidth = largura
       ..strokeCap = StrokeCap.round;
-    canvas.drawLine(Offset(caudaX, caudaY), Offset(cabecaX, cabecaY), trilho);
+    canvas.drawLine(cauda, cabeca, trilho);
     _orbe(
       canvas,
-      Offset(cabecaX, cabecaY),
-      7,
+      cabeca,
+      cometa ? 11 : 7,
       const Color(0x66F4FAFF).withValues(alpha: 0.7 * fade),
     );
   }
 
-  void _pintarVeu(Canvas canvas, double w, double h, double t) {
-    // Horizonte glacial — luz distante de gelo refletida, muito abaixo.
+  void _pintarVeuNoite(Canvas canvas, double w, double h, double t) {
     _orbe(
       canvas,
       Offset(w * 0.5 + _deriva(t, 0.6, 1.8, w * 0.05), h * 0.9),
       w * 1.1,
       const Color(0x0A9FCAEE),
     );
-
-    // Véu vertical de obsidiana — garante contraste do conteúdo.
     final veil = Paint()
       ..shader = const LinearGradient(
         begin: Alignment.topCenter,
@@ -433,6 +451,135 @@ class _InterstellarPainter extends CustomPainter {
     canvas.drawRect(Offset.zero & Size(w, h), veil);
   }
 
+  // ═══════════════════════════ ALVOR — Céu Glacial ═════════════════════════
+
+  void _pintarAlvor(Canvas canvas, double w, double h, double t, double secs) {
+    // Bruma solar — um sol de inverno alto à direita, respirando devagar.
+    final respira = quiet ? 1.0 : 0.82 + 0.18 * math.sin(t * 1.3);
+    _orbe(
+      canvas,
+      Offset(
+        w * 0.86 + _deriva(t, 0.5, 0.9, w * 0.02),
+        h * 0.10 + _deriva(t, 0.7, 2.4, h * 0.015),
+      ),
+      w * 0.55,
+      const Color(0x8CFFD9A0).withValues(alpha: 0.6 * respira),
+    );
+    // Halos frios largos — a "frescura" do gelo.
+    _orbe(canvas, Offset(w * 0.1, h * 0.05), w * 0.8, const Color(0x66A9CCE0));
+    _orbe(canvas, Offset(w * 1.0, h * 0.45), w * 0.7, const Color(0x527FB4D4));
+    _orbe(canvas, Offset(w * 0.35, h * 1.0), w * 0.9, const Color(0x479FCAEE));
+
+    _pintarNuvens(canvas, w, h, t);
+    _pintarPrismaGelo(canvas, w, h, t);
+    _pintarPolen(canvas, w, h, t, secs);
+    _pintarVeuAlvor(canvas, w, h);
+  }
+
+  void _pintarNuvens(Canvas canvas, double w, double h, double t) {
+    // Bandas leitosas — elipses desfocadas a atravessar o céu.
+    void nuvem(double yFrac, double fase, double alpha, double escala) {
+      final x = (w * 1.5) * ((t * 0.02 + fase) % 1.5) - w * 0.35;
+      final y = h * yFrac + math.sin(t * 0.8 + fase * 6.0) * h * 0.012;
+      final r = Rect.fromCenter(
+        center: Offset(x, y),
+        width: w * 0.62 * escala,
+        height: h * 0.028 * escala,
+      );
+      final p = Paint()
+        ..shader = RadialGradient(colors: [
+          Colors.white.withValues(alpha: alpha),
+          const Color(0x148FBED8),
+          Colors.white.withValues(alpha: 0),
+        ], stops: const [0.0, 0.75, 1.0]).createShader(r);
+      canvas.drawOval(r, p);
+    }
+
+    nuvem(0.14, 0.10, 0.95, 1.25);
+    nuvem(0.26, 0.55, 0.75, 0.95);
+    nuvem(0.38, 0.90, 0.6, 0.75);
+    nuvem(0.58, 0.32, 0.5, 1.05);
+    nuvem(0.74, 0.75, 0.42, 0.85);
+  }
+
+  void _pintarPrismaGelo(Canvas canvas, double w, double h, double t) {
+    // Arco-íris de gelo — arco fino e quase invisível sobre o horizonte.
+    final centro = Offset(w * 0.5, h * 1.06);
+    final raio = w * 0.95;
+    final rect = Rect.fromCircle(center: centro, radius: raio);
+    final arco = Paint()
+      ..shader = ui.Gradient.sweep(
+        centro,
+        [
+          const Color(0x00B8D9F3),
+          const Color(0x149FCAEE),
+          const Color(0x12DCC9C0),
+          const Color(0x10C0B0E8),
+          const Color(0x00B8D9F3),
+        ],
+        [0.0, 0.22, 0.45, 0.68, 1.0],
+        ui.TileMode.clamp,
+        3.5,
+        2.6 - (quiet ? 0.35 : math.sin(t * 0.6) * 0.35),
+      )
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 6
+      ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 6);
+    canvas.drawArc(rect, 3.35, 0.75, false, arco);
+  }
+
+  void _pintarPolen(
+    Canvas canvas,
+    double w,
+    double h,
+    double t,
+    double secs,
+  ) {
+    for (var i = 0; i < _polen.length; i++) {
+      final p = _polen[i];
+      // Sobe em ciclo contínuo; o vento empurra em senos suaves.
+      final dy = ((p.baseDy - secs * p.subida) % 1.2 + 1.2) % 1.2;
+      final dx = p.dx * w + _deriva(t, 1.3, p.fase, w * 0.02);
+      final pulsos = quiet
+          ? 1.0
+          : 0.6 + 0.4 * math.sin(secs * 2.4 + p.fase * 3.0);
+      canvas.drawCircle(
+        Offset(dx, dy * h),
+        p.r,
+        Paint()
+          ..color = const Color(0x6B4E86B4)
+              .withValues(alpha: (p.alpha * pulsos * 0.9).clamp(0.0, 1.0))
+          ..isAntiAlias = false,
+      );
+      // núcleo claro do pólen
+      canvas.drawCircle(
+        Offset(dx, dy * h),
+        p.r * 0.45,
+        Paint()
+          ..color = Colors.white
+              .withValues(alpha: (p.alpha * pulsos).clamp(0.0, 1.0))
+          ..isAntiAlias = false,
+      );
+    }
+  }
+
+  void _pintarVeuAlvor(Canvas canvas, double w, double h) {
+    // Véu mínimo — o conteúdo escuro continua legível sobre o gelo claro.
+    final veil = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Colors.white.withValues(alpha: 0),
+          Colors.white.withValues(alpha: 0.10),
+          Colors.white.withValues(alpha: 0.22),
+        ],
+        stops: const [0.0, 0.55, 1.0],
+      ).createShader(Offset.zero & Size(w, h));
+    canvas.drawRect(Offset.zero & Size(w, h), veil);
+  }
+
   @override
-  bool shouldRepaint(_InterstellarPainter oldDelegate) => quiet != oldDelegate.quiet;
+  bool shouldRepaint(_CeuVivoPainter oldDelegate) =>
+      quiet != oldDelegate.quiet;
 }

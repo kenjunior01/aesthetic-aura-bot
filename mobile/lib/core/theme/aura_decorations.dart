@@ -1,5 +1,6 @@
 /// aura_decorations.dart — a gramática visual do "metal usinado e vidro frio":
 /// gradientes de platina, bordas especulares, sombras de estúdio e halos de aurora.
+/// Todos os compostos são getters: leem o modo cromático a cada build.
 library;
 
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ class AuraDecor {
   AuraDecor._();
 
   /// Metal platina usinado em 5 stops (105° no web → Begin/End alinhado).
+  /// Identidade constante nos dois modos.
   static const LinearGradient auraMetal = LinearGradient(
     begin: Alignment(-1, -0.35),
     end: Alignment(1, 0.35),
@@ -17,13 +19,20 @@ class AuraDecor {
     stops: [0.0, 0.22, 0.45, 0.68, 1.0],
   );
 
-  /// Vidro fosco da observidana (--gradient-soft, 165°).
-  static const LinearGradient softGlass = LinearGradient(
-    begin: Alignment(-0.4, -1),
-    end: Alignment(0.4, 1),
-    colors: [Color(0x17494D54), Color(0x0A2B2E33)],
-    stops: [0.0, 0.55],
-  );
+  /// Vidro fosco — fumado na noite, branco leitoso no alvor.
+  static LinearGradient get softGlass => AuraColors.claro
+      ? const LinearGradient(
+          begin: Alignment(-0.4, -1),
+          end: Alignment(0.4, 1),
+          colors: [Color(0xCCFFFFFF), Color(0x8CF2F7FC)],
+          stops: [0.0, 0.55],
+        )
+      : const LinearGradient(
+          begin: Alignment(-0.4, -1),
+          end: Alignment(0.4, 1),
+          colors: [Color(0x17494D54), Color(0x0A2B2E33)],
+          stops: [0.0, 0.55],
+        );
 
   /// Legenda sobre imagem — observidana a derreter para baixo.
   static const LinearGradient imageScrim = LinearGradient(
@@ -34,30 +43,36 @@ class AuraDecor {
   );
 
   /// Borda de vidro: especular no topo, sombra em baixo (2 stops).
-  static const LinearGradient glassBorder = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [Color(0x2EF4F9FF), Color(0x0AEDF2FA)],
-  );
+  static LinearGradient get glassBorder => AuraColors.claro
+      ? const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFFFFFFF), Color(0x140D131C)],
+        )
+      : const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0x2EF4F9FF), Color(0x0AEDF2FA)],
+        );
 
-  static List<BoxShadow> cardShadow = [
+  static List<BoxShadow> get cardShadow => [
     BoxShadow(
-      color: AuraColors.shadowCold.withValues(alpha: 0.85),
+      color: AuraColors.shadowCold.withValues(alpha: AuraColors.claro ? 0.5 : 0.85),
       offset: const Offset(0, 22),
       blurRadius: 44,
       spreadRadius: -24,
     ),
   ];
 
-  static List<BoxShadow> elevatedShadow = [
+  static List<BoxShadow> get elevatedShadow => [
     BoxShadow(
-      color: AuraColors.shadowCold.withValues(alpha: 0.9),
+      color: AuraColors.shadowCold.withValues(alpha: AuraColors.claro ? 0.55 : 0.9),
       offset: const Offset(0, 32),
       blurRadius: 64,
       spreadRadius: -28,
     ),
     BoxShadow(
-      color: AuraColors.shadowCold.withValues(alpha: 0.6),
+      color: AuraColors.shadowCold.withValues(alpha: AuraColors.claro ? 0.35 : 0.6),
       offset: const Offset(0, 4),
       blurRadius: 12,
       spreadRadius: -6,

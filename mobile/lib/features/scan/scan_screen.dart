@@ -160,7 +160,7 @@ class _ScanScreenState extends State<ScanScreen>
                     shape: BoxShape.circle,
                     color: AuraColors.cardFill,
                   ),
-                  child: const Icon(
+                  child:  Icon(
                     Icons.camera_alt_outlined,
                     size: 44,
                     color: AuraColors.primary,
@@ -257,7 +257,7 @@ class _ScanScreenState extends State<ScanScreen>
               children: [
                 Row(
                   children: [
-                    const Icon(
+                     Icon(
                       Icons.verified_outlined,
                       size: 18,
                       color: AuraColors.primary,

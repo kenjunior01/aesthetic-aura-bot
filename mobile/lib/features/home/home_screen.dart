@@ -17,6 +17,8 @@ import '../../core/widgets/section_header.dart';
 import '../../core/widgets/stagger_in.dart';
 import '../chat/chat_screen.dart';
 import '../closet/closet_screen.dart';
+import '../cortes/cortes_screen.dart';
+import '../cromatica/cromatica_screen.dart';
 import '../explore/explore_screen.dart';
 import '../references/references_screen.dart';
 import '../scan/scan_screen.dart';
@@ -276,6 +278,32 @@ class _QuickActions extends StatelessWidget {
                 title: 'Ler a aura',
                 subtitle: 'Scan de rosto',
                 onTap: onScan,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _ActionCard(
+                icon: Icons.palette_outlined,
+                title: 'Cores',
+                subtitle: 'A tua estação',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const CromaticaScreen()),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(width: 0, height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _ActionCard(
+                icon: Icons.content_cut,
+                title: 'Cortes',
+                subtitle: 'Para o teu rosto',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const CortesScreen()),
+                ),
               ),
             ),
             const SizedBox(width: 12),

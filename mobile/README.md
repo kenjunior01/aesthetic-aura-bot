@@ -15,44 +15,54 @@ mobile/lib/
 ├── app.dart                   MultiProvider + MaterialApp + splash
 ├── core/
 │   ├── config.dart            base URL das rotas /api partilhadas (editável em runtime)
-│   ├── theme/                 identidade Platina Glacial
-│   │   ├── aura_colors.dart   tokens oklch→sRGB (1:1 com globals.css do web)
-│   │   ├── aura_typography.dart  Outfit (display) + Manrope (texto) — as mesmas famílias do web
+│   ├── secrets.dart           chaves XOR+base64 (Groq, Pexels, Unsplash) — APK autónomo
+│   ├── theme/                 identidade Platina Glacial em DOIS modos (Noite/Alvor)
+│   │   ├── aura_colors.dart   tokens oklch→sRGB 1:1 com globals.css do web
+│   │   ├── aura_typography.dart  Outfit (display) + Manrope (texto)
 │   │   ├── aura_decorations.dart gradientes usinados, sombras de estúdio, raios
-│   │   └── aura_theme.dart    ThemeData escuro Material 3
+│   │   └── aura_theme.dart    ThemeData Material 3 (claro e escuro)
 │   ├── api/
 │   │   ├── api_client.dart    HTTP único: UA de navegador, retry, timeouts
+│   │   ├── groq_ai.dart       IA Groq direta: llama-3.3-70b (texto) + llama-4-scout (visão)
+│   │   ├── image_bank.dart    Pexels + Unsplash intercalados, direto do telemóvel
+│   │   ├── visual_api.dart    itens visuais + consultor de compras
 │   │   ├── acervo_api.dart    /api/acervo (The Met) + reserva embutida
-│   │   └── aura_api.dart      /api/ai-chat · /api/look-alike · /api/analyze-selfie
-│   ├── data/met_reserva.dart  obras verificadas do Met (gerada do met-fallback.ts)
+│   │   ├── aura_api.dart      rotas partilhadas do web (fallback da IA)
+│   │   └── clima_api.dart     clima ao vivo (Open-Meteo)
+│   ├── data/
+│   │   ├── met_reserva.dart   obras verificadas do Met (gerada do met-fallback.ts)
+│   │   ├── cromatica.dart     motor das 10 estações cromáticas (offline, determinístico)
+│   │   ├── cortes_data.dart   direções de corte por formato de rosto
+│   │   └── diario_store.dart  diário de evolução (timeline local)
 │   ├── store/profile_store.dart  o MESMO perfil do web (chave, forma, fórmula de nível)
-│   └── widgets/               instrumentos visuais
-│       ├── aurora_background.dart   halos de aurora animados (painter, custo zero no conteúdo)
-│       ├── glass_card.dart    GlassCard · MachinedPanel · PlatinaButton
-│       ├── aura_gauge.dart    mostrador de nível (arco platina + ticks)
-│       ├── radar_chart.dart   radar de prioridades (CustomPainter)
-│       ├── tilt_card.dart     resposta à mão com perspectiva (max 5°)
-│       ├── shimmer_box.dart   skeleton com varrimento de luz
-│       ├── stagger_in.dart    entrada escalonada
-│       └── section_header.dart  eyebrow usinado + selos
+│   └── widgets/               instrumentos visuais (fundo interstellar, gauge, radar,
+│                              tilt, shimmer, stagger, glass)
 └── features/
     ├── shell/nav_shell.dart   barra de vidro + Scan central elevado
-    ├── home/                  saudação, gauge, radar, streak, atalhos
+    ├── home/                  saudação, gauge, ritual de hoje (com fotos), clima, radar
+    ├── cromatica/             A TUA ESTAÇÃO: paleta pessoal, neutros, evitar, combos + fotos
+    ├── cortes/                cortes para o teu rosto, cada corte com fotos reais
+    ├── evolucao/              diário de evolução: linha do tempo da aura (foto + leituras)
+    ├── espelho/               espelho de identidade: cabelo e estilo com fotos reais
+    ├── mercado/               mercado fotográfico: foto do produto → recomendação IA
     ├── explore/               Acervo do Met (grade de ritmo quebrado) + ficha de museu
-    ├── scan/                  ritual de leitura da aura (anel de confiança)
-    ├── chat/                  chatbot adaptado ao perfil
+    ├── scan/                  ritual de leitura da aura (guarda no diário)
+    ├── chat/                  chatbot Groq com visão (manda fotos, tira dúvidas gerais)
     ├── closet/                coleções de cor por subtom
-    ├── profile/               ficha, estatísticas, ligação ao backend
+    ├── profile/               ficha, estatísticas, diário, ligação ao backend
     └── references/            "A quem a minha cara se aproxima?" (look-alike)
 ```
 
-## Mesmo banco de dados
+## Mesmo banco de dados + modo autónomo
 
-O mobile **não tem banco próprio**: consome exatamente as rotas Next.js do
-app web (`/api/acervo`, `/api/ai-chat`, `/api/look-alike`,
-`/api/analyze-selfie`). O perfil local usa a mesma chave
-(`aurastyle-profile`) e a mesma fórmula de nível (`floor(sqrt(xp/50))+1`),
-pronto para sincronizar com o mesmo utilizador.
+O mobile fala com as rotas Next.js do app web (`/api/acervo`,
+`/api/ai-chat`, `/api/look-alike`, `/api/analyze-selfie`) quando há backend
+alcançável — e, desde a v1.2, é **autónomo**: as chaves de Groq, Pexels e
+Unsplash viajam ofuscadas (XOR+base64) no app, por isso a IA, as fotos
+reais do Espelho/Cortes/Cromática e o Mercado funcionam **sem backend
+nenhum**. O perfil local usa a mesma chave (`aurastyle-profile-state`) e a
+mesma fórmula de nível (`floor(sqrt(xp/50))+1`), pronto para sincronizar
+com o mesmo utilizador.
 
 ### Apontar para o backend
 
@@ -62,11 +72,10 @@ pronto para sincronizar com o mesmo utilizador.
 | iOS Simulator | `http://localhost:3000` |
 | Dispositivo real | IP da máquina na mesma rede, ou URL de produção |
 
-Muda em runtime em **Perfil → Ligação ao banco de dados**.
-
-Sem rede? O app degrada com honestidade: a galeria Acervo cai para a
-**reserva embutida** (mesmas obras verificadas do web), o Scan e as
-Referências avançam com leitura local — nada bloqueia.
+Muda em runtime em **Perfil → Ligação ao banco de dados**. Sem backend o
+app continua inteiro (IA e bancos de imagens diretos); sem rede, degrada
+com honestidade: Acervo cai para a reserva embutida, o Scan avança com
+leitura local — nada bloqueia.
 
 ## Correr
 
@@ -86,7 +95,7 @@ O build de lançamento gera `build/app/outputs/flutter-apk/app-release.apk`:
 flutter build apk --release --target-platform android-arm64
 ```
 
-O APK desta versão vive em `download/AuraStyle-v1.0.0-arm64.apk` (arm64-v8a —
+O APK desta versão vive em `download/AuraStyle-v1.4.0-arm64.apk` (arm64-v8a —
 cobre praticamente todos os Android modernos, minSdk 24 / Android 7+).
 
 Para instalar:

@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/config.dart';
+import '../../core/data/diario_store.dart';
 import '../../core/store/profile_store.dart';
 import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
@@ -16,6 +17,7 @@ import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/stagger_in.dart';
 import '../references/references_screen.dart';
+import '../evolucao/evolucao_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -24,6 +26,7 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final store = context.watch<ProfileStore>();
     final p = store.profile;
+    final diarioVazio = context.watch<DiarioStore>().entradas.isEmpty;
 
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
@@ -202,6 +205,59 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
+              // ── Diário de evolução ────────────────────────────────────────
+              StaggerIn(
+                index: 2,
+                child: GlassCard(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const EvolucaoScreen()),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AuraColors.primary.withValues(alpha: 0.1),
+                          border: Border.all(
+                            color: AuraColors.primary.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child:  Icon(
+                          Icons.timeline,
+                          size: 21,
+                          color: AuraColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Diário de evolução',
+                              style: AuraType.cardTitle,
+                            ),
+                            Text(
+                              diarioVazio
+                                  ? 'A tua linha do tempo começa no 1.º scan'
+                                  : 'A última leitura: ${_ultimaData(context)}',
+                              style: AuraType.caption.copyWith(fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                       Icon(
+                        Icons.chevron_right,
+                        color: AuraColors.mutedForeground,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
               // ── Ligação ao backend ─────────────────────────────────────────
               StaggerIn(index: 3, child: const BackendCard()),
             ]),
@@ -209,6 +265,18 @@ class ProfileScreen extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String _ultimaData(BuildContext context) {
+    final diario = context.read<DiarioStore>();
+    if (diario.entradas.isEmpty) return '—';
+    final p = diario.entradas.first.data.split('-');
+    if (p.length < 3) return diario.entradas.first.data;
+    const meses = [
+      'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
+    ];
+    return '${p[2]} ${meses[(int.tryParse(p[1]) ?? 1) - 1]} ${p[0]}';
   }
 
   Widget _stat(String label, String value) => Expanded(

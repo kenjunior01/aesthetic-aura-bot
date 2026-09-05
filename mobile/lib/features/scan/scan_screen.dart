@@ -14,6 +14,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api/aura_api.dart';
+import '../../core/data/diario_store.dart';
 import '../../core/store/profile_store.dart';
 import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
@@ -98,6 +99,47 @@ class _ScanScreenState extends State<ScanScreen>
       'source': reading != null ? 'ai' : 'local',
     });
     store.addXp(40);
+    _guardarNoDiario(store, reading);
+  }
+
+  /// Cada scan entra no Diário de Evolução (linha do tempo da aura).
+  Future<void> _guardarNoDiario(
+    ProfileStore store,
+    Map<String, dynamic>? reading,
+  ) async {
+    try {
+      final p = store.profile;
+      final agora = DateTime.now();
+      final thumb = _photo != null
+          ? await DiarioStore.miniatura(_photo!)
+          : null;
+      if (!mounted) return;
+      final rawTone =
+          reading?['skinTone'] ?? reading?['skin_tone'] ?? p.skinTone;
+      final tone = rawTone is num
+          ? rawTone.toInt()
+          : int.tryParse('$rawTone') ?? p.skinTone;
+      context.read<DiarioStore>().adicionar(
+        EntradaDiario(
+          id: agora.toIso8601String(),
+          data:
+              '${agora.year.toString().padLeft(4, '0')}-'
+              '${agora.month.toString().padLeft(2, '0')}-'
+              '${agora.day.toString().padLeft(2, '0')}',
+          faceShape:
+              '${reading?['faceShape'] ?? reading?['face_shape'] ?? p.faceShape}',
+          skinTone: tone,
+          undertone:
+              '${reading?['undertone'] ?? p.undertone}',
+          hairColor: p.hairColor,
+          fonte: reading != null ? 'ai' : 'local',
+          thumb: thumb,
+        ),
+      );
+      store.addXp(15); // bónus de registo no diário
+    } catch (_) {
+      // diário é bónus — nunca bloqueia o scan
+    }
   }
 
   @override
@@ -273,6 +315,26 @@ class _ScanScreenState extends State<ScanScreen>
                 ),
                 const SizedBox(height: 14),
                 if (r != null) ..._aiReadings(r) else ..._localReadings(store),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.timeline,
+                      size: 13,
+                      color: AuraColors.primary,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Registado no diário de evolução · +15 XP',
+                        style: AuraType.caption.copyWith(
+                          fontSize: 10.5,
+                          color: AuraColors.primary.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),

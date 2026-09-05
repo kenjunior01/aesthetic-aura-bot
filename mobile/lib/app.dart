@@ -6,6 +6,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'core/data/diario_store.dart';
 import 'core/store/profile_store.dart';
 import 'core/theme/aura_colors.dart';
 import 'core/theme/aura_decorations.dart';
@@ -21,6 +22,7 @@ class AuraApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ProfileStore()..load()),
+        ChangeNotifierProvider(create: (_) => DiarioStore()..load()),
       ],
       child: const _AuraRoot(),
     );

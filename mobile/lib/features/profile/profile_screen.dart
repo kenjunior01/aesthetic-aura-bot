@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/config.dart';
 import '../../core/data/diario_store.dart';
+import '../../core/sfx/aura_sfx.dart';
 import '../../core/store/profile_store.dart';
 import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
@@ -18,6 +19,7 @@ import '../../core/widgets/section_header.dart';
 import '../../core/widgets/stagger_in.dart';
 import '../references/references_screen.dart';
 import '../evolucao/evolucao_screen.dart';
+import '../diagnostico/diagnostico_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -37,7 +39,7 @@ class ProfileScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                 Text('PERFIL', style: AuraType.eyebrow),
+                Text('PERFIL', style: AuraType.eyebrow),
                 const SizedBox(height: 6),
                 Text(
                   p.name.isEmpty ? 'Sem nome ainda' : p.name,
@@ -109,6 +111,40 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
+              // ── Identidade sonora ──────────────────────────────────────
+              StaggerIn(
+                index: 1,
+                child: GlassCard(
+                  child: Row(
+                    children: [
+                      Icon(
+                        store.sfxOn
+                            ? Icons.volume_up_outlined
+                            : Icons.volume_off_outlined,
+                        color: AuraColors.primary,
+                        size: 22,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Sons do app', style: AuraType.cardTitle),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Timbres de platina: navegação, ritual, a Aura.',
+                              style: AuraType.caption,
+                            ),
+                          ],
+                        ),
+                      ),
+                      _SfxInterruptor(on: store.sfxOn),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
               // ── Ficha ──────────────────────────────────────────────────────
               StaggerIn(
                 index: 1,
@@ -173,7 +209,7 @@ class ProfileScreen extends StatelessWidget {
                             color: AuraColors.primary.withValues(alpha: 0.3),
                           ),
                         ),
-                        child:  Icon(
+                        child: Icon(
                           Icons.face_retouching_natural,
                           size: 21,
                           color: AuraColors.primary,
@@ -195,7 +231,7 @@ class ProfileScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                       Icon(
+                      Icon(
                         Icons.chevron_right,
                         color: AuraColors.mutedForeground,
                       ),
@@ -224,7 +260,7 @@ class ProfileScreen extends StatelessWidget {
                             color: AuraColors.primary.withValues(alpha: 0.3),
                           ),
                         ),
-                        child:  Icon(
+                        child: Icon(
                           Icons.timeline,
                           size: 21,
                           color: AuraColors.primary,
@@ -248,7 +284,63 @@ class ProfileScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                       Icon(
+                      Icon(
+                        Icons.chevron_right,
+                        color: AuraColors.mutedForeground,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // ── Diagnóstico — as APIs provadas no telemóvel ─────────
+              StaggerIn(
+                index: 2,
+                child: GlassCard(
+                  onTap: () {
+                    AuraSfx.I.tap();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const DiagnosticoScreen(),
+                      ),
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AuraColors.primary.withValues(alpha: 0.1),
+                          border: Border.all(
+                            color: AuraColors.primary.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.monitor_heart_outlined,
+                          size: 21,
+                          color: AuraColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Diagnóstico do app',
+                              style: AuraType.cardTitle,
+                            ),
+                            Text(
+                              'IA, bancos de imagens e clima — provados ao vivo.',
+                              style: AuraType.caption.copyWith(fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
                         Icons.chevron_right,
                         color: AuraColors.mutedForeground,
                       ),
@@ -273,8 +365,18 @@ class ProfileScreen extends StatelessWidget {
     final p = diario.entradas.first.data.split('-');
     if (p.length < 3) return diario.entradas.first.data;
     const meses = [
-      'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
+      'Jan',
+      'Fev',
+      'Mar',
+      'Abr',
+      'Mai',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Set',
+      'Out',
+      'Nov',
+      'Dez',
     ];
     return '${p[2]} ${meses[(int.tryParse(p[1]) ?? 1) - 1]} ${p[0]}';
   }
@@ -362,6 +464,60 @@ class _BackendCardState extends State<BackendCard> {
   }
 }
 
+/// Interruptor da identidade sonora — mesmo desenho cerimonial do modo.
+class _SfxInterruptor extends StatelessWidget {
+  const _SfxInterruptor({required this.on});
+
+  final bool on;
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.read<ProfileStore>();
+    return GestureDetector(
+      onTap: () {
+        if (!on) AuraSfx.I.toggle(); // ao ligar, o app confirma com som
+        HapticFeedback.lightImpact();
+        store.setSfx(!on);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+        width: 62,
+        height: 34,
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          color: AuraColors.surface,
+          border: Border.all(color: AuraColors.border),
+        ),
+        child: Stack(
+          children: [
+            AnimatedAlign(
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeOutCubic,
+              alignment: on ? Alignment.centerRight : Alignment.centerLeft,
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: AuraDecor.auraMetal,
+                  boxShadow: AuraDecor.glowShadow(alpha: 0.4),
+                ),
+                child: Icon(
+                  on ? Icons.music_note : Icons.music_off,
+                  size: 15,
+                  color: AuraColors.onPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Interruptor cerimonial Noite/Alvor — disco usinado que desliza.
 class _ModoInterruptor extends StatelessWidget {
   const _ModoInterruptor({required this.claro});
@@ -373,7 +529,7 @@ class _ModoInterruptor extends StatelessWidget {
     final store = context.read<ProfileStore>();
     return GestureDetector(
       onTap: () {
-        HapticFeedback.mediumImpact();
+        AuraSfx.I.toggle();
         store.setModoClaro(!claro);
       },
       child: AnimatedContainer(

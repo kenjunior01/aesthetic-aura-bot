@@ -5,6 +5,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../../core/sfx/aura_sfx.dart';
 import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
 import '../../core/theme/aura_typography.dart';
@@ -84,25 +85,31 @@ class _NavShellState extends State<NavShell> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: _ScanCrown(
         active: _index == 4,
-        onTap: () => Navigator.of(context).push(
-          PageRouteBuilder(
-            transitionDuration: const Duration(milliseconds: 420),
-            reverseTransitionDuration: const Duration(milliseconds: 320),
-            pageBuilder: (_, _, _) => const ScanScreen(),
-            transitionsBuilder: (_, anim, _, child) => SlideTransition(
-              position: Tween(begin: const Offset(0, 1), end: Offset.zero)
-                  .animate(
-                    CurvedAnimation(parent: anim, curve: Curves.easeOutCubic),
-                  ),
-              child: child,
+        onTap: () {
+          AuraSfx.I.toggle();
+          Navigator.of(context).push(
+            PageRouteBuilder(
+              transitionDuration: const Duration(milliseconds: 420),
+              reverseTransitionDuration: const Duration(milliseconds: 320),
+              pageBuilder: (_, _, _) => const ScanScreen(),
+              transitionsBuilder: (_, anim, _, child) => SlideTransition(
+                position: Tween(begin: const Offset(0, 1), end: Offset.zero)
+                    .animate(
+                      CurvedAnimation(parent: anim, curve: Curves.easeOutCubic),
+                    ),
+                child: child,
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
       bottomNavigationBar: _GlassBar(
         destinations: _destinations,
         index: _index,
-        onChanged: (i) => setState(() => _index = i),
+        onChanged: (i) {
+          if (i != _index) AuraSfx.I.tap();
+          setState(() => _index = i);
+        },
       ),
     );
   }
@@ -149,7 +156,7 @@ class _ScanCrown extends StatelessWidget {
         ),
         padding: const EdgeInsets.all(2.4),
         child: Container(
-          decoration:  BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: AuraColors.backgroundDeep,
           ),

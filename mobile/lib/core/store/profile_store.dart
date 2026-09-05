@@ -11,6 +11,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../sfx/aura_sfx.dart';
 import '../theme/aura_colors.dart';
 
 class Profile {
@@ -131,8 +132,7 @@ class Profile {
     profession: '${j['profession'] ?? ''}',
     climate: '${j['climate'] ?? ''}',
     notes: '${j['notes'] ?? ''}',
-    espelho:
-        (j['espelho'] as List?)?.map((e) => '$e').toList() ?? const [],
+    espelho: (j['espelho'] as List?)?.map((e) => '$e').toList() ?? const [],
   );
 
   Profile copyWith({
@@ -231,6 +231,7 @@ class ProfileStore extends ChangeNotifier {
   static const _ritualKey = 'aurastyle-ritual-v1';
   static const _onboardedKey = 'aurastyle-onboarded-v1';
   static const _modoClaroKey = 'aurastyle-modo-claro';
+  static const _sfxKey = 'aurastyle-sfx-on';
 
   /// Passos do ritual diário — idênticos ao espírito do web (5 passos,
   /// 25 XP ao completar).
@@ -251,6 +252,7 @@ class ProfileStore extends ChangeNotifier {
   List<int> _ritualDone = const [];
   bool _onboarded = false;
   bool _modoClaro = false;
+  bool _sfxOn = true;
 
   Profile get profile => _profile;
   int get xp => _xp;
@@ -261,6 +263,9 @@ class ProfileStore extends ChangeNotifier {
   bool get loaded => _loaded;
   bool get onboarded => _onboarded;
   bool get modoClaro => _modoClaro;
+
+  /// Identidade sonora do app (tap, chime, sucesso…) — o utilizador manda.
+  bool get sfxOn => _sfxOn;
 
   /// Ritual de hoje: passos concluídos (recalcula se virou o dia).
   List<int> get ritualDone {
@@ -305,6 +310,8 @@ class ProfileStore extends ChangeNotifier {
         const [];
     _onboarded = prefs.getBool(_onboardedKey) ?? false;
     _modoClaro = prefs.getBool(_modoClaroKey) ?? false;
+    _sfxOn = prefs.getBool(_sfxKey) ?? true;
+    AuraSfx.I.setEnabled(_sfxOn);
     AuraColors.modo = _modoClaro ? ModoCromatico.alvor : ModoCromatico.noite;
     _loaded = true;
     notifyListeners();
@@ -381,6 +388,14 @@ class ProfileStore extends ChangeNotifier {
     SharedPreferences.getInstance().then(
       (p) => p.setBool(_modoClaroKey, claro),
     );
+    notifyListeners();
+  }
+
+  /// Liga/desliga a identidade sonora (Perfil → Sons do app).
+  void setSfx(bool on) {
+    _sfxOn = on;
+    AuraSfx.I.setEnabled(on);
+    SharedPreferences.getInstance().then((p) => p.setBool(_sfxKey, on));
     notifyListeners();
   }
 

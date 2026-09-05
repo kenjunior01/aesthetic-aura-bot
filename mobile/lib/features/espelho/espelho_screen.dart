@@ -17,6 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/api/visual_api.dart';
 import '../../core/secrets.dart';
 import '../../core/store/profile_store.dart';
+import '../../core/sfx/aura_sfx.dart';
 import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
 import '../../core/theme/aura_typography.dart';
@@ -104,7 +105,7 @@ class _EspelhoScreenState extends State<EspelhoScreen> {
         _minhaFoto = bytes;
         _temFotoLocal = true;
       });
-      HapticFeedback.selectionClick();
+      AuraSfx.I.camera();
     } catch (_) {
       // permissão negada etc. — segue sem foto
     }
@@ -126,7 +127,7 @@ class _EspelhoScreenState extends State<EspelhoScreen> {
       ),
     );
     if (!jaTinha && _cabeloSel != null) store.addXp(15);
-    HapticFeedback.mediumImpact();
+    AuraSfx.I.sparkle();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

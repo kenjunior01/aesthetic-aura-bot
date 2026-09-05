@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'core/data/diario_store.dart';
+import 'core/sfx/aura_sfx.dart';
 import 'core/store/profile_store.dart';
 import 'core/theme/aura_colors.dart';
 import 'core/theme/aura_decorations.dart';
@@ -37,7 +38,9 @@ class _AuraRoot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final store = context.watch<ProfileStore>();
-    AuraColors.modo = store.modoClaro ? ModoCromatico.alvor : ModoCromatico.noite;
+    AuraColors.modo = store.modoClaro
+        ? ModoCromatico.alvor
+        : ModoCromatico.noite;
     return MaterialApp(
       key: ValueKey('aura-modo-${store.modoClaro}'),
       title: 'AuraStyle',
@@ -68,6 +71,8 @@ class _AuraSplashState extends State<AuraSplash> {
     Future.delayed(const Duration(milliseconds: 550), () {
       if (!mounted || _navigated) return;
       _navigated = true;
+      // A assinatura sonora: a aura acende com um acorde suave.
+      if (store.onboarded) AuraSfx.I.chime();
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 460),
@@ -85,6 +90,8 @@ class _AuraSplashState extends State<AuraSplash> {
   @override
   void initState() {
     super.initState();
+    // Identidade sonora: pré-carrega os timbres enquanto a marca acende.
+    AuraSfx.I.ensure();
     WidgetsBinding.instance.addPostFrameCallback((_) => _maybeNavigate());
   }
 
@@ -109,11 +116,11 @@ class _AuraSplashState extends State<AuraSplash> {
               ),
               padding: const EdgeInsets.all(3),
               child: Container(
-                decoration:  BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: AuraColors.backgroundDeep,
                 ),
-                child:  Icon(
+                child: Icon(
                   Icons.auto_awesome,
                   size: 34,
                   color: AuraColors.primary,
@@ -121,7 +128,7 @@ class _AuraSplashState extends State<AuraSplash> {
               ),
             ),
             const SizedBox(height: 20),
-             Text(
+            Text(
               'AURA STYLE',
               style: TextStyle(
                 fontFamily: 'Outfit',
@@ -132,7 +139,7 @@ class _AuraSplashState extends State<AuraSplash> {
               ),
             ),
             const SizedBox(height: 8),
-             Text(
+            Text(
               'a tua aura, esculpida em platina',
               style: TextStyle(
                 fontFamily: 'Manrope',

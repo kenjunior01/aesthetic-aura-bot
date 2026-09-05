@@ -11,6 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api/aura_api.dart';
+import '../../core/sfx/aura_sfx.dart';
 import '../../core/store/profile_store.dart';
 import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
@@ -56,7 +57,7 @@ class _ChatScreenState extends State<ChatScreen> {
       final bytes = await x.readAsBytes();
       if (!mounted) return;
       setState(() => _pendente = bytes);
-      HapticFeedback.selectionClick();
+      AuraSfx.I.camera();
     } catch (_) {
       // permissão negada etc. — segue sem foto
     }
@@ -106,6 +107,7 @@ class _ChatScreenState extends State<ChatScreen> {
       _pendente = null;
       _thinking = true;
     });
+    AuraSfx.I.send();
     _bump();
 
     try {
@@ -124,6 +126,7 @@ class _ChatScreenState extends State<ChatScreen> {
         _messages.add(_Msg(role: 'assistant', text: reply.text));
         _thinking = false;
       });
+      AuraSfx.I.receive();
     } catch (_) {
       if (!mounted) return;
       setState(() {

@@ -16,6 +16,7 @@ import 'package:provider/provider.dart';
 import '../../core/api/aura_api.dart';
 import '../../core/data/diario_store.dart';
 import '../../core/store/profile_store.dart';
+import '../../core/sfx/aura_sfx.dart';
 import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
 import '../../core/theme/aura_typography.dart';
@@ -64,6 +65,7 @@ class _ScanScreenState extends State<ScanScreen>
         imageQuality: 86,
       );
       if (photo == null) return;
+      AuraSfx.I.camera();
       setState(() {
         _photo = photo;
         _phase = ScanPhase.scanning;

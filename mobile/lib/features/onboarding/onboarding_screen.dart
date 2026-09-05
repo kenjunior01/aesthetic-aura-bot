@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/store/profile_store.dart';
+import '../../core/sfx/aura_sfx.dart';
 import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
 import '../../core/theme/aura_typography.dart';
@@ -55,6 +56,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     store.addXp(20);
     store.logEvent('onboarding_complete');
     store.completeOnboarding();
+    AuraSfx.I.success(); // a tua aura está pronta — conquista de entrada
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 520),

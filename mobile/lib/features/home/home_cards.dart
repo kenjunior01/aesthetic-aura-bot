@@ -9,12 +9,12 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api/clima_api.dart';
 import '../../core/api/image_bank.dart';
 import '../../core/api/visual_api.dart';
+import '../../core/sfx/aura_sfx.dart';
 import '../../core/store/profile_store.dart';
 import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
@@ -57,8 +57,8 @@ class _RitualCardState extends State<RitualCard> {
     final sujeito = g.contains('fem')
         ? 'mulher elegante'
         : (g.contains('masc') || g.contains('homem')
-            ? 'homem elegante'
-            : 'pessoa elegante');
+              ? 'homem elegante'
+              : 'pessoa elegante');
     final estilo = p.styles.isNotEmpty
         ? p.styles.first.toLowerCase()
         : 'fashion';
@@ -135,9 +135,11 @@ class _RitualCardState extends State<RitualCard> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        for (var i = 0;
-                            i < ProfileStore.kRitualSteps.length;
-                            i++)
+                        for (
+                          var i = 0;
+                          i < ProfileStore.kRitualSteps.length;
+                          i++
+                        )
                           _RitualRow(index: i, done: done.contains(i)),
                       ],
                     ),
@@ -185,83 +187,81 @@ class _RitualCardState extends State<RitualCard> {
         borderRadius: AuraDecor.rounded,
         child: Stack(
           fit: StackFit.expand,
-            children: [
-              // Crossfade entre fotos.
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 760),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeIn,
-                transitionBuilder: (child, anim) => FadeTransition(
-                  opacity: anim,
-                  child: ScaleTransition(
-                    scale: Tween(begin: 1.04, end: 1.0).animate(anim),
-                    child: child,
-                  ),
+          children: [
+            // Crossfade entre fotos.
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 760),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (child, anim) => FadeTransition(
+                opacity: anim,
+                child: ScaleTransition(
+                  scale: Tween(begin: 1.04, end: 1.0).animate(anim),
+                  child: child,
                 ),
-                child: KeyedSubtree(
-                  key: ValueKey(foto.url),
-                  child: TweenAnimationBuilder<double>(
-                    // Ken Burns — zoom lento contínuo dentro de cada foto.
-                    tween: Tween(begin: 1.0, end: 1.09),
-                    duration: const Duration(milliseconds: 5200),
-                    curve: Curves.linear,
-                    builder: (context, escala, filho) => Transform.scale(
-                      scale: escala,
-                      child: filho,
-                    ),
-                    child: CachedNetworkImage(
-                      imageUrl: foto.url,
-                      fit: BoxFit.cover,
-                      fadeInDuration: const Duration(milliseconds: 300),
-                      placeholder: (_, _) => const ShimmerBox(radius: 0),
-                      errorWidget: (_, _, _) => _gradienteReserva(),
-                    ),
+              ),
+              child: KeyedSubtree(
+                key: ValueKey(foto.url),
+                child: TweenAnimationBuilder<double>(
+                  // Ken Burns — zoom lento contínuo dentro de cada foto.
+                  tween: Tween(begin: 1.0, end: 1.09),
+                  duration: const Duration(milliseconds: 5200),
+                  curve: Curves.linear,
+                  builder: (context, escala, filho) =>
+                      Transform.scale(scale: escala, child: filho),
+                  child: CachedNetworkImage(
+                    imageUrl: foto.url,
+                    fit: BoxFit.cover,
+                    fadeInDuration: const Duration(milliseconds: 300),
+                    placeholder: (_, _) => const ShimmerBox(radius: 0),
+                    errorWidget: (_, _, _) => _gradienteReserva(),
                   ),
                 ),
               ),
-              // Base de vidro para os pontos.
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  height: 34,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Color(0x0004060A), Color(0x9904060A)],
-                    ),
+            ),
+            // Base de vidro para os pontos.
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                height: 34,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0x0004060A), Color(0x9904060A)],
                   ),
                 ),
               ),
-              // Pontos de fase.
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 7,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    for (var d = 0; d < _fotos.length.clamp(2, 6); d++)
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        width: d == _idx % _fotos.length ? 7 : 4,
-                        height: 4,
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(999),
-                          color: d == _idx % _fotos.length
-                              ? Colors.white
-                              : Colors.white.withValues(alpha: 0.38),
-                        ),
+            ),
+            // Pontos de fase.
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 7,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (var d = 0; d < _fotos.length.clamp(2, 6); d++)
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      width: d == _idx % _fotos.length ? 7 : 4,
+                      height: 4,
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(999),
+                        color: d == _idx % _fotos.length
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.38),
                       ),
-                  ],
-                ),
+                    ),
+                ],
               ),
-            ],
-          ),
-        );
+            ),
+          ],
+        ),
+      );
     }
 
     return Container(
@@ -310,8 +310,20 @@ class _RitualRow extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
-        HapticFeedback.lightImpact();
-        context.read<ProfileStore>().toggleRitual(index);
+        final store = context.read<ProfileStore>();
+        final eraCompleta = store.ritualComplete;
+        if (done) {
+          AuraSfx.I.toggle();
+        } else {
+          AuraSfx.I.complete();
+        }
+        store.toggleRitual(index);
+        // Os 5 passos completos: a conquista merece o acorde inteiro.
+        if (!eraCompleta && store.ritualComplete) {
+          Future.delayed(const Duration(milliseconds: 420), () {
+            AuraSfx.I.success();
+          });
+        }
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 7),
@@ -330,11 +342,7 @@ class _RitualRow extends StatelessWidget {
                 boxShadow: done ? AuraDecor.glowShadow(alpha: 0.3) : null,
               ),
               child: done
-                  ?  Icon(
-                      Icons.check,
-                      size: 13,
-                      color: AuraColors.onPrimary,
-                    )
+                  ? Icon(Icons.check, size: 13, color: AuraColors.onPrimary)
                   : null,
             ),
             const SizedBox(width: 11),
@@ -428,7 +436,7 @@ class _ClimaCardState extends State<ClimaCard> {
         children: [
           Row(
             children: [
-               Text('CLIMA AO VIVO', style: AuraType.eyebrow),
+              Text('CLIMA AO VIVO', style: AuraType.eyebrow),
               const Spacer(),
               Text(
                 '${c.city}${c.country.isEmpty ? '' : ' · ${c.country}'}',
@@ -468,7 +476,7 @@ class _ClimaCardState extends State<ClimaCard> {
                       width: 4,
                       height: 4,
                       margin: const EdgeInsets.only(top: 7, right: 9),
-                      decoration:  BoxDecoration(
+                      decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: AuraColors.primary,
                       ),

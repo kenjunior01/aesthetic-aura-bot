@@ -14,6 +14,7 @@ import 'package:provider/provider.dart' as p;
 
 import '../../core/api/visual_api.dart';
 import '../../core/store/profile_store.dart';
+import '../../core/sfx/aura_sfx.dart';
 import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
 import '../../core/theme/aura_typography.dart';
@@ -67,7 +68,7 @@ class _MercadoScreenState extends State<MercadoScreen> {
         _foto = bytes;
         _estado = _EstadoMercado.analisando;
       });
-      HapticFeedback.mediumImpact();
+      AuraSfx.I.camera();
 
       final produtos = await VisualApi.I.fotoParaProdutos(base64Encode(bytes));
       if (!mounted) return;
@@ -81,7 +82,7 @@ class _MercadoScreenState extends State<MercadoScreen> {
         _plano = plano;
         _estado = _EstadoMercado.plano;
       });
-      HapticFeedback.heavyImpact();
+      AuraSfx.I.sparkle();
     } catch (_) {
       if (mounted) setState(() => _estado = _EstadoMercado.falhou);
     }

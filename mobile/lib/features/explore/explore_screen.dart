@@ -7,6 +7,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/api/acervo_api.dart';
+import '../../core/sfx/aura_sfx.dart';
 import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
 import '../../core/theme/aura_typography.dart';
@@ -26,16 +27,39 @@ class _ExploreScreenState extends State<ExploreScreen> {
   late Future<AcervoResult> _future;
   final Set<int> _saved = {};
 
+  // Busca livre — 470 mil obras respondendo ao que o utilizador escreve.
+  final TextEditingController _buscaCtrl = TextEditingController();
+  String? _buscaAtiva;
+  Future<AcervoResult>? _buscaFuture;
+
   @override
   void initState() {
     super.initState();
     _future = AcervoApi.I.fetchTheme(_theme);
   }
 
+  @override
+  void dispose() {
+    _buscaCtrl.dispose();
+    super.dispose();
+  }
+
   void _switchTheme(String t) {
     if (t == _theme) return;
-    setState(() => _theme = t);
+    AuraSfx.I.tap();
+    setState(() {
+      _theme = t;
+      _buscaAtiva = null; // trocar de tema limpa a busca
+    });
     _future = AcervoApi.I.fetchTheme(t);
+  }
+
+  void _buscar() {
+    final q = _buscaCtrl.text.trim();
+    if (q.length < 2) return;
+    AuraSfx.I.send();
+    setState(() => _buscaAtiva = q);
+    _buscaFuture = AcervoApi.I.buscaTexto(q);
   }
 
   @override
@@ -60,37 +84,138 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   'Open Access · domínio público · 470 mil obras',
                   style: AuraType.caption,
                 ),
+                const SizedBox(height: 14),
+                // ── Busca livre no acervo ───────────────────────────────
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 44,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(22),
+                          color: AuraColors.cardFill,
+                          border: Border.all(color: AuraColors.border),
+                        ),
+                        child: TextField(
+                          controller: _buscaCtrl,
+                          textInputAction: TextInputAction.search,
+                          onSubmitted: (_) => _buscar(),
+                          style: AuraType.body.copyWith(fontSize: 13),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            hintText: 'Pesquisar no acervo… (ex: kimono)',
+                            hintStyle: AuraType.caption.copyWith(fontSize: 12),
+                            prefixIcon: Icon(
+                              Icons.search,
+                              size: 18,
+                              color: AuraColors.mutedForeground,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: _buscar,
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: AuraDecor.auraMetal,
+                          boxShadow: AuraDecor.glowShadow(alpha: 0.24),
+                        ),
+                        child: Icon(
+                          Icons.arrow_forward,
+                          size: 18,
+                          color: AuraColors.onPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
         ),
 
-        // ── Chips de tema ──────────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: SizedBox(
-            height: 44,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 6),
-              children: [
-                for (final t in AcervoApi.themes)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ThemeChipLite(
-                      label: AcervoApi.themeLabel[t] ?? t,
-                      active: t == _theme,
-                      onTap: () => _switchTheme(t),
+        // ── Chips de tema (escondidos enquanto a busca está ativa) ────
+        if (_buscaAtiva == null)
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 44,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 6),
+                children: [
+                  for (final t in AcervoApi.themes)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ThemeChipLite(
+                        label: AcervoApi.themeLabel[t] ?? t,
+                        active: t == _theme,
+                        onTap: () => _switchTheme(t),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          )
+        else
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(22, 8, 22, 4),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      AuraSfx.I.toggle();
+                      setState(() => _buscaAtiva = null);
+                    },
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(999),
+                        gradient: AuraDecor.auraMetal,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 13,
+                          vertical: 8,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.close,
+                              size: 13,
+                              color: AuraColors.onPrimary,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '“$_buscaAtiva”',
+                              style: AuraType.chip.copyWith(
+                                color: AuraColors.onPrimary,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
 
         // ── Grade ──────────────────────────────────────────────────────────
         FutureBuilder<AcervoResult>(
-          future: _future,
+          future: _buscaAtiva != null ? _buscaFuture : _future,
           builder: (context, snap) {
             if (!snap.hasData) {
               return _gridSkeleton();
@@ -103,13 +228,17 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Fonte da galeria — viva ou reserva.
+                    // Fonte da galeria — viva, busca ou reserva.
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: MachinedChipLite(
                         result.source == 'reserva'
-                            ? 'Reserva offline · acervo verificado'
-                            : 'Ao vivo · collectionAPI do Met',
+                            ? (_buscaAtiva != null
+                                  ? 'Sem resultados vivos · reserva'
+                                  : 'Reserva offline · acervo verificado')
+                            : (_buscaAtiva != null
+                                  ? 'Busca viva · “$_buscaAtiva” · Met'
+                                  : 'Ao vivo · collectionAPI do Met'),
                       ),
                     ),
                     // 2 colunas com ritmo quebrado — index%3==1 desce e vira 3/4.

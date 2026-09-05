@@ -19,6 +19,7 @@ import '../../core/store/profile_store.dart';
 import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
 import '../../core/theme/aura_typography.dart';
+import '../../core/widgets/confetti_burst.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/shimmer_box.dart';
 
@@ -37,6 +38,7 @@ class _RitualCardState extends State<RitualCard> {
   List<VisualItem> _fotos = const [];
   int _idx = 0;
   Timer? _timer;
+  int _rajada = 0; // incrementa a cada celebração → nova key do confetti
 
   @override
   void initState() {
@@ -84,8 +86,10 @@ class _RitualCardState extends State<RitualCard> {
     final done = store.ritualDone;
     final progress = done.length / ProfileStore.kRitualSteps.length;
 
-    return GlassCard(
-      child: Column(
+    return Stack(
+      children: [
+        GlassCard(
+          child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -140,7 +144,12 @@ class _RitualCardState extends State<RitualCard> {
                           i < ProfileStore.kRitualSteps.length;
                           i++
                         )
-                          _RitualRow(index: i, done: done.contains(i)),
+                          _RitualRow(
+                            index: i,
+                            done: done.contains(i),
+                            onConcluir: () =>
+                                setState(() => _rajada += 1),
+                          ),
                       ],
                     ),
                   ),
@@ -170,7 +179,19 @@ class _RitualCardState extends State<RitualCard> {
               ),
             ),
         ],
-      ),
+          ),
+        ),
+        // Explosão de platina quando os 5 passos ficam completos.
+        if (_rajada > 0)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: ConfettiBurst(
+                key: ValueKey('confetti-$_rajada'),
+                pouco: true,
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -299,10 +320,15 @@ class _RitualCardState extends State<RitualCard> {
 }
 
 class _RitualRow extends StatelessWidget {
-  const _RitualRow({required this.index, required this.done});
+  const _RitualRow({
+    required this.index,
+    required this.done,
+    this.onConcluir,
+  });
 
   final int index;
   final bool done;
+  final VoidCallback? onConcluir;
 
   @override
   Widget build(BuildContext context) {
@@ -318,8 +344,9 @@ class _RitualRow extends StatelessWidget {
           AuraSfx.I.complete();
         }
         store.toggleRitual(index);
-        // Os 5 passos completos: a conquista merece o acorde inteiro.
+        // Os 5 passos completos: a conquista merece o acorde inteiro + confetti.
         if (!eraCompleta && store.ritualComplete) {
+          onConcluir?.call();
           Future.delayed(const Duration(milliseconds: 420), () {
             AuraSfx.I.success();
           });

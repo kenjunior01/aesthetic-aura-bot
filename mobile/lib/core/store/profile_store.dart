@@ -12,7 +12,29 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../sfx/aura_sfx.dart';
+import '../sfx/aura_voz.dart';
 import '../theme/aura_colors.dart';
+
+/// Títulos de nível — a escada de prestígio da AuraStyle.
+/// (nível mínimo → título) — o nível sobe com floor(sqrt(xp/50))+1.
+const List<({int min, String titulo})> kNivelTitulos = [
+  (min: 1, titulo: 'Despertar'),
+  (min: 2, titulo: 'Presença'),
+  (min: 3, titulo: 'Assinatura'),
+  (min: 4, titulo: 'Radiancia'),
+  (min: 5, titulo: 'Ícone de Estilo'),
+  (min: 7, titulo: 'Lenda Urbana'),
+  (min: 10, titulo: 'Aura Suprema'),
+];
+
+/// Título do nível — o mais alto atingido pela escada.
+String nivelTitulo(int nivel) {
+  var titulo = kNivelTitulos.first.titulo;
+  for (final t in kNivelTitulos) {
+    if (nivel >= t.min) titulo = t.titulo;
+  }
+  return titulo;
+}
 
 class Profile {
   const Profile({
@@ -232,6 +254,7 @@ class ProfileStore extends ChangeNotifier {
   static const _onboardedKey = 'aurastyle-onboarded-v1';
   static const _modoClaroKey = 'aurastyle-modo-claro';
   static const _sfxKey = 'aurastyle-sfx-on';
+  static const _vozKey = 'aurastyle-voz-on';
 
   /// Passos do ritual diário — idênticos ao espírito do web (5 passos,
   /// 25 XP ao completar).
@@ -253,6 +276,8 @@ class ProfileStore extends ChangeNotifier {
   bool _onboarded = false;
   bool _modoClaro = false;
   bool _sfxOn = true;
+  bool _vozOn = false;
+  int? _levelUpNovo; // nível acabado de alcançar (celebração pendente)
 
   Profile get profile => _profile;
   int get xp => _xp;
@@ -266,6 +291,14 @@ class ProfileStore extends ChangeNotifier {
 
   /// Identidade sonora do app (tap, chime, sucesso…) — o utilizador manda.
   bool get sfxOn => _sfxOn;
+
+  /// A voz da Aura (TTS) — fala as respostas do chat. O utilizador manda.
+  bool get vozOn => _vozOn;
+
+  /// Nível recém-alcançado (overlay de celebração pendente) — null se nenhum.
+  int? get levelUpNovo => _levelUpNovo;
+
+  void clearLevelUp() => _levelUpNovo = null;
 
   /// Ritual de hoje: passos concluídos (recalcula se virou o dia).
   List<int> get ritualDone {
@@ -312,6 +345,8 @@ class ProfileStore extends ChangeNotifier {
     _modoClaro = prefs.getBool(_modoClaroKey) ?? false;
     _sfxOn = prefs.getBool(_sfxKey) ?? true;
     AuraSfx.I.setEnabled(_sfxOn);
+    _vozOn = prefs.getBool(_vozKey) ?? false;
+    AuraVoz.I.setEnabled(_vozOn);
     AuraColors.modo = _modoClaro ? ModoCromatico.alvor : ModoCromatico.noite;
     _loaded = true;
     notifyListeners();
@@ -335,7 +370,11 @@ class ProfileStore extends ChangeNotifier {
   }
 
   void addXp(int amount) {
+    final antes = calculateLevel(_xp);
     _xp = (_xp + amount).clamp(0, 1 << 31);
+    // Cruzou um nível? Guarda para a celebração (o shell mostra o overlay).
+    final agora = calculateLevel(_xp);
+    if (agora > antes && _levelUpNovo == null) _levelUpNovo = agora;
     save();
     notifyListeners();
   }
@@ -396,6 +435,14 @@ class ProfileStore extends ChangeNotifier {
     _sfxOn = on;
     AuraSfx.I.setEnabled(on);
     SharedPreferences.getInstance().then((p) => p.setBool(_sfxKey, on));
+    notifyListeners();
+  }
+
+  /// Liga/desliga a voz da Aura (Perfil → Voz da Aura).
+  void setVoz(bool on) {
+    _vozOn = on;
+    AuraVoz.I.setEnabled(on);
+    SharedPreferences.getInstance().then((p) => p.setBool(_vozKey, on));
     notifyListeners();
   }
 

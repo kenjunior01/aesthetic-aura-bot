@@ -104,7 +104,14 @@ class AcervoApi {
   /// Busca obras de um tema. count limitado a 6-24 pela rota.
   Future<AcervoResult> fetchTheme(String theme, {int count = 12}) async {
     // 1. DIRETO do telemóvel — Met collectionAPI (grátis, sem chave).
-    final direto = await _metDireto(theme, count);
+    final termo = _temaTermo[theme] ?? 'fashion';
+    final depto = _temaDepto[theme];
+    final direto = await _pipelineMet(
+      termo,
+      depto,
+      count,
+      cacheKey: '$theme::$count',
+    );
     if (direto != null && direto.items.isNotEmpty) return direto;
 
     // 2. Backend partilhado (cache 6h no servidor).
@@ -138,12 +145,36 @@ class AcervoApi {
   // ── Camada 1: Met direto ────────────────────────────────────────────────────
   static const _metBase = 'https://collectionapi.metmuseum.org/public/collection/v1';
 
-  Future<AcervoResult?> _metDireto(String theme, int count) async {
-    final hit = _cacheVivo['$theme::$count'];
+  /// BUSCA LIVRE por texto no acervo inteiro do Met — 470 mil obras
+  /// respondendo à palavra que o utilizador escreveu. Sem departamento:
+  /// a palavra manda. Reserva como último recurso.
+  Future<AcervoResult> buscaTexto(String query, {int count = 12}) async {
+    final q = query.trim();
+    if (q.isEmpty) return fetchTheme(themes.first, count: count);
+    final direto = await _pipelineMet(
+      q,
+      null,
+      count,
+      cacheKey: 'livre::$q::$count',
+    );
+    if (direto != null && direto.items.isNotEmpty) return direto;
+    return AcervoResult(
+      items: kMetReserva['vestidos'] ?? const [],
+      source: 'reserva',
+    );
+  }
+
+  /// Pipeline comum: search por termo (+depto opcional) → objetos com
+  /// imagem de domínio público. Cache por chave; null se o vivo falhar.
+  Future<AcervoResult?> _pipelineMet(
+    String termo,
+    int? depto,
+    int count, {
+    required String cacheKey,
+  }) async {
+    final hit = _cacheVivo[cacheKey];
     if (hit != null && hit.items.isNotEmpty) return hit;
     try {
-      final termo = _temaTermo[theme] ?? 'fashion';
-      final depto = _temaDepto[theme];
       final searchUri = Uri.parse('$_metBase/search').replace(queryParameters: {
         'q': termo,
         'hasImages': 'true',
@@ -173,7 +204,7 @@ class AcervoApi {
       }
       if (items.isEmpty) return null;
       final result = AcervoResult(items: items, source: 'met');
-      _cacheVivo['$theme::$count'] = result;
+      _cacheVivo[cacheKey] = result;
       return result;
     } catch (_) {
       return null;

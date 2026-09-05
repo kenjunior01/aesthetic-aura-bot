@@ -68,7 +68,33 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
+
+              // Título do nível — a escada de prestígio.
+              StaggerIn(
+                index: 0,
+                child: Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.workspace_premium,
+                        size: 15,
+                        color: AuraColors.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'NÍVEL ${store.level} · ${nivelTitulo(store.level).toUpperCase()}',
+                        style: AuraType.chip.copyWith(
+                          fontSize: 10,
+                          color: AuraColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
 
               // Aparencia - Noite <-> Alvor
               StaggerIn(
@@ -139,6 +165,40 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       ),
                       _SfxInterruptor(on: store.sfxOn),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // ── A voz da Aura (TTS) ───────────────────────────────────
+              StaggerIn(
+                index: 1,
+                child: GlassCard(
+                  child: Row(
+                    children: [
+                      Icon(
+                        store.vozOn
+                            ? Icons.record_voice_over
+                            : Icons.voice_over_off,
+                        color: AuraColors.primary,
+                        size: 22,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Voz da Aura', style: AuraType.cardTitle),
+                            const SizedBox(height: 2),
+                            Text(
+                              'O chat lê as respostas em voz alta (pt).',
+                              style: AuraType.caption,
+                            ),
+                          ],
+                        ),
+                      ),
+                      _VozInterruptor(on: store.vozOn),
                     ],
                   ),
                 ),
@@ -506,6 +566,59 @@ class _SfxInterruptor extends StatelessWidget {
                 ),
                 child: Icon(
                   on ? Icons.music_note : Icons.music_off,
+                  size: 15,
+                  color: AuraColors.onPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Interruptor da voz da Aura — o mesmo desenho usinado dos outros.
+class _VozInterruptor extends StatelessWidget {
+  const _VozInterruptor({required this.on});
+
+  final bool on;
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.read<ProfileStore>();
+    return GestureDetector(
+      onTap: () {
+        AuraSfx.I.toggle();
+        store.setVoz(!on);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+        width: 62,
+        height: 34,
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          color: AuraColors.surface,
+          border: Border.all(color: AuraColors.border),
+        ),
+        child: Stack(
+          children: [
+            AnimatedAlign(
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeOutCubic,
+              alignment: on ? Alignment.centerRight : Alignment.centerLeft,
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: AuraDecor.auraMetal,
+                  boxShadow: AuraDecor.glowShadow(alpha: 0.4),
+                ),
+                child: Icon(
+                  on ? Icons.record_voice_over : Icons.voice_over_off,
                   size: 15,
                   color: AuraColors.onPrimary,
                 ),

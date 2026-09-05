@@ -4,12 +4,15 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/sfx/aura_sfx.dart';
+import '../../core/store/profile_store.dart';
 import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
 import '../../core/theme/aura_typography.dart';
 import '../../core/widgets/aurora_background.dart';
+import '../../core/widgets/confetti_burst.dart';
 import '../espelho/espelho_screen.dart';
 import '../home/home_screen.dart';
 import '../mercado/mercado_screen.dart';
@@ -63,7 +66,8 @@ class _NavShellState extends State<NavShell> {
       body: AuroraBackground(
         child: SafeArea(
           bottom: false,
-          child: AnimatedSwitcher(
+          child: _LevelUpListener(
+            child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 260),
             switchInCurve: Curves.easeOutCubic,
             switchOutCurve: Curves.easeIn,
@@ -78,6 +82,7 @@ class _NavShellState extends State<NavShell> {
               ),
             ),
             child: KeyedSubtree(key: ValueKey(_index), child: screens[_index]),
+          ),
           ),
         ),
       ),
@@ -124,6 +129,41 @@ class _Dest {
   final IconData icon;
   final IconData activeIcon;
   final String label;
+}
+
+/// Escuta o store: quando o XP cruza um nível, ergue a celebração de
+/// level-up — confetti + título novo — uma única vez por conquista.
+class _LevelUpListener extends StatefulWidget {
+  const _LevelUpListener({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_LevelUpListener> createState() => _LevelUpListenerState();
+}
+
+class _LevelUpListenerState extends State<_LevelUpListener> {
+  bool _celebrando = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final store = context.watch<ProfileStore>();
+    final nivel = store.levelUpNovo;
+    if (nivel == null || _celebrando) return;
+    _celebrando = true;
+    store.clearLevelUp();
+    AuraSfx.I.success();
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.transparent,
+      barrierDismissible: false,
+      builder: (_) => LevelUpOverlay(nivel: nivel),
+    ).then((_) => _celebrando = false);
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// Disco usinado do Scan — meia coroa acima da barra.

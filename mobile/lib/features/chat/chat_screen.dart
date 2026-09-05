@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/api/aura_api.dart';
 import '../../core/sfx/aura_sfx.dart';
+import '../../core/sfx/aura_voz.dart';
 import '../../core/store/profile_store.dart';
 import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
@@ -43,6 +44,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void dispose() {
     _input.dispose();
     _scroll.dispose();
+    AuraVoz.I.parar(); // sair do chat corta a voz
     super.dispose();
   }
 
@@ -127,6 +129,8 @@ class _ChatScreenState extends State<ChatScreen> {
         _thinking = false;
       });
       AuraSfx.I.receive();
+      // A voz da Aura: se ligada (Perfil), lê a resposta em voz alta.
+      AuraVoz.I.falar(reply.text);
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -473,6 +477,12 @@ class _ChatScreenState extends State<ChatScreen> {
                   fontWeight: mine ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),
+            // Ouvir a resposta — o alto-falante nas bolhas da Aura.
+            if (!mine && m.text.length > 12)
+              Padding(
+                padding: const EdgeInsets.only(top: 5),
+                child: _BotaoVoz(texto: m.text),
+              ),
           ],
         ),
       ),
@@ -492,6 +502,52 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         child: const _TypingDots(),
       ),
+    );
+  }
+}
+
+/// Alto-falante das bolhas da IA: toca/para a voz da resposta.
+class _BotaoVoz extends StatelessWidget {
+  const _BotaoVoz({required this.texto});
+
+  final String texto;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<bool>(
+      stream: AuraVoz.I.estado,
+      initialData: AuraVoz.I.falando,
+      builder: (context, snap) {
+        final aFalar = snap.data ?? false;
+        return GestureDetector(
+          onTap: () {
+            if (aFalar) {
+              AuraVoz.I.parar();
+            } else {
+              AuraSfx.I.tap();
+              AuraVoz.I.falar(texto);
+            }
+          },
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                aFalar ? Icons.stop_rounded : Icons.volume_up_rounded,
+                size: 15,
+                color: AuraColors.primary,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                aFalar ? 'parar' : 'ouvir',
+                style: AuraType.chip.copyWith(
+                  fontSize: 9.5,
+                  color: AuraColors.primary,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

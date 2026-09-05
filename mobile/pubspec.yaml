@@ -1,7 +1,7 @@
 name: aurastyle_mobile
 description: "AuraStyle Mobile — a tua aura, esculpida em platina. App Flutter do assistente de estética com IA."
 publish_to: 'none'
-version: 1.5.0+6
+version: 1.6.0+7
 
 environment:
   sdk: ^3.13.2
@@ -18,6 +18,7 @@ dependencies:
   url_launcher: ^6.3.0          # abrir fichas no metmuseum.org
   image_picker: ^1.1.2          # foto do rosto para o Scan / Referências
   audioplayers: ^6.4.0          # identidade sonora (sfx platina, AudioPool)
+  flutter_tts: ^4.2.5
 
 dev_dependencies:
   flutter_test:

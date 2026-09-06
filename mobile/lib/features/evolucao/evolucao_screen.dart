@@ -9,11 +9,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/data/diario_store.dart';
+import '../../core/data/jornada_store.dart';
 import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
 import '../../core/theme/aura_typography.dart';
+import '../../core/sfx/aura_sfx.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/stagger_in.dart';
+import '../jornada/barra_chegada.dart';
+import '../jornada/jornada_screen.dart';
 import '../scan/scan_screen.dart';
 
 class EvolucaoScreen extends StatefulWidget {
@@ -41,8 +45,14 @@ class _EvolucaoScreenState extends State<EvolucaoScreen> {
                 child: _topBar(),
               ),
             ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
+                child: const _JornadaResumo(),
+              ),
+            ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(22, 10, 22, 40),
+              padding: const EdgeInsets.fromLTRB(22, 16, 22, 40),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   if (entradas.isEmpty)
@@ -310,5 +320,68 @@ class _EvolucaoScreenState extends State<EvolucaoScreen> {
     final p = iso.split('-');
     if (p.length < 3) return iso;
     return '${p[2]} ${meses[(int.tryParse(p[1]) ?? 1) - 1]} ${p[0]}';
+  }
+}
+
+/// Resumo compacto da Jornada do Auge — abre a rota completa com um toque.
+class _JornadaResumo extends StatelessWidget {
+  const _JornadaResumo();
+
+  @override
+  Widget build(BuildContext context) {
+    final jStore = context.watch<JornadaStore>();
+    final j = jStore.jornada;
+
+    return GlassCard(
+      padding: const EdgeInsets.all(14),
+      onTap: () {
+        AuraSfx.I.tap();
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const JornadaScreen()),
+        );
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.route_outlined, size: 14, color: AuraColors.primary),
+              const SizedBox(width: 7),
+              Text('JORNADA DO AUGE', style: AuraType.eyebrow),
+              const Spacer(),
+              Icon(
+                Icons.chevron_right,
+                size: 16,
+                color: AuraColors.mutedForeground,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (j == null)
+            Text(
+              'Traça a rota real até o teu auge — em semanas, com fases e '
+              'pontos de controlo.',
+              style: AuraType.caption.copyWith(fontSize: 11.5, height: 1.45),
+            )
+          else ...[
+            BarraChegadaCompacta(
+              progresso: jStore.progresso,
+              totalSemanas: j.totalSemanas,
+              nos: [
+                for (final f in j.fases.skip(1))
+                  (f.semanaInicio - 1) /
+                      (j.totalSemanas <= 1 ? 1 : j.totalSemanas),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Semana ${jStore.semanaAtual} de ${j.totalSemanas} · '
+              '${jStore.faseAtual?.nome ?? 'a caminho'}',
+              style: AuraType.caption.copyWith(fontSize: 11),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }

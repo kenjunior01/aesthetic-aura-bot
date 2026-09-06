@@ -184,16 +184,20 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 16),
 
               // ── Ritual de hoje ────────────────────────────────────────
-              StaggerIn(index: 1, child: const RitualCard()),
+              StaggerIn(index: 1, child: const JornadaCard()),
+              const SizedBox(height: 16),
+
+              // ── Ritual de hoje ─────────────────────────────────────
+              StaggerIn(index: 2, child: const RitualCard()),
               const SizedBox(height: 16),
 
               // ── Clima ao vivo ─────────────────────────────────────────
-              StaggerIn(index: 2, child: const ClimaCard()),
+              StaggerIn(index: 3, child: const ClimaCard()),
               const SizedBox(height: 16),
 
               // ── Radar de prioridades ──────────────────────────────────────
               StaggerIn(
-                index: 3,
+                index: 4,
                 child: GlassCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,7 +220,7 @@ class HomeScreen extends StatelessWidget {
 
               // ── Atalhos ───────────────────────────────────────────────────
               StaggerIn(
-                index: 4,
+                index: 5,
                 child: const SectionHeader(
                   eyebrow: 'Agora',
                   title: 'O que fazer já',

@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api/clima_api.dart';
+import '../../core/data/jornada_store.dart';
 import '../../core/api/image_bank.dart';
 import '../../core/api/visual_api.dart';
 import '../../core/sfx/aura_sfx.dart';
@@ -22,6 +23,8 @@ import '../../core/theme/aura_typography.dart';
 import '../../core/widgets/confetti_burst.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/shimmer_box.dart';
+import '../jornada/barra_chegada.dart';
+import '../jornada/jornada_screen.dart';
 
 /// RITUAL DE HOJE — o cartão-motivação: à esquerda, pessoas reais (Pexels +
 /// Unsplash) escolhidas pela Aura para o teu género, estilo e metas; à
@@ -521,6 +524,108 @@ class _ClimaCardState extends State<ClimaCard> {
                   ],
                 ),
               ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// JORNADA DO AUGE — o cartão da rota: barra de chegada compacta, fase
+/// atual e o próximo ponto de controlo. Toque abre a jornada completa.
+class JornadaCard extends StatelessWidget {
+  const JornadaCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final jStore = context.watch<JornadaStore>();
+    final j = jStore.jornada;
+
+    return GlassCard(
+      onTap: () {
+        AuraSfx.I.tap();
+        Navigator.of(context).push(
+          PageRouteBuilder(
+            transitionDuration: const Duration(milliseconds: 400),
+            pageBuilder: (_, _, _) => const JornadaScreen(),
+            transitionsBuilder: (_, anim, _, child) => SlideTransition(
+              position: Tween(begin: const Offset(0, 0.02), end: Offset.zero)
+                  .animate(
+                    CurvedAnimation(parent: anim, curve: Curves.easeOutCubic),
+                  ),
+              child: FadeTransition(opacity: anim, child: child),
+            ),
+          ),
+        );
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.route_outlined, size: 15, color: AuraColors.primary),
+              const SizedBox(width: 7),
+              Text('JORNADA DO AUGE', style: AuraType.eyebrow),
+              const Spacer(),
+              Icon(
+                Icons.chevron_right,
+                size: 17,
+                color: AuraColors.mutedForeground,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (j == null) ...[
+            Text(
+              'A tua rota até o auge ainda não existe. A Aura traça-a com '
+              'o teu perfil real — em semanas, não promessas.',
+              style: AuraType.caption.copyWith(height: 1.5, fontSize: 12.5),
+            ),
+            const SizedBox(height: 4),
+          ] else ...[
+            BarraChegadaCompacta(
+              progresso: jStore.progresso,
+              totalSemanas: j.totalSemanas,
+              nos: [
+                for (final f in j.fases.skip(1))
+                  (f.semanaInicio - 1) /
+                      (j.totalSemanas <= 1 ? 1 : j.totalSemanas),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Text(
+                  'Semana ${jStore.semanaAtual} de ${j.totalSemanas}',
+                  style: AuraType.cardTitle.copyWith(fontSize: 13),
+                ),
+                const Spacer(),
+                if (jStore.checkinDue)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      gradient: AuraDecor.auraMetal,
+                    ),
+                    child: Text(
+                      'CHECK-IN A TEMPO',
+                      style: AuraType.chip.copyWith(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w800,
+                        color: AuraColors.onPrimary,
+                      ),
+                    ),
+                  )
+                else if (jStore.faseAtual != null)
+                  Text(
+                    jStore.faseAtual!.nome,
+                    style: AuraType.caption.copyWith(fontSize: 11.5),
+                  ),
+              ],
+            ),
           ],
         ],
       ),

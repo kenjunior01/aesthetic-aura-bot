@@ -1,17 +1,34 @@
-/// onboarding_screen.dart — a entrada ceremonial: 3 gestos e a tua Aura
-/// sabe quem és. Nome → prioridades → convenção feita. Só aparece uma vez.
+/// onboarding_screen.dart — a entrada ceremonial da AuraStyle.
+///
+/// Quatro gestos e a tua Aura sabe quem és — e traça a tua rota:
+///   0 · Bem-vinda          — a promessa honesta da plataforma
+///   1 · Nome               — a tua Aura passa a saber quem a chama
+///   2 · Identidade         — género + idade (o que muda ritmos reais)
+///   3 · Prioridades        — o teu radar orbita isto
+///   4 · A JORNADA          — a Aura calcula o período estimado até o
+///                            auge e revela a barra de chegada ao vivo
+///
+/// O clímax é o passo 4: enquanto a IA traça a rota, a órbita da Aura
+/// gira com estados vivos; quando chega, a barra de chegada preenche-se
+/// com as fases e as imagens reais do teu percurso.
 library;
+
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/store/profile_store.dart';
+import '../../core/data/jornada_store.dart';
 import '../../core/sfx/aura_sfx.dart';
+import '../../core/store/profile_store.dart';
 import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
 import '../../core/theme/aura_typography.dart';
 import '../../core/widgets/glass_card.dart';
+import '../../core/widgets/orbita_aura.dart';
+import '../../core/widgets/shimmer_box.dart';
+import '../jornada/barra_chegada.dart';
 import '../shell/nav_shell.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -23,6 +40,7 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final TextEditingController _name = TextEditingController();
+
   static const _kPriorities = [
     'pele',
     'cabelo',
@@ -39,23 +57,90 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     'rotina': 'Rotina',
     'compras': 'Compras',
   };
+  static const _kGeneros = {'f': 'Feminino', 'm': 'Masculino', 'o': 'Outro'};
+  static const _kEstadosRota = [
+    'A ler o teu perfil…',
+    'A calcular ritmos de pele e cabelo…',
+    'A traçar as fases até o auge…',
+    'A escolher imagens que se parecem contigo…',
+  ];
+
   final Set<String> _picked = {};
+  String _genero = '';
+  double _idade = 24;
   int _page = 0;
+  int _estadoRota = 0;
+  Timer? _ticker;
+  bool _rotaIniciada = false;
 
   @override
   void dispose() {
     _name.dispose();
+    _ticker?.cancel();
     super.dispose();
   }
 
-  void _finish() {
-    final store = context.read<ProfileStore>();
-    store.updateProfile(
-      (p) => p.copyWith(name: _name.text.trim(), priorities: _picked.toList()),
+  ProfileStore get _store => context.read<ProfileStore>();
+
+  void _salvarIdentidade() {
+    _store.updateProfile(
+      (p) => p.copyWith(
+        name: _name.text.trim(),
+        gender: _genero,
+        age: _idade.round(),
+        priorities: _picked.toList(),
+      ),
     );
-    store.addXp(20);
-    store.logEvent('onboarding_complete');
-    store.completeOnboarding();
+  }
+
+  void _irPara(int pagina) {
+    HapticFeedback.lightImpact();
+    if (_page == 1) _salvarIdentidade(); // guarda o nome ao sair do passo 1
+    if (_page == 2) _salvarIdentidade(); // guarda género/idade ao sair do 2
+    if (_page == 3) _salvarIdentidade(); // guarda prioridades ao sair do 3
+    setState(() => _page = pagina);
+    if (pagina == 4) _iniciarRota();
+  }
+
+  void _iniciarRota() {
+    if (_rotaIniciada) return;
+    _rotaIniciada = true;
+    _ticker = Timer.periodic(const Duration(milliseconds: 950), (t) {
+      if (mounted) setState(() => _estadoRota = t.tick % _kEstadosRota.length);
+    });
+    AuraSfx.I.toggle();
+    final jStore = context.read<JornadaStore>();
+    jStore.criarJornada({
+      'name': _store.profile.name,
+      'gender': _genero,
+      'age': _idade.round(),
+      'priorities': _picked.toList(),
+      'hairType': _store.profile.hairType,
+      'skinTone': _store.profile.skinTone,
+      'undertone': _store.profile.undertone,
+      'faceShape': _store.profile.faceShape,
+      'budget': _store.profile.budget,
+      'city': _store.profile.city,
+      'country': _store.profile.country,
+    }).then((j) {
+      _ticker?.cancel();
+      if (!mounted) return;
+      if (j != null) {
+        _store.addXp(30);
+        _store.logEvent('jornada_criada_onboarding', {
+          'fonte': j.fonte,
+          'semanas': j.totalSemanas,
+        });
+        AuraSfx.I.sparkle();
+      }
+    });
+  }
+
+  void _finish() {
+    _salvarIdentidade();
+    _store.addXp(20);
+    _store.logEvent('onboarding_complete');
+    _store.completeOnboarding();
     AuraSfx.I.success(); // a tua aura está pronta — conquista de entrada
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
@@ -81,10 +166,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 22),
           child: Column(
             children: [
-              // Indicador de passos — 3 fios usinados.
+              // Indicador de passos — fios usinados.
               Row(
                 children: [
-                  for (var i = 0; i < 3; i++)
+                  for (var i = 0; i < 4; i++)
                     Expanded(
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
@@ -92,7 +177,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         margin: const EdgeInsets.only(right: 8),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(999),
-                          color: i <= _page
+                          color: i <= _page.clamp(0, 3)
                               ? AuraColors.primary
                               : AuraColors.surfaceStrong,
                           boxShadow: i == _page
@@ -121,7 +206,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: switch (_page) {
                     0 => _welcome(key: const ValueKey(0)),
                     1 => _nameStep(key: const ValueKey(1)),
-                    _ => _priorities(key: const ValueKey(2)),
+                    2 => _identidade(key: const ValueKey(2)),
+                    3 => _prioridades(key: const ValueKey(3)),
+                    _ => _jornada(key: const ValueKey(4)),
                   },
                 ),
               ),
@@ -132,7 +219,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // ── Passo 1 · Bem-vinda ─────────────────────────────────────────────────────
+  // ── Passo 0 · Bem-vinda ─────────────────────────────────────────────────────
   Widget _welcome({Key? key}) => Column(
     key: key,
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,11 +236,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           padding: const EdgeInsets.all(3.5),
           child: Container(
-            decoration:  BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: AuraColors.backgroundDeep,
             ),
-            child:  Icon(
+            child: Icon(
               Icons.auto_awesome,
               size: 44,
               color: AuraColors.primary,
@@ -162,7 +249,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ),
       ),
       const SizedBox(height: 34),
-       Text('AURA STYLE', style: AuraType.eyebrow),
+      Text('AURA STYLE', style: AuraType.eyebrow),
       const SizedBox(height: 10),
       Text(
         'A tua aura,\nesculpida em platina.',
@@ -171,7 +258,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       const SizedBox(height: 14),
       Text(
         'Um assistente de estética que lê o teu rosto, as tuas cores e o '
-        'teu ritmo — e devolve conselhos honestos, feitos para ti.',
+        'teu ritmo — e traça a rota real até a tua melhor versão. Com '
+        'períodos, fases e provas no espelho.',
         style: AuraType.caption.copyWith(fontSize: 13.5, height: 1.55),
       ),
       const Spacer(),
@@ -179,21 +267,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         label: 'Começar',
         icon: Icons.arrow_forward,
         expanded: true,
-        onTap: () => setState(() => _page = 1),
+        onTap: () => _irPara(1),
       ),
     ],
   );
 
-  // ── Passo 2 · Nome ──────────────────────────────────────────────────────────
+  // ── Passo 1 · Nome ──────────────────────────────────────────────────────────
   Widget _nameStep({Key? key}) => Column(
     key: key,
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       const SizedBox(height: 40),
-       Text('COMO TE CHAMAS?', style: AuraType.eyebrow),
+      Text('COMO TE CHAMAS?', style: AuraType.eyebrow),
       const SizedBox(height: 10),
       Text(
-        'É assim que a tua Aura vai tratar-te.',
+        'É assim que a tua Aura vai tratar-te — e assinar a tua rota.',
         style: AuraType.caption.copyWith(fontSize: 13.5, height: 1.5),
       ),
       const SizedBox(height: 26),
@@ -202,34 +290,158 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         style: AuraType.machinedNumber.copyWith(fontSize: 26),
         decoration: const InputDecoration(hintText: 'O teu nome'),
         textCapitalization: TextCapitalization.words,
-        onSubmitted: (_) => _nextIfNamed(),
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) => _irPara(2),
+        onChanged: (_) => setState(() {}),
+      ),
+      if (_name.text.trim().isNotEmpty) ...[
+        const SizedBox(height: 14),
+        AnimatedOpacity(
+          duration: const Duration(milliseconds: 320),
+          opacity: 1,
+          child: Row(
+            children: [
+              Icon(Icons.auto_awesome, size: 13, color: AuraColors.primary),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(
+                  '${_name.text.trim().split(' ').first}, a tua jornada '
+                  'vai ter o teu nome em cada fase.',
+                  style: AuraType.caption.copyWith(
+                    fontSize: 12,
+                    height: 1.45,
+                    color: AuraColors.primary.withValues(alpha: 0.9),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+      const Spacer(),
+      PlatinaButton(
+        label: 'Continuar',
+        icon: Icons.arrow_forward,
+        expanded: true,
+        onTap: _name.text.trim().isNotEmpty ? () => _irPara(2) : null,
+      ),
+    ],
+  );
+
+  // ── Passo 2 · Identidade ────────────────────────────────────────────────────
+  Widget _identidade({Key? key}) => Column(
+    key: key,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const SizedBox(height: 40),
+      Text('QUEM ÉS?', style: AuraType.eyebrow),
+      const SizedBox(height: 10),
+      Text(
+        'Género e idade mudam os ritmos reais de pele e cabelo — é com '
+        'isto que o teu período estimado sai verdadeiro.',
+        style: AuraType.caption.copyWith(fontSize: 13.5, height: 1.5),
+      ),
+      const SizedBox(height: 26),
+      Row(
+        children: [
+          for (final e in _kGeneros.entries) ...[
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _genero = e.key);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    gradient: _genero == e.key ? AuraDecor.auraMetal : null,
+                    color: _genero == e.key ? null : AuraColors.surface,
+                    border: Border.all(
+                      color: _genero == e.key
+                          ? Colors.transparent
+                          : AuraColors.border,
+                    ),
+                    boxShadow: _genero == e.key
+                        ? AuraDecor.glowShadow(alpha: 0.22)
+                        : null,
+                  ),
+                  child: Text(
+                    e.value,
+                    textAlign: TextAlign.center,
+                    style: AuraType.chip.copyWith(
+                      fontSize: 12,
+                      color: _genero == e.key
+                          ? AuraColors.onPrimary
+                          : AuraColors.mutedForeground,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+      const SizedBox(height: 30),
+      Center(
+        child: RichText(
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: '${_idade.round()}',
+                style: AuraType.machinedNumber.copyWith(fontSize: 44),
+              ),
+              TextSpan(
+                text: ' anos',
+                style: AuraType.caption.copyWith(fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+      ),
+      SliderTheme(
+        data: SliderTheme.of(context).copyWith(
+          trackHeight: 3,
+          activeTrackColor: AuraColors.primary,
+          inactiveTrackColor: AuraColors.surfaceStrong,
+          thumbColor: AuraColors.platinaLuminosa,
+          overlayColor: AuraColors.primary.withValues(alpha: 0.12),
+          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
+        ),
+        child: Slider(
+          value: _idade,
+          min: 14,
+          max: 70,
+          divisions: 56,
+          onChanged: (v) => setState(() => _idade = v),
+          onChangeEnd: (_) {
+            HapticFeedback.selectionClick();
+            AuraSfx.I.tap();
+          },
+        ),
       ),
       const Spacer(),
       PlatinaButton(
         label: 'Continuar',
         icon: Icons.arrow_forward,
         expanded: true,
-        onTap: _nextIfNamed,
+        onTap: _genero.isNotEmpty ? () => _irPara(3) : null,
       ),
     ],
   );
 
-  void _nextIfNamed() {
-    if (_name.text.trim().isEmpty) return;
-    HapticFeedback.lightImpact();
-    setState(() => _page = 2);
-  }
-
   // ── Passo 3 · Prioridades ───────────────────────────────────────────────────
-  Widget _priorities({Key? key}) => Column(
+  Widget _prioridades({Key? key}) => Column(
     key: key,
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       const SizedBox(height: 40),
-       Text('O QUE MAIS IMPORTA?', style: AuraType.eyebrow),
+      Text('O QUE MAIS IMPORTA?', style: AuraType.eyebrow),
       const SizedBox(height: 10),
       Text(
-        'Escolhe até 3 — o teu radar vai orbitar isto.',
+        'Escolhe até 3 — o teu radar e as tuas fases vão orbitar isto.',
         style: AuraType.caption.copyWith(fontSize: 13.5, height: 1.5),
       ),
       const SizedBox(height: 26),
@@ -291,11 +503,185 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
       const SizedBox(height: 12),
       PlatinaButton(
-        label: 'Entrar na minha Aura',
+        label: 'Traçar a minha jornada',
         icon: Icons.auto_awesome,
         expanded: true,
-        onTap: _picked.isNotEmpty ? _finish : null,
+        onTap: _picked.isNotEmpty ? () => _irPara(4) : null,
       ),
     ],
+  );
+
+  // ── Passo 4 · A Jornada (o clímax) ──────────────────────────────────────────
+  Widget _jornada({Key? key}) {
+    final jStore = context.watch<JornadaStore>();
+    final j = jStore.jornada;
+    final pronta = j != null && !jStore.gerando;
+
+    if (!pronta) {
+      // A rota a ser traçada ao vivo.
+      return Column(
+        key: key,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const SizedBox(height: 34),
+          Text('A TUA JORNADA', style: AuraType.eyebrow),
+          const SizedBox(height: 8),
+          Text(
+            'A Aura está a traçar a rota real do $_nomeCurto até o auge.',
+            textAlign: TextAlign.center,
+            style: AuraType.caption.copyWith(fontSize: 13.5, height: 1.5),
+          ),
+          const Spacer(),
+          const OrbitaAura(tamanho: 96),
+          const Spacer(),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 340),
+            child: Text(
+              _kEstadosRota[_estadoRota],
+              key: ValueKey(_estadoRota),
+              textAlign: TextAlign.center,
+              style: AuraType.caption.copyWith(fontSize: 12.5, height: 1.5),
+            ),
+          ),
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: const ShimmerBox(width: double.infinity, height: 8),
+          ),
+          const SizedBox(height: 30),
+        ],
+      );
+    }
+
+    // A rota revelada.
+    final total = j.totalSemanas <= 1 ? 1 : j.totalSemanas;
+    final nos = [
+      for (final f in j.fases.skip(1)) (f.semanaInicio - 1) / total,
+    ];
+    return SingleChildScrollView(
+      key: key,
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 30),
+          Center(
+            child: Column(
+              children: [
+                Text('A TUA ROTA ESTÁ TRAÇADA', style: AuraType.eyebrow),
+                const SizedBox(height: 8),
+                Text(
+                  '$_nomeCurto, esta é a jornada até o teu auge —\n'
+                  'medida nas semanas, não em promessas.',
+                  textAlign: TextAlign.center,
+                  style: AuraType.sectionTitle.copyWith(
+                    fontSize: 20,
+                    height: 1.25,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          GlassCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                BarraChegada(
+                  progresso: 0,
+                  totalSemanas: j.totalSemanas,
+                  nos: nos,
+                  semanaAtual: 1,
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    _marco('SENTIR', j.efeitosSemanas),
+                    _fio(),
+                    _marco('VER', j.mudancasSemanas),
+                    _fio(),
+                    _marco('AUGE', j.totalSemanas),
+                  ],
+                ),
+                if (j.resumo.isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  Text(
+                    j.resumo,
+                    style: AuraType.caption.copyWith(height: 1.5, fontSize: 12),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          GlassCard(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                Icon(Icons.schedule, size: 15, color: AuraColors.primary),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    'O primeiro ponto de controlo abre na semana '
+                    '${j.mudancasSemanas} — partilhas uma foto e a rota '
+                    'confirma ou ajusta-se ao teu ritmo real.',
+                    style: AuraType.caption.copyWith(
+                      fontSize: 11.5,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          PlatinaButton(
+            label: 'Entrar na minha Aura',
+            icon: Icons.auto_awesome,
+            expanded: true,
+            onTap: _finish,
+          ),
+          const SizedBox(height: 14),
+        ],
+      ),
+    );
+  }
+
+  String get _nomeCurto {
+    final n = _name.text.trim().split(' ').first;
+    return n.isEmpty ? 'a tua' : n;
+  }
+
+  Widget _marco(String label, int semanas) => Expanded(
+    child: Column(
+      children: [
+        RichText(
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: '$semanas',
+                style: AuraType.machinedNumber.copyWith(fontSize: 24),
+              ),
+              TextSpan(
+                text: ' sem',
+                style: AuraType.caption.copyWith(fontSize: 10.5),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          label,
+          style: AuraType.eyebrow.copyWith(fontSize: 7.5, letterSpacing: 1.6),
+        ),
+      ],
+    ),
+  );
+
+  Widget _fio() => Container(
+    width: 1,
+    height: 28,
+    margin: const EdgeInsets.symmetric(horizontal: 4),
+    color: AuraColors.border,
   );
 }

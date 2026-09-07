@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import 'core/data/diario_store.dart';
 import 'core/data/jornada_store.dart';
+import 'core/data/missoes_store.dart';
 import 'core/sfx/aura_sfx.dart';
 import 'core/store/profile_store.dart';
 import 'core/theme/aura_colors.dart';
@@ -26,6 +27,10 @@ class AuraApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ProfileStore()..load()),
         ChangeNotifierProvider(create: (_) => DiarioStore()..load()),
         ChangeNotifierProvider(create: (_) => JornadaStore()..load()),
+        // As missões espiam o ProfileStore — o progresso nasce da telemetria.
+        ChangeNotifierProvider(
+          create: (ctx) => MissaoStore(ctx.read<ProfileStore>())..load(),
+        ),
       ],
       child: const _AuraRoot(),
     );

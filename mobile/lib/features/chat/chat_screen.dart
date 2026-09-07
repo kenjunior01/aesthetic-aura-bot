@@ -114,6 +114,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
     try {
       final store = context.read<ProfileStore>();
+      // Telemetria → alimenta a missão 'Fala com a Aura'.
+      store.logEvent('chat_msg', {'tem_foto': foto != null});
       final reply = await AuraApi.I.chat(
         message: text.isEmpty ? 'O que vês nesta foto e o que recomendas?' : text,
         profile: store.aiContext(),

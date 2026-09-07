@@ -5,9 +5,11 @@ library;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/api/acervo_api.dart';
 import '../../core/sfx/aura_sfx.dart';
+import '../../core/store/profile_store.dart';
 import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
 import '../../core/theme/aura_typography.dart';
@@ -36,6 +38,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
   void initState() {
     super.initState();
     _future = AcervoApi.I.fetchTheme(_theme);
+    // Telemetria → alimenta a missão 'Caça à inspiração'.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<ProfileStore>().logEvent('explorar_open');
+      }
+    });
   }
 
   @override

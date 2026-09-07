@@ -1,7 +1,7 @@
 name: aurastyle_mobile
 description: "AuraStyle Mobile — a tua aura, esculpida em platina. App Flutter do assistente de estética com IA."
 publish_to: 'none'
-version: 1.7.0+8
+version: 1.8.0+9
 
 environment:
   sdk: ^3.13.2
@@ -26,6 +26,11 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.1
   flutter_native_splash: ^2.4.4
+
+# path_provider_android 2.3.x exige jni/jni_flutter (CMake + NDK ~3GB) para
+# uma vantagem zero no app. Ficamos na 2.2.x — Kotlin puro, mesma API.
+dependency_overrides:
+  path_provider_android: 2.2.16
 
 flutter:
   uses-material-design: true

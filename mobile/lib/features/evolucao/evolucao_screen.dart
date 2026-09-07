@@ -19,6 +19,7 @@ import '../../core/widgets/stagger_in.dart';
 import '../jornada/barra_chegada.dart';
 import '../jornada/jornada_screen.dart';
 import '../scan/scan_screen.dart';
+import 'antes_depois.dart';
 
 class EvolucaoScreen extends StatefulWidget {
   const EvolucaoScreen({super.key});
@@ -51,6 +52,17 @@ class _EvolucaoScreenState extends State<EvolucaoScreen> {
                 child: const _JornadaResumo(),
               ),
             ),
+            // ANTES & AGORA — o comparador deslizante da evolução.
+            if (entradas.length >= 2)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
+                  child: StaggerIn(
+                    index: 0,
+                    child: AntesDepoisCard(entradas: entradas),
+                  ),
+                ),
+              ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(22, 16, 22, 40),
               sliver: SliverList(

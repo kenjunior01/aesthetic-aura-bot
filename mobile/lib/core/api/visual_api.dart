@@ -147,6 +147,35 @@ class MarcaLocal {
   );
 }
 
+/// Produto REAL vindo do banco aberto mundial (Open Beauty / Open Products
+/// Facts) — com código de barras, marca, quantidade e ingredientes.
+class ProdutoReal {
+  const ProdutoReal({
+    required this.barcode,
+    required this.name,
+    required this.brand,
+    required this.quantity,
+    required this.image,
+    required this.ingredients,
+  });
+
+  final String barcode;
+  final String name;
+  final String brand;
+  final String quantity;
+  final String? image;
+  final String ingredients;
+
+  factory ProdutoReal.fromJson(Map<String, dynamic> j) => ProdutoReal(
+    barcode: '${j['barcode'] ?? ''}',
+    name: '${j['name'] ?? ''}',
+    brand: '${j['brand'] ?? ''}',
+    quantity: '${j['quantity'] ?? ''}',
+    image: j['image'] as String?,
+    ingredients: '${j['ingredients'] ?? ''}',
+  );
+}
+
 class VisualApi {
   VisualApi._();
   static final VisualApi I = VisualApi._();
@@ -319,9 +348,32 @@ class VisualApi {
   }
 
   String _pais() {
-    // O país do perfil é inferido no servidor por timezone/país informado.
-    return '';
+    // O país real do perfil alimenta marcas locais e moeda — antes devolvia
+    // '' e o servidor tinha de adivinhar pelo timezone.
+    return _perfil.country;
   }
+
+  // ── Busca de produtos REAIS (Open Beauty / Open Products Facts) ────────────
+  /// Procura por nome no banco aberto mundial — produtos reais com marca,
+  /// quantidade, foto e ingredientes. Via backend (sem chave, open data).
+  Future<List<ProdutoReal>> buscarProdutos(String query) async {
+    final q = query.trim();
+    if (q.isEmpty) return const [];
+    try {
+      final data = await ApiClient.I.get(
+        '/api/product-lookup',
+        query: {'search': q},
+      );
+      final lista = (data['products'] as List?) ?? const [];
+      return lista
+          .whereType<Map<String, dynamic>>()
+          .map(ProdutoReal.fromJson)
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
 
   Map<String, dynamic> _perfilResumo() {
     final p = _perfil;

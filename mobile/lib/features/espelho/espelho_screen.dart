@@ -7,6 +7,8 @@
 library;
 
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -78,9 +80,18 @@ class _EspelhoScreenState extends State<EspelhoScreen> {
 
   Future<void> _carregarFotoLocal() async {
     final prefs = await SharedPreferences.getInstance();
-    final temFoto = (prefs.getString('aurastyle-espelho-foto') ?? '').isNotEmpty;
-    if (temFoto && mounted) {
-      setState(() => _temFotoLocal = true);
+    // A foto própria persiste de VERDADE (base64) — antes só se guardava o
+    // nome do ficheiro e a imagem evaporava ao reiniciar.
+    final b64 = prefs.getString('aurastyle-espelho-foto-b64');
+    if (b64 != null && b64.isNotEmpty && mounted) {
+      try {
+        setState(() {
+          _minhaFoto = Uint8List.fromList(base64Decode(b64));
+          _temFotoLocal = true;
+        });
+      } catch (_) {
+        // base64 corrompido → ignora, o utilizador escolhe outra
+      }
     }
   }
 
@@ -96,8 +107,8 @@ class _EspelhoScreenState extends State<EspelhoScreen> {
       final bytes = await x.readAsBytes();
       await SharedPreferences.getInstance().then(
         (prefs) => prefs.setString(
-          'aurastyle-espelho-foto',
-          Uri.encodeComponent(x.name),
+          'aurastyle-espelho-foto-b64',
+          base64Encode(bytes),
         ),
       );
       if (!mounted) return;

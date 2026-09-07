@@ -15,8 +15,16 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+// Lint "vital" de release desligado em TODOS os módulos (incl. plugins):
+// no ambiente de build com RAM limitada o lintVital estoura metaspace e
+// mata o build. AGP 9 tranca a DSL depois de lida — por isso desligamos
+// pela TAREFA (whenTaskAdded), que nunca é trancada.
 subprojects {
-    project.evaluationDependsOn(":app")
+    tasks.whenTaskAdded {
+        if (name.startsWith("lintVital") || name.startsWith("lintAnalyze")) {
+            enabled = false
+        }
+    }
 }
 
 // Distribuição arm64-v8a — plugins com código nativo (ex.: :jni) deixam de

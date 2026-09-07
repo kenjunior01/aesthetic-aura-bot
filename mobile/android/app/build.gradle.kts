@@ -34,6 +34,10 @@ android {
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
+            // R8 desligado: no ambiente de build (4 GB RAM) o minify estoura
+            // a memória — e o APK fica ~1 MB maior, sem perda de função.
+            isMinifyEnabled = false
+            isShrinkResources = false
             signingConfig = signingConfigs.getByName("debug")
         }
     }

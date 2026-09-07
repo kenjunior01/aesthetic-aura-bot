@@ -9,6 +9,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart' as p;
 
@@ -39,11 +40,16 @@ class _MercadoScreenState extends State<MercadoScreen> {
 
   _EstadoMercado _estado = _EstadoMercado.idle;
   PlanoCompra? _plano;
-  String _aba = 'prateleira'; // prateleira | marcas
+  String _aba = 'prateleira'; // prateleira | busca | marcas
   List<MarcaLocal> _marcas = const [];
   bool _marcasACarregar = false;
   double _orcamento = 0;
   Uint8List? _foto;
+
+  // Busca de produtos REAIS (Open Facts).
+  final TextEditingController _buscaCtrl = TextEditingController();
+  List<ProdutoReal>? _resultadosBusca;
+  bool _buscando = false;
 
   static const _orcamentos = <double>[0, 5000, 10000, 25000, 50000];
 
@@ -134,7 +140,9 @@ class _MercadoScreenState extends State<MercadoScreen> {
               _orcamentosChips(),
               const SizedBox(height: 16),
               _corpo(),
-            ] else
+            ] else if (_aba == 'busca')
+              _seccaoBusca()
+            else
               _seccaoMarcas(),
           ],
         ),
@@ -179,6 +187,8 @@ class _MercadoScreenState extends State<MercadoScreen> {
     return Row(
       children: [
         _abaChip('prateleira', Icons.storefront_outlined, 'Prateleira'),
+        const SizedBox(width: 10),
+        _abaChip('busca', Icons.manage_search, 'Buscar'),
         const SizedBox(width: 10),
         _abaChip('marcas', Icons.verified_user_outlined, 'Marcas'),
       ],
@@ -522,6 +532,195 @@ class _MercadoScreenState extends State<MercadoScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // ── Busca REAL de produtos (banco aberto mundial) ──────────────────────────
+  Future<void> _buscarProduto() async {
+    final q = _buscaCtrl.text.trim();
+    if (q.isEmpty || _buscando) return;
+    setState(() => _buscando = true);
+    AuraSfx.I.send();
+    final r = await VisualApi.I.buscarProdutos(q);
+    if (!mounted) return;
+    setState(() {
+      _resultadosBusca = r;
+      _buscando = false;
+    });
+    AuraSfx.I.receive();
+  }
+
+  Widget _seccaoBusca() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GlassCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SectionHeader(
+                eyebrow: 'BANCO ABERTO MUNDIAL',
+                title: 'Procura o produto real',
+                subtitle:
+                    'Open Beauty Facts — nome, marca, foto e ingredientes de verdade',
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _buscaCtrl,
+                      style: AuraType.body.copyWith(fontSize: 13),
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: (_) => _buscarProduto(),
+                      decoration: const InputDecoration(
+                        hintText: 'shampoo seda, sérum vitamina c…',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: _buscarProduto,
+                    child: Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: AuraDecor.auraMetal,
+                        boxShadow: AuraDecor.glowShadow(alpha: 0.25),
+                      ),
+                      child: Icon(
+                        Icons.search,
+                        size: 20,
+                        color: AuraColors.onPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        if (_buscando)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: ShimmerBox(height: 90, radius: 18),
+          )
+        else if (_resultadosBusca != null && _resultadosBusca!.isEmpty)
+          GlassCard(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.search_off,
+                    size: 30,
+                    color: AuraColors.mutedForeground,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Nada encontrado — tenta outro nome',
+                    style: AuraType.caption.copyWith(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else if (_resultadosBusca != null)
+          for (final prod in _resultadosBusca!.take(12))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _cartaoProdutoReal(prod),
+            ),
+      ],
+    );
+  }
+
+  Widget _cartaoProdutoReal(ProdutoReal prod) {
+    return GlassCard(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Foto real do produto (ou moldura neutra).
+          Container(
+            width: 74,
+            height: 74,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              color: AuraColors.surface,
+              border: Border.all(color: AuraColors.border),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(13),
+              child: prod.image != null
+                  ? CachedNetworkImage(
+                      imageUrl: prod.image!,
+                      fit: BoxFit.contain,
+                      httpHeaders: const {
+                        'User-Agent': 'AuraStyle/1.0',
+                      },
+                      placeholder: (_, _) => const ShimmerBox(radius: 0),
+                      errorWidget: (_, _, _) => Icon(
+                        Icons.inventory_2_outlined,
+                        color: AuraColors.mutedForeground,
+                        size: 22,
+                      ),
+                    )
+                  : Icon(
+                      Icons.inventory_2_outlined,
+                      color: AuraColors.mutedForeground,
+                      size: 22,
+                    ),
+            ),
+          ),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  prod.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AuraType.cardTitle.copyWith(fontSize: 13),
+                ),
+                if (prod.brand.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 3),
+                    child: Text(
+                      prod.brand,
+                      style: AuraType.chip.copyWith(
+                        fontSize: 10,
+                        color: AuraColors.primary,
+                      ),
+                    ),
+                  ),
+                if (prod.quantity.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      prod.quantity,
+                      style: AuraType.caption.copyWith(fontSize: 10.5),
+                    ),
+                  ),
+                if (prod.ingredients.isNotEmpty) ...[
+                  const SizedBox(height: 5),
+                  Text(
+                    prod.ingredients,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AuraType.caption.copyWith(
+                      fontSize: 10,
+                      height: 1.35,
+                      color: AuraColors.mutedForeground,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

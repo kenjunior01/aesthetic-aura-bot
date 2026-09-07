@@ -155,23 +155,38 @@ class AuraApi {
   /// Envia mensagem de chat com o contexto do perfil — e, opcionalmente,
   /// uma FOTO (câmara/galeria/partilha).
   /// Cadeia: Groq direto (visão quando há foto) → backend → local (nunca lança).
+  /// Sem foto, o Groq responde EM STREAMING: cada delta é entregue em
+  /// [onDelta] enquanto o modelo escreve (resposta viva, não espera).
   Future<ChatReply> chat({
     required String message,
     required Map<String, dynamic> profile,
     List<Map<String, String>> history = const [],
     String? imageBase64,
+    void Function(String delta)? onDelta,
   }) async {
     final turns = [
       ...history.take(12),
       {'role': 'user', 'content': message},
     ];
 
-    // 1. Groq direto — IA completa sem backend (modelo de visão se houver foto).
-    final groq = imageBase64 != null && imageBase64.isNotEmpty
-        ? await GroqAi.I.chatVision(system: _persona(profile), turns: turns, imageBase64: imageBase64)
-        : await GroqAi.I.chat(system: _persona(profile), turns: turns);
-    if (groq != null) {
-      return ChatReply(text: groq, source: 'groq');
+    // 1. Groq direto — visão quando há foto; STREAMING quando é texto.
+    if (imageBase64 != null && imageBase64.isNotEmpty) {
+      final groq = await GroqAi.I.chatVision(
+        system: _persona(profile),
+        turns: turns,
+        imageBase64: imageBase64,
+      );
+      if (groq != null) return ChatReply(text: groq, source: 'groq');
+    } else if (onDelta != null) {
+      final groq = await GroqAi.I.chatStream(
+        system: _persona(profile),
+        turns: turns,
+        onDelta: onDelta,
+      );
+      if (groq != null) return ChatReply(text: groq, source: 'groq');
+    } else {
+      final groq = await GroqAi.I.chat(system: _persona(profile), turns: turns);
+      if (groq != null) return ChatReply(text: groq, source: 'groq');
     }
 
     // 2. Backend partilhado (persona idêntica + heurística própria; sem foto).

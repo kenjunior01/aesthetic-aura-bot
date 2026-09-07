@@ -6,6 +6,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'core/config.dart';
 import 'core/data/diario_store.dart';
 import 'core/data/jornada_store.dart';
 import 'core/data/missoes_store.dart';
@@ -17,8 +18,21 @@ import 'core/theme/aura_theme.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/shell/nav_shell.dart';
 
-class AuraApp extends StatelessWidget {
+class AuraApp extends StatefulWidget {
   const AuraApp({super.key});
+
+  @override
+  State<AuraApp> createState() => _AuraAppState();
+}
+
+class _AuraAppState extends State<AuraApp> {
+  @override
+  void initState() {
+    super.initState();
+    // A base URL guardada (Perfil → Ligação) tem de existir antes de qualquer
+    // pedido — carregamento fire-and-forget, o splash cobre o instante.
+    AuraConfig.load();
+  }
 
   @override
   Widget build(BuildContext context) {

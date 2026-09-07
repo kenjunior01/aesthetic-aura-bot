@@ -20,6 +20,8 @@ import '../../core/widgets/stagger_in.dart';
 import '../references/references_screen.dart';
 import '../evolucao/evolucao_screen.dart';
 import '../diagnostico/diagnostico_screen.dart';
+import '../conquistas/conquistas_screen.dart';
+import 'profile_edit_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -209,17 +211,26 @@ class ProfileScreen extends StatelessWidget {
               StaggerIn(
                 index: 1,
                 child: GlassCard(
+                  onTap: () {
+                    AuraSfx.I.tap();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ProfileEditScreen(),
+                      ),
+                    );
+                  },
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SectionHeader(
                         eyebrow: 'FICHA DE AURA',
                         title: 'Os teus traços',
+                        subtitle: 'toca para editar — grava ao vivo',
                       ),
                       _row('Rosto', p.faceShape.isEmpty ? '—' : p.faceShape),
                       _row(
                         'Tom de pele',
-                        p.skinTone > 0 ? '${p.skinTone}/10' : '—',
+                        p.skinTone > 0 ? '${p.skinTone}/14' : '—',
                       ),
                       _row('Subtom', p.undertone.isEmpty ? '—' : p.undertone),
                       _row(
@@ -339,6 +350,59 @@ class ProfileScreen extends StatelessWidget {
                               diarioVazio
                                   ? 'A tua linha do tempo começa no 1.º scan'
                                   : 'A última leitura: ${_ultimaData(context)}',
+                              style: AuraType.caption.copyWith(fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        color: AuraColors.mutedForeground,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // ── Conquistas — a sala dos troféus ──────────────────
+              StaggerIn(
+                index: 2,
+                child: GlassCard(
+                  onTap: () {
+                    AuraSfx.I.tap();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ConquistasScreen(),
+                      ),
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AuraColors.primary.withValues(alpha: 0.1),
+                          border: Border.all(
+                            color: AuraColors.primary.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.emoji_events_outlined,
+                          size: 21,
+                          color: AuraColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Conquistas', style: AuraType.cardTitle),
+                            Text(
+                              'A escada de streak e os teus troféus reais.',
                               style: AuraType.caption.copyWith(fontSize: 11),
                             ),
                           ],
@@ -507,9 +571,10 @@ class _BackendCardState extends State<BackendCard> {
             style: AuraType.body.copyWith(fontSize: 13),
             decoration: const InputDecoration(hintText: 'http://10.0.2.2:3000'),
             onSubmitted: (v) {
-              if (v.trim().isNotEmpty) {
-                setState(() => AuraConfig.apiBase = v.trim());
-              }
+              // Persiste de verdade — antes resetava a cada arranque.
+              AuraConfig.setApiBase(v).then((_) {
+                if (mounted) setState(() {});
+              });
             },
           ),
           const SizedBox(height: 10),

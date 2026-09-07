@@ -6,6 +6,9 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/data/diario_store.dart';
+import '../../core/data/jornada_store.dart';
+import '../../core/data/missoes_store.dart';
 import '../../core/store/profile_store.dart';
 import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
@@ -201,26 +204,7 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 16),
 
               // ── Radar de prioridades ──────────────────────────────────────
-              StaggerIn(
-                index: 5,
-                child: GlassCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SectionHeader(
-                        eyebrow: 'Aura Radar',
-                        title: 'As tuas prioridades em órbita',
-                      ),
-                      Center(
-                        child: RadarChart(
-                          points: _radarPoints(p),
-                          size: MediaQuery.of(context).size.width - 120,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              const StaggerIn(index: 5, child: _RadarCard()),
               const SizedBox(height: 16),
 
               // ── Atalhos ───────────────────────────────────────────────────
@@ -241,26 +225,6 @@ class HomeScreen extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  List<RadarPoint> _radarPoints(Profile p) {
-    final all = {
-      'Pele': 0.72,
-      'Cabelo': 0.58,
-      'Estilo': 0.64,
-      'Corpo': 0.45,
-      'Rotina': 0.52,
-    };
-    final keys = p.priorities.isEmpty
-        ? all.keys.toList()
-        : (p.priorities.take(5).toList());
-    return [
-      for (final k in keys)
-        RadarPoint(
-          label: k[0].toUpperCase() + k.substring(1),
-          value: all[k] ?? 0.5,
-        ),
-    ];
   }
 
   void _openScan(BuildContext context, ProfileStore store) {
@@ -396,6 +360,101 @@ class _ActionCard extends StatelessWidget {
           Text(title, style: AuraType.cardTitle),
           const SizedBox(height: 2),
           Text(subtitle, style: AuraType.caption.copyWith(fontSize: 11)),
+        ],
+      ),
+    );
+  }
+}
+
+/// AURA RADAR — medido na vida real, zero números decorativos. Cada eixo
+/// combina três sinais honestos do telemóvel:
+///  • conhecimento (o perfil já tem os traços dessa área? scan, espelho, ficha)
+///  • consistência (streak de rituais, registos no diário)
+///  • evolução (progresso real na Jornada do Auge)
+class _RadarCard extends StatelessWidget {
+  const _RadarCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.watch<ProfileStore>();
+    final p = store.profile;
+    final jStore = context.watch<JornadaStore>();
+    final dStore = context.watch<DiarioStore>();
+    final mStore = context.watch<MissaoStore>();
+
+    // Sinais partilhados (0..1).
+    final streakF = (store.streak / 21).clamp(0.0, 1.0);
+    final evolucao = (jStore.jornada == null ? 0.0 : jStore.progresso);
+    final diarioF = (dStore.entradas.length / 6).clamp(0.0, 1.0);
+    final ritualF = store.ritualComplete
+        ? 1.0
+        : store.ritualDone.length / ProfileStore.kRitualSteps.length;
+    final missoesF = mStore.fracaoSemana.clamp(0.0, 1.0);
+
+    double radar(String area) {
+      // Conhecimento por área — o que o perfil já sabe de ti.
+      final double conhecimento = switch (area) {
+        'pele' => (p.skinTone > 0 ? 0.6 : 0.0) +
+            (p.undertone.isNotEmpty ? 0.4 : 0.0),
+        'cabelo' => (p.hairType.isNotEmpty ? 0.5 : 0.0) +
+            (p.hairColor.isNotEmpty ? 0.25 : 0.0) +
+            (p.hairLength.isNotEmpty ? 0.25 : 0.0),
+        'estilo' => ((p.styles.length / 3) * 0.7)
+            .clamp(0.0, 0.7) +
+            ((p.colors.length / 2) * 0.3).clamp(0.0, 0.3),
+        'corpo' => (p.bodyType.isNotEmpty ? 0.5 : 0.0) +
+            (p.height > 0 ? 0.25 : 0.0) +
+            (p.weight > 0 ? 0.25 : 0.0),
+        'rotina' => 1.0,
+        'compras' => (p.budget.isNotEmpty ? 0.6 : 0.0) +
+            (p.priorities.contains('compras') ? 0.4 : 0.0),
+        _ => 0.5,
+      };
+      final double consistencia = switch (area) {
+        'rotina' => (streakF * 0.5 + diarioF * 0.3 + ritualF * 0.2),
+        'pele' => streakF * 0.8 + ritualF * 0.2,
+        'cabelo' => streakF * 0.8 + ritualF * 0.2,
+        _ => streakF * 0.6 + missoesF * 0.4,
+      };
+      return (0.55 * conhecimento + 0.25 * consistencia + 0.20 * evolucao)
+          .clamp(0.06, 1.0);
+    }
+
+    final areas = p.priorities.isEmpty
+        ? const ['pele', 'cabelo', 'estilo', 'corpo', 'rotina']
+        : p.priorities.take(5).toList();
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader(
+            eyebrow: 'Aura Radar',
+            title: 'As tuas prioridades em órbita',
+          ),
+          Center(
+            child: RadarChart(
+              points: [
+                for (final k in areas)
+                  RadarPoint(
+                    label: k[0].toUpperCase() + k.substring(1),
+                    value: radar(k),
+                  ),
+              ],
+              size: MediaQuery.of(context).size.width - 120,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'medido na tua atividade real: conhecimento do perfil + '
+            'consistência + progresso na jornada',
+            style: AuraType.caption.copyWith(
+              fontSize: 10.5,
+              height: 1.4,
+              color: AuraColors.mutedForeground,
+            ),
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );

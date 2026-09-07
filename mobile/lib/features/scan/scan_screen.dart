@@ -43,6 +43,7 @@ class _ScanScreenState extends State<ScanScreen>
   ];
   int _step = 0;
   XFile? _photo;
+  String? _selfieB64; // base64 da foto escolhida (calculado fora da UI thread)
   Map<String, dynamic>? _reading;
   Timer? _ticker;
   late final AnimationController _pulse = AnimationController(
@@ -57,12 +58,56 @@ class _ScanScreenState extends State<ScanScreen>
     super.dispose();
   }
 
+  /// Escolhe a fonte: câmara (ao vivo) ou galeria — folha de vidro igual à
+  /// do chat. A câmara abre a frontal por defeito: é um scan do rosto.
   Future<void> _pick() async {
+    final fonte = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        margin: const EdgeInsets.all(14),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: AuraColors.cardFill,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AuraColors.border),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 4, bottom: 8),
+              child: Text(
+                'DE ONDE VEM A FOTO?',
+                style: AuraType.eyebrow.copyWith(fontSize: 10),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.photo_camera_outlined,
+                  color: AuraColors.primary),
+              title: const Text('Tirar agora (câmara)'),
+              subtitle: Text(
+                'Rosto de frente, luz natural',
+                style: AuraType.caption.copyWith(fontSize: 11.5),
+              ),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            ListTile(
+              leading: Icon(Icons.photo_outlined, color: AuraColors.primary),
+              title: const Text('Escolher da galeria'),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (fonte == null || !mounted) return;
     try {
       final photo = await ImagePicker().pickImage(
-        source: ImageSource.gallery,
+        source: fonte,
         maxWidth: 1280,
         imageQuality: 86,
+        preferredCameraDevice: CameraDevice.front,
       );
       if (photo == null) return;
       AuraSfx.I.camera();
@@ -88,8 +133,10 @@ class _ScanScreenState extends State<ScanScreen>
     final store = context.read<ProfileStore>();
     Map<String, dynamic>? reading;
     if (_photo != null) {
+      // Leitura assíncrona (nunca na UI thread) + base64 reutilizado no fim.
       final bytes = await File(_photo!.path).readAsBytes();
-      reading = await AuraApi.I.analyzeSelfie(base64Encode(bytes));
+      _selfieB64 = base64Encode(bytes);
+      reading = await AuraApi.I.analyzeSelfie(_selfieB64!);
     }
     if (!mounted) return;
     setState(() {
@@ -351,13 +398,13 @@ class _ScanScreenState extends State<ScanScreen>
               icon: Icons.check,
               expanded: true,
               onTap: () {
-                store.updateProfile(
-                  (p) => p.copyWith(
-                    selfie: _photo != null
-                        ? base64Encode(File(_photo!.path).readAsBytesSync())
-                        : null,
-                  ),
-                );
+                final b64 = _selfieB64;
+                if (b64 != null) {
+                  // A selfie entra no perfil: a IA (chat, jornada, mercado)
+                  // passa a conhecer o rosto real da pessoa.
+                  store.updateProfile((p) => p.copyWith(selfie: b64));
+                  store.logEvent('selfie_saved', {'bytes': b64.length});
+                }
                 Navigator.of(context).pop();
               },
             ),

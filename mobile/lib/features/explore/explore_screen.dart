@@ -6,6 +6,7 @@ library;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/api/acervo_api.dart';
 import '../../core/sfx/aura_sfx.dart';
@@ -27,7 +28,30 @@ class ExploreScreen extends StatefulWidget {
 class _ExploreScreenState extends State<ExploreScreen> {
   String _theme = AcervoApi.themes.first;
   late Future<AcervoResult> _future;
-  final Set<int> _saved = {};
+  // Favoritos PERSISTEM (prefs) — antes morriam ao fechar o app.
+  Set<int> _saved = {};
+
+  Future<void> _carregarFavoritos() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _saved = (prefs.getStringList('aurastyle-acervo-favoritos') ?? const [])
+          .map(int.parse)
+          .toSet();
+    });
+  }
+
+  Future<void> _toggleFavorito(int id) async {
+    setState(() {
+      _saved.contains(id) ? _saved.remove(id) : _saved.add(id);
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      'aurastyle-acervo-favoritos',
+      _saved.map((i) => '$i').toList(),
+    );
+    AuraSfx.I.toggle();
+  }
 
   // Busca livre — 470 mil obras respondendo ao que o utilizador escreve.
   final TextEditingController _buscaCtrl = TextEditingController();
@@ -38,6 +62,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   void initState() {
     super.initState();
     _future = AcervoApi.I.fetchTheme(_theme);
+    _carregarFavoritos();
     // Telemetria → alimenta a missão 'Caça à inspiração'.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -363,13 +388,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
         pageBuilder: (_, _, _) => AcervoDetailSheet(
           item: item,
           saved: _saved.contains(item.objectID),
-          onToggleSave: () {
-            setState(() {
-              _saved.contains(item.objectID)
-                  ? _saved.remove(item.objectID)
-                  : _saved.add(item.objectID);
-            });
-          },
+          onToggleSave: () => _toggleFavorito(item.objectID),
         ),
         transitionsBuilder: (_, anim, _, child) => FadeTransition(
           opacity: CurvedAnimation(parent: anim, curve: Curves.easeOut),

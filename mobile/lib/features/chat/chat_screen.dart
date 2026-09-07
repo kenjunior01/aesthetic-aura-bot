@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/api/aura_api.dart';
 import '../../core/sfx/aura_sfx.dart';
@@ -32,6 +33,50 @@ class _ChatScreenState extends State<ChatScreen> {
   final List<_Msg> _messages = [];
   Uint8List? _pendente; // foto à espera de ser enviada
   bool _thinking = false;
+
+  static const _histKey = 'aurastyle-chat-hist-v1';
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarHistorico();
+  }
+
+  /// O histórico SOBREVIVE ao fechar do app (últimas 40 mensagens).
+  /// Imagens só nos 6 turnos mais recentes — o resto segue em texto
+  /// (prefs leves, arranque rápido).
+  Future<void> _carregarHistorico() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getStringList(_histKey) ?? const [];
+      final carregadas = <_Msg>[
+        for (final linha in raw)
+          if (linha.isNotEmpty)
+            _Msg.fromJson((jsonDecode(linha) as Map).cast<String, dynamic>()),
+      ];
+      if (!mounted || carregadas.isEmpty) return;
+      setState(() => _messages.addAll(carregadas));
+      _bump();
+    } catch (_) {
+      // histórico corrompido → começa limpo
+    }
+  }
+
+  Future<void> _persistirHistorico() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final ultimas = _messages.length > 40
+          ? _messages.sublist(_messages.length - 40)
+          : _messages;
+      final linhas = <String>[
+        for (var i = 0; i < ultimas.length; i++)
+          jsonEncode(ultimas[i].toJson(comImagem: i >= ultimas.length - 6)),
+      ];
+      await prefs.setStringList(_histKey, linhas);
+    } catch (_) {
+      // prefs cheias etc. — o chat continua a funcionar na sessão
+    }
+  }
 
   static const _suggestions = [
     'Que cores favorecem o meu subtom?',
@@ -104,6 +149,10 @@ class _ChatScreenState extends State<ChatScreen> {
     final foto = _pendente;
     if ((text.isEmpty && foto == null) || _thinking) return;
     _input.clear();
+    final historico = _messages
+        .take(12)
+        .map((m) => {'role': m.role, 'content': m.text})
+        .toList();
     setState(() {
       _messages.add(_Msg(role: 'user', text: text, image: foto));
       _pendente = null;
@@ -116,34 +165,59 @@ class _ChatScreenState extends State<ChatScreen> {
       final store = context.read<ProfileStore>();
       // Telemetria → alimenta a missão 'Fala com a Aura'.
       store.logEvent('chat_msg', {'tem_foto': foto != null});
-      final reply = await AuraApi.I.chat(
-        message: text.isEmpty ? 'O que vês nesta foto e o que recomendas?' : text,
-        profile: store.aiContext(),
-        history: _messages
-            .take(12)
-            .map((m) => {'role': m.role, 'content': m.text})
-            .toList(),
-        imageBase64: foto == null ? null : base64Encode(foto),
-      );
-      if (!mounted) return;
+
+      // BOLHA VIVA: entra já no ecrã e cresce com os deltas do Groq
+      // (streaming SSE). Se a stream falhar, a cadeia de reserva
+      // (backend → local) preenche a mesma bolha no fim.
+      final live = _Msg(role: 'assistant', text: '', streaming: true);
       setState(() {
-        _messages.add(_Msg(role: 'assistant', text: reply.text));
+        _messages.add(live);
         _thinking = false;
       });
+      _bump();
+
+      final reply = await AuraApi.I.chat(
+        message: text.isEmpty
+            ? 'O que vês nesta foto e o que recomendas?'
+            : text,
+        profile: store.aiContext(),
+        history: historico,
+        imageBase64: foto == null ? null : base64Encode(foto),
+        onDelta: (delta) {
+          live.text += delta;
+          if (mounted) {
+            setState(() {});
+            _bump();
+          }
+        },
+      );
+      if (!mounted) return;
+      // Se a streaming não entregou nada (foto / fallback), mostra já.
+      live.text = reply.text;
+      live.streaming = false;
+      setState(() {});
       AuraSfx.I.receive();
-      // A voz da Aura: se ligada (Perfil), lê a resposta em voz alta.
+      await _persistirHistorico();
+      // A voz da Aura: se ligada (Perfil), lê a resposta COMPLETA em voz alta.
       AuraVoz.I.falar(reply.text);
     } catch (_) {
       if (!mounted) return;
       setState(() {
+        if (_messages.isNotEmpty &&
+            _messages.last.role == 'assistant' &&
+            _messages.last.text.isEmpty) {
+          _messages.removeLast();
+        }
         _messages.add(
-          const _Msg(
+          _Msg(
             role: 'assistant',
-            text: 'A IA não respondeu neste momento — tenta de novo daqui a pouco.',
+            text:
+                'A IA não respondeu neste momento — tenta de novo daqui a pouco.',
           ),
         );
         _thinking = false;
       });
+      await _persistirHistorico();
     }
     _bump();
   }
@@ -479,8 +553,14 @@ class _ChatScreenState extends State<ChatScreen> {
                   fontWeight: mine ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),
+            // A resposta a nascer: um fio de luz a pulsar no fim do texto.
+            if (!mine && m.streaming && m.text.isNotEmpty) ...[
+              const SizedBox(height: 7),
+              const _FioVivo(),
+            ],
             // Ouvir a resposta — o alto-falante nas bolhas da Aura.
-            if (!mine && m.text.length > 12)
+            // (só quando a bolha terminou de nascer)
+            if (!mine && !m.streaming && m.text.length > 12)
               Padding(
                 padding: const EdgeInsets.only(top: 5),
                 child: _BotaoVoz(texto: m.text),
@@ -554,11 +634,70 @@ class _BotaoVoz extends StatelessWidget {
   }
 }
 
+/// O fio de luz que pulsa enquanto a resposta da IA está a ser escrita.
+class _FioVivo extends StatefulWidget {
+  const _FioVivo();
+
+  @override
+  State<_FioVivo> createState() => _FioVivoState();
+}
+
+class _FioVivoState extends State<_FioVivo>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 850),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: Tween(begin: 0.3, end: 1.0).animate(
+        CurvedAnimation(parent: _c, curve: Curves.easeInOut),
+      ),
+      child: Container(
+        width: 34,
+        height: 3,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          gradient: AuraDecor.auraMetal,
+        ),
+      ),
+    );
+  }
+}
+
 class _Msg {
-  const _Msg({required this.role, required this.text, this.image});
-  final String role;
-  final String text;
-  final Uint8List? image;
+  _Msg({
+    required this.role,
+    required this.text,
+    this.image,
+    this.streaming = false,
+  });
+  String role;
+  String text;
+  Uint8List? image;
+  bool streaming; // a resposta ainda está a ser escrita (bolha viva)
+
+  Map<String, dynamic> toJson({bool comImagem = true}) => {
+    'role': role,
+    'text': text,
+    if (comImagem && image != null) 'image': base64Encode(image!),
+  };
+
+  factory _Msg.fromJson(Map<String, dynamic> j) => _Msg(
+    role: '${j['role'] ?? 'assistant'}',
+    text: '${j['text'] ?? ''}',
+    image: j['image'] is String
+        ? Uint8List.fromList(base64Decode(j['image'] as String))
+        : null,
+  );
 }
 
 class _TypingDots extends StatefulWidget {

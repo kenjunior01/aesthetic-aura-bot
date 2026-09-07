@@ -28,6 +28,68 @@ class GroqAi {
 
   bool get disponivel => AuraSecrets.temGroq;
 
+  /// Conversa de texto EM STREAMING — os tokens chegam em SSE e são
+  /// entregues via onDelta à medida que o modelo escreve. Devolve o texto
+  /// completo (null se o Groq não responder). A perceção de velocidade muda
+  /// de "6 s a olhar pontos" para "primeiras palavras em ~300 ms".
+  Future<String?> chatStream({
+    required String system,
+    required List<Map<String, String>> turns,
+    double temperature = 0.85,
+    int maxTokens = 700,
+    void Function(String delta)? onDelta,
+  }) async {
+    if (!disponivel) return null;
+    try {
+      final req = http.Request('POST', Uri.parse(_base))
+        ..headers.addAll({
+          'Authorization': 'Bearer ${AuraSecrets.groqKey}',
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream',
+        })
+        ..body = jsonEncode({
+          'model': _modeloTexto,
+          'messages': [
+            {'role': 'system', 'content': system},
+            ...turns,
+          ],
+          'temperature': temperature,
+          'max_tokens': maxTokens,
+          'stream': true,
+        });
+      final res = await _http
+          .send(req)
+          .timeout(const Duration(seconds: 45));
+      if (res.statusCode != 200) return null;
+      final completo = StringBuffer();
+      await for (final linha in res.stream
+          .transform(utf8.decoder)
+          .transform(const LineSplitter())) {
+        final l = linha.trim();
+        if (!l.startsWith('data:')) continue;
+        final payload = l.substring(5).trim();
+        if (payload == '[DONE]') break;
+        try {
+          final data = jsonDecode(payload) as Map<String, dynamic>;
+          final choices = data['choices'] as List?;
+          final delta = ((choices?.firstOrNull as Map<String, dynamic>?)
+              ?['delta'] as Map<String, dynamic>?);
+          final pedaco = '${delta?['content'] ?? ''}';
+          if (pedaco.isNotEmpty) {
+            completo.write(pedaco);
+            onDelta?.call(pedaco);
+          }
+        } catch (_) {
+          // linha parcial/corrompida → ignora e continua
+        }
+      }
+      final texto = completo.toString().trim();
+      return texto.isEmpty ? null : texto;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Conversa de texto. Devolve null se o Groq não responder (o chamador
   /// cai para o backend/local).
   Future<String?> chat({

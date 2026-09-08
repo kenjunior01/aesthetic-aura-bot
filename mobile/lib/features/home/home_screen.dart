@@ -20,6 +20,7 @@ import '../../core/widgets/section_header.dart';
 import '../../core/widgets/stagger_in.dart';
 import '../chat/chat_screen.dart';
 import '../closet/closet_screen.dart';
+import '../closet/look_do_dia.dart';
 import '../cortes/cortes_screen.dart';
 import '../cromatica/cromatica_screen.dart';
 import '../explore/explore_screen.dart';
@@ -191,32 +192,36 @@ class HomeScreen extends StatelessWidget {
               StaggerIn(index: 1, child: const JornadaCard()),
               const SizedBox(height: 16),
 
+              // ── Look de Hoje (vitrine do guarda-roupa vivo) ──────────
+              StaggerIn(index: 2, child: const LookCompactCard()),
+              const SizedBox(height: 16),
+
               // ── Ritual de hoje ─────────────────────────────────────
-              StaggerIn(index: 2, child: const RitualCard()),
+              StaggerIn(index: 3, child: const RitualCard()),
               const SizedBox(height: 16),
 
               // ── Missões da semana ──────────────────────────────────────
-              StaggerIn(index: 3, child: const MissoesCard()),
+              StaggerIn(index: 4, child: const MissoesCard()),
               const SizedBox(height: 16),
 
               // ── Clima ao vivo ─────────────────────────────────────────
-              StaggerIn(index: 4, child: const ClimaCard()),
+              StaggerIn(index: 5, child: const ClimaCard()),
               const SizedBox(height: 16),
 
               // ── Radar de prioridades ──────────────────────────────────────
-              const StaggerIn(index: 5, child: _RadarCard()),
+              const StaggerIn(index: 6, child: _RadarCard()),
               const SizedBox(height: 16),
 
               // ── Atalhos ───────────────────────────────────────────────────
               StaggerIn(
-                index: 6,
+                index: 7,
                 child: const SectionHeader(
                   eyebrow: 'Agora',
                   title: 'O que fazer já',
                 ),
               ),
               StaggerIn(
-                index: 6,
+                index: 7,
                 child: _QuickActions(onScan: () => _openScan(context, store)),
               ),
               const SizedBox(height: 110), // respiro acima da barra
@@ -310,7 +315,7 @@ class _QuickActions extends StatelessWidget {
               child: _ActionCard(
                 icon: Icons.checkroom_outlined,
                 title: 'Armário',
-                subtitle: 'Tons e paletas',
+                subtitle: 'Cores e peças',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const ClosetScreen()),
                 ),

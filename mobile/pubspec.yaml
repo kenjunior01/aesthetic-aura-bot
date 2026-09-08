@@ -1,7 +1,7 @@
 name: aurastyle_mobile
 description: "AuraStyle Mobile — a tua aura, esculpida em platina. App Flutter do assistente de estética com IA."
 publish_to: 'none'
-version: 1.10.0+11
+version: 1.11.0+12
 
 environment:
   sdk: ^3.13.2
@@ -20,6 +20,11 @@ dependencies:
   image: ^4.5.4                 # guarda-roupa: miniatura JPEG + cor média (pure Dart, sem NDK)
   audioplayers: ^6.4.0          # identidade sonora (sfx platina, AudioPool)
   flutter_tts: ^4.2.5
+  video_player: ^2.9.2          # clipes reais de cortes (Pexels Videos)
+  share_plus: ^10.1.2           # Aura Card partilhável (imagem PNG via RepaintBoundary)
+  flutter_local_notifications: ^18.0.1 # lembretes: ritual diário + check-in da jornada
+  timezone: ^0.10.1             # base do agendamento (dependência explícita)
+  path_provider: ^2.1.4         # temp dir do PNG partilhável (override android 2.2.x)
 
 dev_dependencies:
   flutter_test:

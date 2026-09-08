@@ -40,6 +40,10 @@ subprojects {
     }
 }
 
+// Alinhamento JVM — deixado nos valores de cada plugin. O flutter_timezone
+// (que partia o alinhamento) foi REMOVIDO do app: a timezone local agora
+// é derivada do offset do sistema no Dart (aura_lembretes.dart).
+
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }

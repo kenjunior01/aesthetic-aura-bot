@@ -2,6 +2,9 @@
     <!-- O release NÃO herda a permissão INTERNET do debug — sem isto nenhuma
          API (Groq, Pexels, Unsplash, Met, clima) responde no APK instalado. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Lembretes locais: ritual diário + check-in da jornada. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <application
         android:label="AuraStyle"
         android:name="${applicationName}"
@@ -33,6 +36,19 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- flutter_local_notifications: re-despacha os lembretes agendados
+             (e re-agenda após reiniciar o telemóvel). -->
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+            </intent-filter>
+        </receiver>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

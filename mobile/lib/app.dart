@@ -11,6 +11,7 @@ import 'core/data/diario_store.dart';
 import 'core/data/guarda_roupa_store.dart';
 import 'core/data/jornada_store.dart';
 import 'core/data/missoes_store.dart';
+import 'core/sfx/aura_lembretes.dart';
 import 'core/sfx/aura_sfx.dart';
 import 'core/store/profile_store.dart';
 import 'core/theme/aura_colors.dart';
@@ -96,6 +97,13 @@ class _AuraSplashState extends State<AuraSplash> {
       _navigated = true;
       // A assinatura sonora: a aura acende com um acorde suave.
       if (store.onboarded) AuraSfx.I.chime();
+      // Re-agenda os lembretes (boot/upgrade pode ter limpo os agendamentos).
+      if (store.lembretesOn) {
+        AuraLembretes.I.agendar(
+          ligado: true,
+          minutosDoDia: store.lembreteHora,
+        );
+      }
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 460),

@@ -11,6 +11,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../sfx/aura_lembretes.dart';
 import '../sfx/aura_sfx.dart';
 import '../sfx/aura_voz.dart';
 import '../theme/aura_colors.dart';
@@ -255,6 +256,8 @@ class ProfileStore extends ChangeNotifier {
   static const _modoClaroKey = 'aurastyle-modo-claro';
   static const _sfxKey = 'aurastyle-sfx-on';
   static const _vozKey = 'aurastyle-voz-on';
+  static const _lembretesKey = 'aurastyle-lembretes-on';
+  static const _lembreteHoraKey = 'aurastyle-lembrete-hora';
 
   /// Passos do ritual diário — idênticos ao espírito do web (5 passos,
   /// 25 XP ao completar).
@@ -277,6 +280,8 @@ class ProfileStore extends ChangeNotifier {
   bool _modoClaro = false;
   bool _sfxOn = true;
   bool _vozOn = false;
+  bool _lembretesOn = false;
+  int _lembreteHora = 20 * 60 + 30; // 20:30 em minutos do dia
   int? _levelUpNovo; // nível acabado de alcançar (celebração pendente)
 
   Profile get profile => _profile;
@@ -294,6 +299,12 @@ class ProfileStore extends ChangeNotifier {
 
   /// A voz da Aura (TTS) — fala as respostas do chat. O utilizador manda.
   bool get vozOn => _vozOn;
+
+  /// Lembretes locais (ritual diário + check-in). O utilizador manda.
+  bool get lembretesOn => _lembretesOn;
+
+  /// Hora do lembrete do ritual (minutos do dia; 0 = 00:00).
+  int get lembreteHora => _lembreteHora;
 
   /// Nível recém-alcançado (overlay de celebração pendente) — null se nenhum.
   int? get levelUpNovo => _levelUpNovo;
@@ -347,6 +358,8 @@ class ProfileStore extends ChangeNotifier {
     AuraSfx.I.setEnabled(_sfxOn);
     _vozOn = prefs.getBool(_vozKey) ?? false;
     AuraVoz.I.setEnabled(_vozOn);
+    _lembretesOn = prefs.getBool(_lembretesKey) ?? false;
+    _lembreteHora = prefs.getInt(_lembreteHoraKey) ?? 20 * 60 + 30;
     AuraColors.modo = _modoClaro ? ModoCromatico.alvor : ModoCromatico.noite;
     _loaded = true;
     notifyListeners();
@@ -443,6 +456,26 @@ class ProfileStore extends ChangeNotifier {
     _vozOn = on;
     AuraVoz.I.setEnabled(on);
     SharedPreferences.getInstance().then((p) => p.setBool(_vozKey, on));
+    notifyListeners();
+  }
+
+  /// Lembretes locais (Perfil → Lembretes). Liga e agenda na hora guardada.
+  void setLembretes(bool on) {
+    _lembretesOn = on;
+    SharedPreferences.getInstance().then((p) => p.setBool(_lembretesKey, on));
+    AuraLembretes.I.agendar(ligado: on, minutosDoDia: _lembreteHora);
+    notifyListeners();
+  }
+
+  /// Define a hora do lembrete do ritual (minutos do dia) e reagenda.
+  void setLembreteHora(int minutos) {
+    _lembreteHora = minutos.clamp(0, 23 * 60 + 59);
+    SharedPreferences.getInstance().then(
+      (p) => p.setInt(_lembreteHoraKey, _lembreteHora),
+    );
+    if (_lembretesOn) {
+      AuraLembretes.I.agendar(ligado: true, minutosDoDia: _lembreteHora);
+    }
     notifyListeners();
   }
 

@@ -4,6 +4,10 @@
 ///  • Pexels   (200 req/h) — fotografia de pessoas, luz e moda
 ///  • Unsplash (50 req/h)  — editorial e retrato de estúdio
 ///
+/// E o MESMO Pexels serve VÍDEOS (Pexels Videos — cortes em movimento,
+/// 200 req/h): a ficha de corte ganha clipes reais para ver a tesoura
+/// a trabalhar antes de sentar na cadeira.
+///
 /// Cadeia de fonte: bancos diretos → backend partilhado (/api/galeria-visual)
 /// → reserva embutida. O app nunca fica sem grelha visual.
 library;
@@ -16,6 +20,34 @@ import 'package:http/http.dart' as http;
 import '../secrets.dart';
 import 'api_client.dart';
 import 'visual_api.dart';
+
+/// Um vídeo real do Pexels — ficheiro sd/hd + thumbnail oficial.
+class VideoItem {
+  const VideoItem({
+    required this.id,
+    required this.videoUrl,
+    required this.thumb,
+    required this.duracao,
+    required this.autor,
+    required this.fonte,
+  });
+
+  final String id;
+  final String videoUrl;
+  final String thumb;
+  final int duracao; // segundos
+  final String autor;
+  final String fonte;
+
+  factory VideoItem.fromJson(Map<String, dynamic> j) => VideoItem(
+    id: '${j['id'] ?? ''}',
+    videoUrl: '${j['videoUrl'] ?? ''}',
+    thumb: '${j['thumb'] ?? ''}',
+    duracao: (j['duracao'] as num?)?.toInt() ?? 0,
+    autor: '${j['autor'] ?? ''}',
+    fonte: '${j['fonte'] ?? 'pexels'}',
+  );
+}
 
 class BancoImagens {
   BancoImagens._();
@@ -59,6 +91,63 @@ class BancoImagens {
 
     _cache[chave] = (items, DateTime.now().add(_ttl));
     return VisualResult(items: items, source: fonte);
+  }
+
+  // ── Pexels VÍDEOS — cortes e penteados em movimento ──────────────────────
+  static final Map<String, List<VideoItem>> _cacheVideo = {};
+
+  /// Clipes verticais curtos (≤ 40 s) da busca de vídeos do Pexels.
+  /// Nunca lança: sem chave/sem rede → lista vazia (o ecrã esconde a faixa).
+  Future<List<VideoItem>> buscarVideos(String query, {int count = 3}) async {
+    final hit = _cacheVideo[query];
+    if (hit != null) return hit.take(count).toList();
+    if (AuraSecrets.pexelsKey.isEmpty) return const [];
+    try {
+      final uri = Uri.parse(
+        'https://api.pexels.com/videos/search?query=${Uri.encodeComponent(query)}'
+        '&per_page=8&orientation=portrait&size=medium',
+      );
+      final res = await _http
+          .get(uri, headers: {'Authorization': AuraSecrets.pexelsKey})
+          .timeout(const Duration(seconds: 10));
+      if (res.statusCode != 200) return const [];
+      final videos = (jsonDecode(res.body)['videos'] as List?) ?? const [];
+      final itens = <VideoItem>[];
+      for (final v in videos.whereType<Map<String, dynamic>>()) {
+        if ((v['duration'] as num?) == null) continue;
+        final duracao = (v['duration'] as num).toInt();
+        if (duracao > 40) continue; // clipes curtos, não documentários
+        // Escolhe o ficheiro com altura entre 640-1280 (leve e nítido).
+        final files = ((v['video_files'] as List?) ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .where((f) => f['link'] != null && (f['width'] as num? ?? 0) > 0)
+            .toList()
+          ..sort((a, b) => ((a['height'] as num?) ?? 0)
+              .compareTo((b['height'] as num?) ?? 0));
+        final escolhido = files
+            .where((f) {
+              final h = (f['height'] as num?)?.toInt() ?? 0;
+              return h >= 640 && h <= 1280;
+            })
+            .lastOrNull ??
+            files.lastOrNull;
+        if (escolhido == null) continue;
+        itens.add(
+          VideoItem(
+            id: 'pxv-${v['id']}',
+            videoUrl: '${escolhido['link']}',
+            thumb: '${v['image'] ?? ''}',
+            duracao: duracao,
+            autor: '${(v['user'] as Map?)?['name'] ?? 'Pexels'}',
+            fonte: 'pexels',
+          ),
+        );
+      }
+      _cacheVideo[query] = itens;
+      return itens.take(count).toList();
+    } catch (_) {
+      return const [];
+    }
   }
 
   // ── Pexels ────────────────────────────────────────────────────────────────

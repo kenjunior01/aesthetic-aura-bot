@@ -14,6 +14,7 @@ import '../../core/store/profile_store.dart';
 import '../../core/theme/aura_colors.dart';
 import '../../core/theme/aura_decorations.dart';
 import '../../core/theme/aura_typography.dart';
+import '../../core/widgets/aura_card_share.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/stagger_in.dart';
@@ -25,6 +26,25 @@ import 'profile_edit_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
+
+  /// Hora em minutos-do-dia → "20:30".
+  String _horaBonita(int minutos) =>
+      '${(minutos ~/ 60).toString().padLeft(2, '0')}:'
+      '${(minutos % 60).toString().padLeft(2, '0')}';
+
+  Future<void> _escolherHora(BuildContext context, ProfileStore store) async {
+    final escolhida = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: store.lembreteHora ~/ 60,
+        minute: store.lembreteHora % 60,
+      ),
+      helpText: 'HORA DO RITUAL',
+    );
+    if (escolhida == null) return;
+    AuraSfx.I.tap();
+    store.setLembreteHora(escolhida.hour * 60 + escolhida.minute);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -207,7 +227,59 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // ── Ficha ──────────────────────────────────────────────────────
+              // ── Lembretes locais (ritual + check-in) ──────────────────────
+              StaggerIn(
+                index: 1,
+                child: GlassCard(
+                  child: Row(
+                    children: [
+                      Icon(
+                        store.lembretesOn
+                            ? Icons.notifications_active_outlined
+                            : Icons.notifications_off_outlined,
+                        color: AuraColors.primary,
+                        size: 22,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Lembretes', style: AuraType.cardTitle),
+                            const SizedBox(height: 2),
+                            Text(
+                              store.lembretesOn
+                                  ? 'Ritual às ${_horaBonita(store.lembreteHora)} + check-in às segundas.'
+                                  : 'Ritual de hoje e check-in da jornada, na hora que escolheres.',
+                              style: AuraType.caption,
+                            ),
+                            if (store.lembretesOn) ...[
+                              const SizedBox(height: 6),
+                              GestureDetector(
+                                onTap: () => _escolherHora(context, store),
+                                child: Text(
+                                  'mudar a hora',
+                                  style: AuraType.chip.copyWith(
+                                    fontSize: 10.5,
+                                    color: AuraColors.primary,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: AuraColors.primary
+                                        .withValues(alpha: 0.5),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      _LembretesInterruptor(on: store.lembretesOn),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // ── Ficha ───────────────────────────────────────────────────
               StaggerIn(
                 index: 1,
                 child: GlassCard(
@@ -418,6 +490,62 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
+              // ── AURA CARD — a ficha que se partilha ──────────────────
+              StaggerIn(
+                index: 2,
+                child: GlassCard(
+                  onTap: () {
+                    AuraSfx.I.tap();
+                    store.logEvent('aura_card_share', {});
+                    partilharAuraCard(context);
+                  },
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: AuraDecor.auraMetal,
+                          boxShadow: AuraDecor.glowShadow(alpha: 0.25),
+                        ),
+                        padding: const EdgeInsets.all(1.4),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AuraColors.backgroundDeep,
+                          ),
+                          child: Icon(
+                            Icons.card_giftcard_outlined,
+                            size: 20,
+                            color: AuraColors.primary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Aura Card', style: AuraType.cardTitle),
+                            Text(
+                              'A tua presença numa imagem — partilha com o mundo.',
+                              style: AuraType.caption.copyWith(fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.ios_share,
+                        size: 17,
+                        color: AuraColors.mutedForeground,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
               // ── Diagnóstico — as APIs provadas no telemóvel ─────────
               StaggerIn(
                 index: 2,
@@ -589,7 +717,62 @@ class _BackendCardState extends State<BackendCard> {
   }
 }
 
-/// Interruptor da identidade sonora — mesmo desenho cerimonial do modo.
+/// Interruptor dos lembretes — replica o metal dos irmãos (modo, som, voz).
+class _LembretesInterruptor extends StatelessWidget {
+  const _LembretesInterruptor({required this.on});
+
+  final bool on;
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.read<ProfileStore>();
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        if (!on) AuraSfx.I.toggle();
+        store.setLembretes(!on);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+        width: 62,
+        height: 34,
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          color: AuraColors.surface,
+          border: Border.all(color: AuraColors.border),
+        ),
+        child: Stack(
+          children: [
+            AnimatedAlign(
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeOutCubic,
+              alignment: on ? Alignment.centerRight : Alignment.centerLeft,
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: AuraDecor.auraMetal,
+                  boxShadow: AuraDecor.glowShadow(alpha: 0.4),
+                ),
+                child: Icon(
+                  on
+                      ? Icons.notifications_active
+                      : Icons.notifications_off,
+                  size: 14,
+                  color: AuraColors.onPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _SfxInterruptor extends StatelessWidget {
   const _SfxInterruptor({required this.on});
 

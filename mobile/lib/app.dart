@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import 'core/config.dart';
 import 'core/data/diario_store.dart';
+import 'core/data/evento_store.dart';
 import 'core/data/guarda_roupa_store.dart';
 import 'core/data/jornada_store.dart';
 import 'core/data/missoes_store.dart';
@@ -44,6 +45,7 @@ class _AuraAppState extends State<AuraApp> {
         ChangeNotifierProvider(create: (_) => DiarioStore()..load()),
         ChangeNotifierProvider(create: (_) => JornadaStore()..load()),
         ChangeNotifierProvider(create: (_) => GuardaRoupaStore()..load()),
+        ChangeNotifierProvider(create: (_) => EventoStore()..load()),
         // As missões espiam o ProfileStore — o progresso nasce da telemetria.
         ChangeNotifierProvider(
           create: (ctx) => MissaoStore(ctx.read<ProfileStore>())..load(),

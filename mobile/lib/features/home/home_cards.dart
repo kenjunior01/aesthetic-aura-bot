@@ -25,6 +25,7 @@ import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/shimmer_box.dart';
 import '../jornada/barra_chegada.dart';
 import '../jornada/jornada_screen.dart';
+import 'ritual_guiado.dart';
 
 /// RITUAL DE HOJE — o cartão-motivação: à esquerda, pessoas reais (Pexels +
 /// Unsplash) escolhidas pela Aura para o teu género, estilo e metas; à
@@ -103,6 +104,34 @@ class _RitualCardState extends State<RitualCard> {
                 store.ritualComplete
                     ? 'completa +25 XP'
                     : '${done.length}/5 passos',
+              ),
+              const SizedBox(width: 8),
+              // Modo guiado — o ritual com cronómetro, um passo de cada vez.
+              GestureDetector(
+                onTap: () {
+                  AuraSfx.I.tap();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const RitualGuiadoScreen(),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AuraColors.primary.withValues(alpha: 0.12),
+                    border: Border.all(
+                      color: AuraColors.primary.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.play_arrow_rounded,
+                    size: 19,
+                    color: AuraColors.primary,
+                  ),
+                ),
               ),
             ],
           ),

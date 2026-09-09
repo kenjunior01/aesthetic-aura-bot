@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/data/diario_store.dart';
+import '../../core/data/evento_store.dart';
 import '../../core/data/jornada_store.dart';
 import '../../core/data/missoes_store.dart';
 import '../../core/store/profile_store.dart';
@@ -23,7 +24,9 @@ import '../closet/closet_screen.dart';
 import '../closet/look_do_dia.dart';
 import '../cortes/cortes_screen.dart';
 import '../cromatica/cromatica_screen.dart';
+import '../evento/evento_screen.dart';
 import '../explore/explore_screen.dart';
+import '../lookcheck/lookcheck_screen.dart';
 import '../references/references_screen.dart';
 import '../scan/scan_screen.dart';
 import 'home_cards.dart';
@@ -246,8 +249,39 @@ class _QuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final evento = context.watch<EventoStore>().evento;
     return Column(
       children: [
+        Row(
+          children: [
+            Expanded(
+              child: _ActionCard(
+                icon: Icons.checkroom_outlined,
+                title: 'Avalia o look',
+                subtitle: 'Nota 0-100 + ajustes',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const LookCheckScreen()),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _ActionCard(
+                icon: Icons.event_outlined,
+                title: 'Evento',
+                subtitle: evento == null
+                    ? 'Plano até o dia'
+                    : evento.diasRestantes <= 0
+                        ? 'É hoje!'
+                        : '${evento.diasRestantes} dias',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const EventoScreen()),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(width: 0, height: 12),
         Row(
           children: [
             Expanded(

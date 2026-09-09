@@ -128,4 +128,11 @@ class AuraSfx {
 
   /// Assinatura de arranque — a aura acende.
   void chime() => play(Sfx.chime, volume: 0.55);
+
+  /// Tique-tique do cronómetro (ritual guiado, últimos segundos) — o
+  /// mesmo timbre do toggle, bem mais suave. Sem ficheiro novo.
+  void tick() {
+    HapticFeedback.selectionClick();
+    play(Sfx.toggle, volume: 0.22);
+  }
 }

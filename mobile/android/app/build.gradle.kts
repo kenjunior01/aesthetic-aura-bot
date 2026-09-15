@@ -31,6 +31,11 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // Entrega arm64-only: a fusão de nativas só processa arm64-v8a
+        // (os AAR dos plugins trazem 4 ABIs — ~4× o espaço no merge).
+        ndk {
+            abiFilters += "arm64-v8a"
+        }
     }
 
     buildTypes {

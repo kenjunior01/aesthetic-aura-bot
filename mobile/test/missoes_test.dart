@@ -29,21 +29,20 @@ void main() {
     final store = MissaoStore(perfil);
     await store.load();
 
-    final alvo = store.estados
-        .where((e) => e.missao.evento == 'cromatica_open')
-        .first;
-    expect(alvo.missao.alvo, 1);
+    // A rotação semanal decide quais missões estão em campo — o teste
+    // acompanha qualquer uma delas (a mecânica é igual para todas).
+    final alvo = store.estados.first.missao;
     final xpAntes = perfil.xp;
 
-    perfil.logEvent('cromatica_open');
+    for (var i = 0; i < alvo.alvo; i++) {
+      perfil.logEvent(alvo.evento);
+    }
     // O ingestion é síncrono no listener.
-    final depois = store.estados
-        .where((e) => e.missao.evento == 'cromatica_open')
-        .first;
-    expect(depois.feita, isTrue);
+    final e = store.estados.firstWhere((x) => x.missao.id == alvo.id);
+    expect(e.feita, isTrue);
     expect(store.feitasCount, 1);
-    expect(perfil.xp, xpAntes + alvo.missao.xp);
-    expect(store.xpSemana, alvo.missao.xp);
+    expect(perfil.xp, xpAntes + alvo.xp);
+    expect(store.xpSemana, alvo.xp);
   });
 
   test('missão multi-passo precisa do alvo completo', () async {

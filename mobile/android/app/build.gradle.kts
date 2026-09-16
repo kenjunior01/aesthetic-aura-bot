@@ -51,6 +51,16 @@ android {
     }
 }
 
+// O NDK aqui é um esqueleto (source.properties + llvm-strip shim para o
+// binutils-aarch64 do apt — 9 KB em vez de ~2,5 GB): nenhuma dependência
+// compila C++. A extração de tabelas de símbolos (objcopy) não existe no
+// esqueleto e não serve para nada em produção — desligada.
+tasks.whenTaskAdded {
+    if (name.equals("extractReleaseNativeSymbolTables", ignoreCase = true)) {
+        enabled = false
+    }
+}
+
 kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17

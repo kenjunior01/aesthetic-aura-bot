@@ -212,9 +212,16 @@ class GuardaRoupaStore extends ChangeNotifier {
     if (raw != null) {
       try {
         final list = jsonDecode(raw) as List;
-        _pecas = [
+        final lidas = <Peca>[
           for (final e in list)
             if (e is Map<String, dynamic>) Peca.fromJson(e),
+        ];
+        // Saneamento: o id é a identidade — dados persistidos duplicados
+        // (ou de sessões antigas) não podem partir a rotação do look.
+        final vistas = <String>{};
+        _pecas = [
+          for (final p in lidas)
+            if (vistas.add(p.id)) p,
         ];
       } catch (_) {
         _pecas = const [];
@@ -234,7 +241,11 @@ class GuardaRoupaStore extends ChangeNotifier {
   }
 
   void adicionar(Peca peca) {
-    _pecas = [peca, ..._pecas].take(_maxPecas).toList();
+    // O id é a identidade: reler a mesma peça atualiza em vez de duplicar
+    // (duplicados partem a rotação do "trocar combinação").
+    _pecas = [peca, ..._pecas.where((p) => p.id != peca.id)]
+        .take(_maxPecas)
+        .toList();
     _persistir();
     notifyListeners();
   }
@@ -258,7 +269,9 @@ class GuardaRoupaStore extends ChangeNotifier {
     final extras = _pecas.where((p) => p.categoria == PecaCategoria.extra);
 
     // Ranqueia todos os pares topo×base pela harmonia com tie-break
-    // determinístico (dia + attempt), para variar dentro dos melhores.
+    // determinístico do DIA (sem o attempt — o ranking é fixo, o attempt
+    // só roda a janela; incluir o attempt re-baralhava a lista e podia
+    // devolver o mesmo par em tentativas seguidas).
     final hoje = _todayKey();
     final mes = DateTime.now().month;
     final pares = <({Peca topo, Peca base, double score})>[];
@@ -274,8 +287,8 @@ class GuardaRoupaStore extends ChangeNotifier {
     pares.sort((x, y) {
       final cmp = y.score.compareTo(x.score);
       if (cmp != 0) return cmp;
-      final hx = '${x.topo.id}${x.base.id}$hoje$attempt'.hashCode;
-      final hy = '${y.topo.id}${y.base.id}$hoje$attempt'.hashCode;
+      final hx = '${x.topo.id}${x.base.id}$hoje'.hashCode;
+      final hy = '${y.topo.id}${y.base.id}$hoje'.hashCode;
       return hx.compareTo(hy);
     });
 

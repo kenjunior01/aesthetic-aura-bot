@@ -22,6 +22,7 @@ import '../references/references_screen.dart';
 import '../evolucao/evolucao_screen.dart';
 import '../diagnostico/diagnostico_screen.dart';
 import '../conquistas/conquistas_screen.dart';
+import '../home/ritual_guiado.dart';
 import 'profile_edit_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -475,6 +476,59 @@ class ProfileScreen extends StatelessWidget {
                             Text('Conquistas', style: AuraType.cardTitle),
                             Text(
                               'A escada de streak e os teus troféus reais.',
+                              style: AuraType.caption.copyWith(fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        color: AuraColors.mutedForeground,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // ── Ritual guiado — o cronómetro que acompanha ──────────
+              StaggerIn(
+                index: 2,
+                child: GlassCard(
+                  onTap: () {
+                    AuraSfx.I.tap();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const RitualGuiadoScreen(),
+                      ),
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AuraColors.primary.withValues(alpha: 0.1),
+                          border: Border.all(
+                            color: AuraColors.primary.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.timer_outlined,
+                          size: 21,
+                          color: AuraColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Ritual guiado', style: AuraType.cardTitle),
+                            Text(
+                              'Um passo de cada vez, ao ritmo do cronómetro.',
                               style: AuraType.caption.copyWith(fontSize: 11),
                             ),
                           ],

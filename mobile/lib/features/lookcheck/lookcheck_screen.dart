@@ -27,6 +27,7 @@ import '../../core/widgets/confetti_burst.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/stagger_in.dart';
 import '../home/home_cards.dart' show MachinedChipXP;
+import 'look_share.dart';
 
 class LookCheckScreen extends StatefulWidget {
   const LookCheckScreen({super.key});
@@ -458,7 +459,10 @@ class _LookCheckScreenState extends State<LookCheckScreen>
       key: const ValueKey('done'),
       padding: const EdgeInsets.all(22),
       children: [
-        _topBar('VEREDITO'),
+        _topBar(
+          'VEREDITO',
+          onShare: () => partilharNotaLook(context, leitura),
+        ),
         const SizedBox(height: 22),
         // O anel da nota — o instrumento central.
         StaggerIn(
@@ -706,7 +710,7 @@ class _LookCheckScreenState extends State<LookCheckScreen>
     );
   }
 
-  Widget _topBar(String eyebrow) => Row(
+  Widget _topBar(String eyebrow, {VoidCallback? onShare}) => Row(
         children: [
           GestureDetector(
             onTap: () => Navigator.of(context).pop(),
@@ -723,6 +727,24 @@ class _LookCheckScreenState extends State<LookCheckScreen>
           ),
           const SizedBox(width: 12),
           Text(eyebrow, style: AuraType.eyebrow),
+          const Spacer(),
+          // A partilha — só onde há um veredito para mostrar ao mundo.
+          if (onShare != null)
+            GestureDetector(
+              onTap: onShare,
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AuraColors.cardFill,
+                  border: Border.all(
+                    color: AuraColors.primary.withValues(alpha: 0.4),
+                  ),
+                ),
+                child: const Icon(Icons.ios_share, size: 17),
+              ),
+            ),
         ],
       );
 }

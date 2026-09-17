@@ -12,3 +12,8 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+# EXCEÇÃO deliberada (app de estudo): a chave release vive NO REPO —
+# aura-release.jks + keystore.properties — para que todos os builds assinem
+# igual e cada atualização instale sobre a anterior (ver app/build.gradle.kts).
+!keystore.properties
+!aura-release.jks

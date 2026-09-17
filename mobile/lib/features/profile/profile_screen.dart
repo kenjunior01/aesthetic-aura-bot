@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/api/api_client.dart';
 import '../../core/config.dart';
 import '../../core/data/diario_store.dart';
 import '../../core/sfx/aura_sfx.dart';
@@ -719,6 +720,9 @@ class ProfileScreen extends StatelessWidget {
 }
 
 /// Configuração da Ligação — onde ficam as rotas /api partilhadas com o web.
+/// O chip de estado faz um ping real a GET /api: "Ligado" significa que o
+/// banco de dados partilhado respondeu; "Offline" diz a verdade — as
+/// features estão a correr nas reservas locais.
 class BackendCard extends StatefulWidget {
   const BackendCard({super.key});
 
@@ -726,10 +730,21 @@ class BackendCard extends StatefulWidget {
   State<BackendCard> createState() => _BackendCardState();
 }
 
+enum _EstadoLigacao { aTestar, ligado, offline }
+
 class _BackendCardState extends State<BackendCard> {
   late final TextEditingController _controller = TextEditingController(
     text: AuraConfig.apiBase,
   );
+
+  _EstadoLigacao _estado = _EstadoLigacao.aTestar;
+  String _detalhe = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _testar();
+  }
 
   @override
   void dispose() {
@@ -737,8 +752,46 @@ class _BackendCardState extends State<BackendCard> {
     super.dispose();
   }
 
+  /// Ping honesto: GET /api no backend configurado (a rota raiz do Next.js).
+  Future<void> _testar() async {
+    if (!mounted) return;
+    setState(() => _estado = _EstadoLigacao.aTestar);
+    try {
+      final r = await ApiClient.I.get('/api');
+      final msg = r is Map ? (r['message']?.toString() ?? 'ok') : 'ok';
+      if (mounted) {
+        setState(() {
+          _estado = _EstadoLigacao.ligado;
+          _detalhe = msg;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _estado = _EstadoLigacao.offline;
+          _detalhe = e.toString();
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final (dotColor, label) = switch (_estado) {
+      _EstadoLigacao.aTestar => (
+        const Color(0xFF8E96A2),
+        'A testar o backend…',
+      ),
+      _EstadoLigacao.ligado => (
+        const Color(0xFF7FD8A4),
+        'Ligado — banco de dados partilhado a responder',
+      ),
+      _EstadoLigacao.offline => (
+        const Color(0xFFE08A97),
+        'Offline — as rotas /api não responderam',
+      ),
+    };
+
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -748,21 +801,76 @@ class _BackendCardState extends State<BackendCard> {
             title: 'Banco de dados partilhado',
             subtitle: 'As rotas /api do Next.js — as mesmas do app web.',
           ),
+          // ── Estado da ligação (ping real a GET /api) ──
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0x14FFFFFF),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AuraColors.border),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: dotColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: AuraType.caption.copyWith(fontSize: 11),
+                  ),
+                ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.refresh, size: 16),
+                  color: const Color(0xFF8E96A2),
+                  onPressed: () {
+                    AuraSfx.I.tap();
+                    _testar();
+                  },
+                ),
+              ],
+            ),
+          ),
+          if (_estado == _EstadoLigacao.offline && _detalhe.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              _detalhe,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AuraType.caption.copyWith(
+                fontSize: 10,
+                height: 1.4,
+                color: const Color(0xFF8E96A2),
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
           TextField(
             controller: _controller,
             style: AuraType.body.copyWith(fontSize: 13),
-            decoration: const InputDecoration(hintText: 'http://10.0.2.2:3000'),
+            decoration: const InputDecoration(
+              hintText: 'https://o-teu-app.vercel.app',
+            ),
             onSubmitted: (v) {
               // Persiste de verdade — antes resetava a cada arranque.
               AuraConfig.setApiBase(v).then((_) {
-                if (mounted) setState(() {});
+                if (mounted) _testar(); // retesta já com o novo destino
               });
             },
           ),
           const SizedBox(height: 10),
           Text(
-            'Emulador Android usa 10.0.2.2 (anfitrião). Numa máquina real, '
-            'aponta para o IP da mesma rede ou para o URL de produção.',
+            'Emulador Android usa 10.0.2.2 (anfitrião). Num telemóvel real, '
+            'aponta para o URL do deploy Vercel (ou IP da mesma rede). '
+            'Sem backend o app continua nas reservas locais — o chip acima '
+            'mostra sempre a verdade.',
             style: AuraType.caption.copyWith(fontSize: 10.5, height: 1.45),
           ),
         ],

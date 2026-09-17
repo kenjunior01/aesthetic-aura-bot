@@ -92,22 +92,30 @@ flutter test                # smoke test de arranque
 O build de lançamento gera `build/app/outputs/flutter-apk/app-release.apk`:
 
 ```bash
-flutter build apk --release --target-platform android-arm64
+flutter build apk --release
 ```
 
-O APK desta versão vive em `download/AuraStyle-v1.4.0-arm64.apk` (arm64-v8a —
-cobre praticamente todos os Android modernos, minSdk 24 / Android 7+).
+**Universal** (arm64-v8a + armeabi-v7a + x86 + x86_64) — instala em
+qualquer Android 7+ (minSdk 24), telemóvel 32-bit incluído. Um APK
+arm64-only devolve "App não instalado" em dispositivos 32-bit.
 
-Para instalar:
-1. Copia o APK para o telefone (USB, Drive, WhatsApp…).
-2. Abre o ficheiro e aceita "Instalar app desconhecido" quando pedido.
-3. Em Perfil → Ligação, aponta a base URL para onde o backend web corre
-   (produção ou IP da tua máquina na mesma rede) — a IA, o Acervo e as
-   Referências ligam-se ao MESMO banco de dados do web.
+Desde a v1.13.0 o release é assinado com a **keystore persistente do repo**
+(`android/aura-release.jks` + `android/keystore.properties`) — todos os
+builds, em qualquer máquina, assinam igual, e cada atualização instala
+**por cima** da anterior sem "App não instalado". (Tradeoff assumido de app
+de estudo: chave e password são públicas; para a Play Store, troca por uma
+keystore privada.)
 
-Nota: o APK atual é assinado com a chave de debug (instalável, ideal para
-testar). Para publicar na Play Store, cria uma keystore própria e define
-`signingConfig` de release em `android/app/build.gradle.kts`.
+> ⚠️ Se tinhas instalada uma versão **anterior à 1.13.0** (assinada com a
+> debug key efémera do ambiente de build), o Android bloqueia o upgrade —
+> **desinstala a antiga primeiro** (uma única vez). As versões 1.13.0+
+> atualizam-se entre si sem desinstalar.
+
+Em Perfil → **Ligação ao backend**, aponta a base URL para o deploy Vercel
+da versão web (ou IP da tua máquina na mesma rede) — o chip de estado faz
+ping real a `GET /api` e mostra **Ligado** quando o banco de dados
+partilhado do web responde. Sem backend, o app continua inteiro no modo
+autónomo (IA e imagens diretas do telemóvel).
 
 ## Notas de design
 

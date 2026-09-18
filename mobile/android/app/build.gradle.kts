@@ -37,12 +37,18 @@ android {
         // (arm64-v8a, armeabi-v7a, x86, x86_64). Um APK arm64-only devolve
         // "App não instalado" em dispositivos 32-bit.
         //
-        // Para builds de ABI único honestos (cada APK declara só o ABI que
+        // Para builds honestos por ABI (cada APK declara só os ABIs que
         // REALMENTE contém — evita "instala e quebra" de ABIs fantasmas):
         //   flutter build apk --release --target-platform android-arm64 \
         //       -Pabi=arm64-v8a
-        val abiFilter = project.findProperty("abi") as String?
-        if (abiFilter != null) {
+        // Aceita também LISTA separada por vírgulas — o APK de telemóvel
+        // (arm64-v8a + armeabi-v7a num só ficheiro, qualquer dispositivo real):
+        //   flutter build apk --release \
+        //       --target-platform android-arm64,android-arm \
+        //       -Pabi=arm64-v8a,armeabi-v7a
+        val abiFilter = (project.findProperty("abi") as String?)
+            ?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }
+        if (!abiFilter.isNullOrEmpty()) {
             ndk { abiFilters += abiFilter }
         }
     }
@@ -51,12 +57,13 @@ android {
     // VAZA pelo ndk.abiFilters — entra no APK em ABIs que não o alvo, e um
     // telemóvel desse ABI instalava e QUEBRAVA no arranque (sem libflutter).
     // Exclui, no packaging, todo o diretório lib/<abi> que não seja o alvo.
-    val abiTarget = project.findProperty("abi") as String?
-    if (abiTarget != null) {
+    val abiTarget = (project.findProperty("abi") as String?)
+        ?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }
+    if (!abiTarget.isNullOrEmpty()) {
         val todosAbis = listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         packagingOptions {
             jniLibs {
-                excludes += todosAbis.filter { it != abiTarget }.map { "lib/$it/**" }
+                excludes += todosAbis.filter { it !in abiTarget }.map { "lib/$it/**" }
             }
         }
     }

@@ -110,30 +110,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     });
     AuraSfx.I.toggle();
     final jStore = context.read<JornadaStore>();
-    jStore.criarJornada({
-      'name': _store.profile.name,
-      'gender': _genero,
-      'age': _idade.round(),
-      'priorities': _picked.toList(),
-      'hairType': _store.profile.hairType,
-      'skinTone': _store.profile.skinTone,
-      'undertone': _store.profile.undertone,
-      'faceShape': _store.profile.faceShape,
-      'budget': _store.profile.budget,
-      'city': _store.profile.city,
-      'country': _store.profile.country,
-    }).then((j) {
-      _ticker?.cancel();
-      if (!mounted) return;
-      if (j != null) {
-        _store.addXp(30);
-        _store.logEvent('jornada_criada_onboarding', {
-          'fonte': j.fonte,
-          'semanas': j.totalSemanas,
+    jStore
+        .criarJornada({
+          'name': _store.profile.name,
+          'gender': _genero,
+          'age': _idade.round(),
+          'priorities': _picked.toList(),
+          'hairType': _store.profile.hairType,
+          'skinTone': _store.profile.skinTone,
+          'undertone': _store.profile.undertone,
+          'faceShape': _store.profile.faceShape,
+          'budget': _store.profile.budget,
+          'city': _store.profile.city,
+          'country': _store.profile.country,
+        })
+        .then((j) {
+          _ticker?.cancel();
+          if (!mounted) return;
+          if (j != null) {
+            _store.addXp(30);
+            _store.logEvent('jornada_criada_onboarding', {
+              'fonte': j.fonte,
+              'semanas': j.totalSemanas,
+            });
+            AuraSfx.I.sparkle();
+          }
         });
-        AuraSfx.I.sparkle();
-      }
-    });
+  }
+
+  /// Tentar outra vez após um erro — recomeça a rota.
+  void _tentarRotaOutraVez() {
+    _rotaIniciada = false;
+    _iniciarRota();
   }
 
   void _finish() {
@@ -503,11 +511,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
       const SizedBox(height: 12),
       PlatinaButton(
-        label: 'Traçar a minha jornada',
+        label: _picked.isEmpty
+            ? 'Traçar com pele e cabelo'
+            : 'Traçar a minha jornada',
         icon: Icons.auto_awesome,
         expanded: true,
-        onTap: _picked.isNotEmpty ? () => _irPara(4) : null,
+        // Sem escolha? A Aura assume pele + cabelo — o início mais comum.
+        // Nunca bloqueia o avanço: a jornada é sempre traçável.
+        onTap: () {
+          if (_picked.isEmpty) _picked.addAll(['pele', 'cabelo']);
+          _irPara(4);
+        },
       ),
+      if (_picked.isEmpty) ...[
+        const SizedBox(height: 10),
+        Center(
+          child: Text(
+            'ou toca nas opções acima para escolher as tuas',
+            style: AuraType.caption.copyWith(
+              fontSize: 11,
+              color: AuraColors.mutedForeground.withValues(alpha: 0.8),
+            ),
+          ),
+        ),
+      ],
     ],
   );
 
@@ -518,7 +545,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final pronta = j != null && !jStore.gerando;
 
     if (!pronta) {
-      // A rota a ser traçada ao vivo.
+      // A rota a ser traçada ao vivo — SEMPRE com saída honesta: a geração
+      // tem teto de 14 s no store, e aqui há "entrar já" a qualquer momento.
+      final erro = jStore.erro;
       return Column(
         key: key,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -527,27 +556,76 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Text('A TUA JORNADA', style: AuraType.eyebrow),
           const SizedBox(height: 8),
           Text(
-            'A Aura está a traçar a rota real do $_nomeCurto até o auge.',
+            erro != null
+                ? 'Não consegui traçar a rota agora — a tua Aura fica\npronta na mesma.'
+                : 'A Aura está a traçar a rota real do $_nomeCurto até o auge.',
             textAlign: TextAlign.center,
             style: AuraType.caption.copyWith(fontSize: 13.5, height: 1.5),
           ),
           const Spacer(),
-          const OrbitaAura(tamanho: 96),
+          if (erro == null)
+            const OrbitaAura(tamanho: 96)
+          else
+            Icon(Icons.wifi_off, size: 44, color: AuraColors.mutedForeground),
           const Spacer(),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 340),
-            child: Text(
-              _kEstadosRota[_estadoRota],
-              key: ValueKey(_estadoRota),
-              textAlign: TextAlign.center,
-              style: AuraType.caption.copyWith(fontSize: 12.5, height: 1.5),
-            ),
+            child: erro != null
+                ? Text(
+                    'Sem leitura de IA agora — tenta outra vez ou entra sem rota.',
+                    key: const ValueKey('erro-rota'),
+                    textAlign: TextAlign.center,
+                    style: AuraType.caption.copyWith(
+                      fontSize: 12.5,
+                      height: 1.5,
+                    ),
+                  )
+                : Text(
+                    _kEstadosRota[_estadoRota],
+                    key: ValueKey(_estadoRota),
+                    textAlign: TextAlign.center,
+                    style: AuraType.caption.copyWith(
+                      fontSize: 12.5,
+                      height: 1.5,
+                    ),
+                  ),
           ),
+          if (erro == null) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Normalmente leva segundos — sem internet, traçamos offline.',
+              textAlign: TextAlign.center,
+              style: AuraType.caption.copyWith(
+                fontSize: 11,
+                height: 1.4,
+                color: AuraColors.mutedForeground.withValues(alpha: 0.85),
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
             child: const ShimmerBox(width: double.infinity, height: 8),
           ),
+          const SizedBox(height: 18),
+          if (erro != null)
+            PlatinaButton(
+              label: 'Tentar outra vez',
+              icon: Icons.refresh,
+              expanded: true,
+              onTap: _tentarRotaOutraVez,
+            )
+          else
+            TextButton(
+              onPressed: _finish,
+              child: Text(
+                'Não esperar — entrar já (a rota fica pronta lá dentro)',
+                style: AuraType.caption.copyWith(
+                  fontSize: 12,
+                  color: AuraColors.primary,
+                ),
+              ),
+            ),
           const SizedBox(height: 30),
         ],
       );
@@ -555,9 +633,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     // A rota revelada.
     final total = j.totalSemanas <= 1 ? 1 : j.totalSemanas;
-    final nos = [
-      for (final f in j.fases.skip(1)) (f.semanaInicio - 1) / total,
-    ];
+    final nos = [for (final f in j.fases.skip(1)) (f.semanaInicio - 1) / total];
     return SingleChildScrollView(
       key: key,
       physics: const BouncingScrollPhysics(),

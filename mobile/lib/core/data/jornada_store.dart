@@ -62,8 +62,7 @@ class FaseJornada {
     semanaFim: (j['semanaFim'] as num?)?.toInt() ?? 4,
     titulo: '${j['titulo'] ?? ''}',
     foco: '${j['foco'] ?? ''}',
-    acoes:
-        (j['acoes'] as List?)?.map((e) => '$e').toList() ?? const <String>[],
+    acoes: (j['acoes'] as List?)?.map((e) => '$e').toList() ?? const <String>[],
     visivel: '${j['visivel'] ?? ''}',
     imagemQuery: '${j['imagemQuery'] ?? 'healthy skin portrait'}',
     imagemUrl: j['imagemUrl'] as String?,
@@ -130,10 +129,8 @@ class CheckinJornada {
     aderencia: (j['aderencia'] as num?)?.toInt() ?? 50,
     veredito: '${j['veredito'] ?? 'no_trilho'}',
     mensagem: '${j['mensagem'] ?? ''}',
-    mudancas:
-        (j['mudancas'] as List?)?.map((e) => '$e').toList() ?? const [],
-    ajustes:
-        (j['ajustes'] as List?)?.map((e) => '$e').toList() ?? const [],
+    mudancas: (j['mudancas'] as List?)?.map((e) => '$e').toList() ?? const [],
+    ajustes: (j['ajustes'] as List?)?.map((e) => '$e').toList() ?? const [],
     fotoThumb: j['fotoThumb'] as String?,
     revisouPlano: j['revisouPlano'] == true,
   );
@@ -228,12 +225,14 @@ class Jornada {
     mudancasSemanas: (j['mudancasSemanas'] as num?)?.toInt() ?? 6,
     resumo: '${j['resumo'] ?? ''}',
     dicaChave: '${j['dicaChave'] ?? ''}',
-    fases: (j['fases'] as List?)
+    fases:
+        (j['fases'] as List?)
             ?.whereType<Map<String, dynamic>>()
             .map(FaseJornada.fromJson)
             .toList() ??
         const [],
-    checkins: (j['checkins'] as List?)
+    checkins:
+        (j['checkins'] as List?)
             ?.whereType<Map<String, dynamic>>()
             .map(CheckinJornada.fromJson)
             .toList() ??
@@ -350,6 +349,8 @@ class JornadaStore extends ChangeNotifier {
   }
 
   /// Traça a jornada a partir do perfil completo. Guarda e devolve.
+  /// GARANTIA: devolve sempre uma jornada (IA → local determinística) —
+  /// o onboarding nunca fica preso a um spinner infinito.
   Future<Jornada?> criarJornada(Map<String, dynamic> perfil) async {
     _gerando = true;
     _erro = null;
@@ -359,9 +360,17 @@ class JornadaStore extends ChangeNotifier {
       _jornada = j;
       await _persistir();
       return j;
-    } catch (e) {
-      _erro = 'Não consegui traçar a rota agora. Tenta outra vez.';
-      return null;
+    } catch (_) {
+      // Última linha de defesa: a rota local determinística.
+      try {
+        final j = JornadaApi.I.jornadaLocal(perfil);
+        _jornada = j;
+        await _persistir();
+        return j;
+      } catch (e) {
+        _erro = 'Não consegui traçar a rota agora. Tenta outra vez.';
+        return null;
+      }
     } finally {
       _gerando = false;
       notifyListeners();
@@ -472,9 +481,7 @@ class JornadaStore extends ChangeNotifier {
 
   void limpar() {
     _jornada = null;
-    SharedPreferences.getInstance().then(
-      (p) => p.remove(_prefsKey),
-    );
+    SharedPreferences.getInstance().then((p) => p.remove(_prefsKey));
     notifyListeners();
   }
 
